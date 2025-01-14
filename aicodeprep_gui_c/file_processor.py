@@ -38,7 +38,7 @@ def copy_to_clipboard(output_path: str) -> bool:
         with open(output_path, 'r', encoding='utf-8') as f:
             full_code = f.read()
         pyperclip.copy(full_code)
-        logging.info("Code copied to clipboard!")
+#        logging.info("Code copied to clipboard!")
         return True
     except Exception as e:
         logging.error(f"Error copying to clipboard: {str(e)}")

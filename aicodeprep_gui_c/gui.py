@@ -2,7 +2,7 @@ import os
 import sys
 import platform
 import logging
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
 from typing import List, Tuple
 
 def get_resource_path(relative_path):
@@ -80,11 +80,34 @@ class FileSelectionGUI(QtWidgets.QWidget):
         button_layout = QtWidgets.QHBoxLayout()
         main_layout.addLayout(button_layout)
 
-        # Buttons
-        website_label = QtWidgets.QLabel("wuu73.org/aicp")
+        # Website link
+        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">wuu73.org/aicp</a>")
+        website_label.setOpenExternalLinks(True)
+        website_label.setTextFormat(QtCore.Qt.RichText)
         button_layout.addWidget(website_label)
+
+        # Create a network manager to handle requests
+        self.network_manager = QtNetwork.QNetworkAccessManager()
+        self.network_manager.finished.connect(self.handle_network_reply)
+
+        # Use a QLabel to display the text
+        self.text_label = QtWidgets.QLabel("")  # Start with an empty label
+        self.text_label.setTextFormat(QtCore.Qt.RichText)
+        self.text_label.setOpenExternalLinks(True)
+        self.text_label.setWordWrap(True)
+        # Insert the label into the layout
+        main_layout.insertWidget(main_layout.indexOf(website_label) + 1, self.text_label)
+
+        # Fetch content from the URL (silently)
+        self.fetch_text_content()
+
+        # Add some vertical space using QSpacerItem with a fixed height
+        vertical_spacer = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        main_layout.insertItem(main_layout.indexOf(self.text_label) + 1, vertical_spacer)  # Insert below text_label
+
         button_layout.addStretch()
 
+        # Buttons
         process_button = QtWidgets.QPushButton("Process Selected")
         process_button.clicked.connect(self.process_selected)
         button_layout.addWidget(process_button)
@@ -131,6 +154,27 @@ class FileSelectionGUI(QtWidgets.QWidget):
     def process_selected(self):
         self.get_selected_files()
         self.close()
+
+    def fetch_text_content(self):
+        url = "https://wuu73.org/aicp/display.txt"  # URL to fetch text from
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
+        self.network_manager.get(request)
+
+    def handle_network_reply(self, reply):
+        if reply.error() == QtNetwork.QNetworkReply.NoError:
+            text = reply.readAll().data().decode()
+            # Check if the text is not just whitespace
+            if text.strip():
+                # Convert plain text links to HTML links (basic link handling)
+                text_with_links = self.convert_text_links_to_html(text)
+                self.text_label.setText(text_with_links)
+        # If there's an error or the content is empty, do nothing (silent handling)
+
+    def convert_text_links_to_html(self, text):
+        """Converts URLs in plain text to clickable HTML links (very basic)."""
+        import re
+        url_pattern = re.compile(r'(https?://\S+)')
+        return url_pattern.sub(r'<a href="\1">\1</a>', text)
 
 def show_file_selection_gui(files):
     app = QtWidgets.QApplication.instance()

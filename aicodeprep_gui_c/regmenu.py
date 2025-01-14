@@ -4,6 +4,7 @@ import sys
 import subprocess
 import argparse
 
+
 def add_classic_right_click_menu():
     try:
         # Define the registry path
@@ -25,6 +26,7 @@ def add_classic_right_click_menu():
         print(f"An error occurred while adding classic right-click menu: {e}")
         return False
 
+
 def remove_classic_right_click_menu():
     try:
         key_path = r"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
@@ -41,17 +43,19 @@ def remove_classic_right_click_menu():
         print(f"An error occurred while removing classic right-click menu: {e}")
         return False
 
+
 def restart_explorer():
     # Restart Windows Explorer to apply changes
     os.system("taskkill /f /im explorer.exe")
     os.system("start explorer.exe")
 
+
 def add_to_context_menu():
     # Get the path to the aicodeprep executable
     try:
-        result = subprocess.run(['where', 'aicodeprep-gui'], capture_output=True, text=True)
+        result = subprocess.run(['where', 'aicodeprep-gui-c'], capture_output=True, text=True)
         if result.returncode != 0:
-            print("Error: aicodeprep-gui not found. Please install the package first.")
+            print("Error: aicodeprep-gui-c not found. Please install the package first.")
             return False
         script_path = result.stdout.strip().split('\n')[0]
     except Exception as e:
@@ -65,7 +69,7 @@ def add_to_context_menu():
 
     try:
         # Create context menu for directories
-        key_path = r'Directory\Background\shell\aicodeprep-gui'
+        key_path = r'Directory\Background\shell\aicodeprep-gui-c'
         key = winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, key_path)
         winreg.SetValue(key, '', winreg.REG_SZ, 'AI Code Prep GUI')
 
@@ -79,9 +83,10 @@ def add_to_context_menu():
         print(f"Error adding context menu: {str(e)}")
         return False
 
+
 def remove_from_context_menu():
     try:
-        key_path = r'Directory\Background\shell\aicodeprep-gui'
+        key_path = r'Directory\Background\shell\aicodeprep-gui-c'
         winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, f"{key_path}\\command")
         winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, key_path)
         print("Context menu entry removed successfully!")
@@ -90,23 +95,24 @@ def remove_from_context_menu():
         print(f"Error removing context menu: {str(e)}")
         return False
 
+
 def main():
     parser = argparse.ArgumentParser(description='Manage Windows Context Menus')
-    
+
     # Create mutually exclusive group for classic right-click menu
     classic_group = parser.add_mutually_exclusive_group()
-    classic_group.add_argument('--enable-classic', action='store_true', 
-                                help='Enable classic right-click menu')
-    classic_group.add_argument('--disable-classic', action='store_true', 
-                                help='Disable classic right-click menu')
-    
+    classic_group.add_argument('--enable-classic', action='store_true',
+                               help='Enable classic right-click menu')
+    classic_group.add_argument('--disable-classic', action='store_true',
+                               help='Disable classic right-click menu')
+
     # Create mutually exclusive group for context menu
     context_group = parser.add_mutually_exclusive_group()
-    context_group.add_argument('--add-context', action='store_true', 
-                                help='Add AI Code Prep to context menu')
-    context_group.add_argument('--remove-context', action='store_true', 
-                                help='Remove AI Code Prep from context menu')
-    
+    context_group.add_argument('--add-context', action='store_true',
+                               help='Add AI Code Prep to context menu')
+    context_group.add_argument('--remove-context', action='store_true',
+                               help='Remove AI Code Prep from context menu')
+
     args = parser.parse_args()
 
     # Track if any changes were made to trigger explorer restart
@@ -131,6 +137,7 @@ def main():
     # Restart explorer if changes were made
     if changes_made:
         restart_explorer()
+
 
 if __name__ == '__main__':
     main()
