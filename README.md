@@ -1,3 +1,5 @@
+Still trying to get it to work on a Mac! Halfway there.. works on command line but the GUI part is giving me a hard time. If anyone has any experience with Mac Finder right click menu's... feel free to help 
+
 aicodeprep-gui (AI Code Prep GUI)
 
 aicodeprep is now a GUI application designed to streamline the process of sharing your project's code with AI chatbots. It allows you to quickly gather code files into a single text file and copy the content to your clipboard, making it easy to paste into AI chatbots for coding assistance.
