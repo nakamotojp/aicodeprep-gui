@@ -23,7 +23,7 @@ dependencies = [
 requires-python = ">=3.6"
 
 [project.scripts]
-aicodeprep_gui_c = "aicodeprep_gui_c.main:main" # Use an underscore here
+aicodeprep-gui-c = "aicodeprep_gui_c.main:main"
 
 [project.urls]
 Homepage = "https://github.com/detroittommy879/aicodeprep"
