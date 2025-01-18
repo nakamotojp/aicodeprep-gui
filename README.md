@@ -1,3 +1,13 @@
+This is NOT ready so this readme is for the older exe installer which is at wuu73.org/aicp 
+But you can still get it working by downloading this, cd into the folder, type:
+"pip install -e ."
+After package is installed, cd into the aicodeprep_gui_c folder, type:
+"python regmenu_gui.py"
+if that doesn't work for some reason try looking at the other regmenu-win.py file, 
+enabling classic menu gets rid of the usual "extra step" you would need to do to get to the AI Code Prep actual menu. The default Windows 11 menu is the annoying one that doesn't show every option. You should enable classic menu then add context menu, if having issues just paste the whole script into ChatGPT and ask it how to do it.
+
+Most people say this works fine but one person said the menu won't install for them and I have no idea why, can't replicate it, so can't figure out why that would happen but feel free to let me know if it does!
+
 aicodeprep-gui (AI Code Prep GUI)
 
 aicodeprep is now a GUI application designed to streamline the process of sharing your project's code with AI chatbots. It allows you to quickly gather code files into a single text file and copy the content to your clipboard, making it easy to paste into AI chatbots for coding assistance.
