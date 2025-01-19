@@ -6,7 +6,7 @@ After package is installed, cd into the aicodeprep_gui_c folder, type:
 if that doesn't work for some reason try looking at the other regmenu-win.py file, 
 enabling classic menu gets rid of the usual "extra step" you would need to do to get to the AI Code Prep actual menu. The default Windows 11 menu is the annoying one that doesn't show every option. You should enable classic menu then add context menu, if having issues just paste the whole script into ChatGPT and ask it how to do it.
 
-Most people say this works fine but one person said the menu won't install for them and I have no idea why, can't replicate it, so can't figure out why that would happen but feel free to let me know if it does!
+Most people say this works fine but one person said the menu won't install for them and I have no idea why, the regmenu scripts try to add it to windows registry. The Mac one doesn't work yet but soon.
 
 aicodeprep-gui (AI Code Prep GUI)
 
