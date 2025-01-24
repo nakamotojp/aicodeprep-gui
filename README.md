@@ -1,39 +1,66 @@
-Old readme but the Mac OS install zip file seems to work, just unzip, drag app to your Applications folder, then double
-click the workflow file to add it to the Mac context menu. I haven't fully tested it but it works on my Macbook so 
-let me know if there are issues. 
+# AI Code Prep GUI  
+*Streamline code sharing with AI chatbots (macOS & Windows)*  
 
-aicodeprep-gui (AI Code Prep GUI)
+**New in v0.9.5**  
+✓ Added macOS installation & support  
+✓ Improved file selection logic  
+✓ Context menu integration for both platforms  
 
-aicodeprep is now a GUI application designed to streamline the process of sharing your project's code with AI chatbots. It allows you to quickly gather code files into a single text file and copy the content to your clipboard, making it easy to paste into AI chatbots for coding assistance.
+---
+Pictures of how to use it are here:
+[wuu73.org/aicp](https://wuu73.org/aicp)
 
-Purpose
+## Installation
 
-The main goal of aicodeprep is to expedite the process of preparing and sharing your project code with AI chatbots. With the new GUI, you can effortlessly select and manage files to include, simplifying your workflow.
+### macOS
+1. Download and unzip the macOS package
+2. Drag `AICodePrepGUI.app` to your Applications folder
+3. Double-click `AICodePrepGUI.workflow`, follow instructions to add the menu
+4. You may need to restart Finder to activate menu (but often not)
+5. **To use:** Select one folder with project/code, Right-click → Quick Actions → AICodePrepGUI
+6. Select and unselect any files you want to be added to the context
+7. Click Process Selected which will copy it all to clipboard and save it to fullcode.txt. Paste into LLM chat
 
-Features
+*Tested on macOS Ventura 13.4 - report issues to wuu73@yahoo.com*
 
-Right-Click Context Menu: After installation, you can right-click in any Windows folder to open the GUI.
-Pre-Checked Files: The GUI automatically checks relevant files, with options to modify selections.
-Easy Processing: Click "Process Selected" to compile code into fullcode.txt and copy it to the clipboard.
-Installation
+### Windows
+1. Run `windows-easy-installer-dist.exe`
+2. Follow installation wizard (default: `Program Files\AICodePrep-GUI`)
+3. **To use:** Right-click in any folder's blank space in windows file explorer → `AI Code Prep GUI`
+     (you might have to click show more options if you don't have 'classic menu' enabled)
+4. You may need to restart Windows to activate menu (if it doesn't work right away)
+5. Select and unselect any files you want to be added to the context
+6. Click Process Selected which will copy it all to clipboard and save it to fullcode.txt. Paste into LLM chat
 
-Windows Installation
+---
 
-Double Click install file and follow instructions, standard type of Windows install wizard.
+## Features
+- **Cross-platform GUI** - Visual file selection beats command line
+- **Smart Preselection** - Auto-detects likely code files
+- **Context-Aware** - Maintains folder structure in output, uses <> tags that LLMs understand
+- **Clipboard & File** - Copies to clipboard AND creates `fullcode.txt`
+- **LLM Optimized** - Filters non-essential files for better AI responses
 
-Usage
+---
 
-Once installed, right-click in a folder that has code or subfolders with code, project folder etc window to run aicodeprep-gui. The GUI will launch, showing pre-checked files. Adjust selections as needed, then click "Process Selected" to generate fullcode.txt and copy to clipboard.
+## Usage
+1. Right-click in project folder blank space (Windows) or use Quick Actions (in macOS, you have to select one folder before right clicking for the menu)
+2. Review preselected files:
+   - Check/Uncheck individual files
+   - Expand/collapse directory trees
+3. Click **Process Selected** to:
+   - Generate structured code overview
+   - Copy sanitized content to clipboard
+   - Create `fullcode.txt` in project root
 
-Optional Configuration (rarely needed)
 
-Customize behavior by modifying default_config.yaml or create an aicodeprep_config.yaml which is in the data folder in the folder where you installed aicodeprep-gui (usually Program Files/AICodePrep-GUI/data)
+## Support & Development
+Found this useful? Support future development:
 
-Donations/Tips:
+₿ **Bitcoin:** `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`  
+Ł **Litecoin:** `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`  
+ɱ **Monero:** `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ`  
+💵 **CashApp:** `$lightweb73`
 
-Bitcoin: bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6
-Litecoin: ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4
-Monero: 46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ
-Cashapp: $lightweb73
-
-Share any bugs, improvement ideas! wuu73@yahoo.com
+*Report issues/ideas:* wuu73@yahoo.com  
+*Linux version coming soon!*
