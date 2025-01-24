@@ -1,12 +1,16 @@
 # Changelog
 
-# Changelog
-
-## [0.5.0] - 2024-14-11 (Premium GUI Release)
+## [0.9.5] - 2025-24-1 (Mac GUI version seems to work)
 
 ### Added
 
-- Premium Windows GUI Version
+- Mac OS app and workflow file that installs a right click menu to Finder. Switched to PyQt5 also.
+
+## [0.5.0] - 2024-14-11 (GUI Release)
+
+### Added
+
+- Windows GUI Version
 - Right-click context menu integration for Windows
 - Enhanced file selection GUI with granular file inclusion/exclusion
 - DPI awareness for better display on high-resolution screens
