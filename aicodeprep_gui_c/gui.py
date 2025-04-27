@@ -22,6 +22,13 @@ class FileSelectionGUI(QtWidgets.QWidget):
         if self.app is None:
             self.app = QtWidgets.QApplication([])
 
+        # .aicodeprep prefs
+        self.prefs_filename = ".aicodeprep"
+        self.remember_checkbox = None
+        self.checked_files_from_prefs = set()
+        self.prefs_loaded = False
+        self.load_prefs_if_exists()
+
         # DPI Awareness and Scaling
         if platform.system() == 'Windows':
             screen = self.app.primaryScreen()
@@ -60,11 +67,14 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.tree_widget.setColumnWidth(0, int(400 * scale_factor))  # Wider for file paths
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         main_layout.addWidget(self.tree_widget)
-        
+
         # --- Build folder/file tree ---
         self.path_to_item = {}  # Maps folder path to QTreeWidgetItem
         self.checked_paths = set()
         for file_path, relative_path, is_included in files:
+            # If prefs loaded, override: only check files in prefs, uncheck all others
+            if self.prefs_loaded:
+                is_included = relative_path in self.checked_files_from_prefs
             if is_included:
                 self.checked_paths.add(relative_path)
             parts = relative_path.split(os.sep)
@@ -117,6 +127,14 @@ class FileSelectionGUI(QtWidgets.QWidget):
         # Button Layout
         button_layout = QtWidgets.QHBoxLayout()
         main_layout.addLayout(button_layout)
+
+        # --- Preferences Checkbox ---
+        prefs_checkbox_layout = QtWidgets.QHBoxLayout()
+        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep)")
+        self.remember_checkbox.setChecked(True)
+        prefs_checkbox_layout.addWidget(self.remember_checkbox)
+        prefs_checkbox_layout.addStretch()
+        main_layout.addLayout(prefs_checkbox_layout)
 
         # Website link
         website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">wuu73.org/aicp</a>")
@@ -213,6 +231,9 @@ class FileSelectionGUI(QtWidgets.QWidget):
 
     def process_selected(self):
         self.get_selected_files()
+        # Save prefs if checkbox is checked
+        if self.remember_checkbox and self.remember_checkbox.isChecked():
+            self.save_prefs()
         self.close()
 
     def fetch_text_content(self):
@@ -245,3 +266,54 @@ def show_file_selection_gui(files):
     gui.show()
     app.exec_()
     return gui.selected_files
+
+# --- Preferences Save/Load Methods ---
+
+def _prefs_path():
+    # Always save/load in current working directory
+    return os.path.join(os.getcwd(), ".aicodeprep")
+
+def _write_prefs_file(checked_relpaths):
+    try:
+        with open(_prefs_path(), "w", encoding="utf-8") as f:
+            for relpath in checked_relpaths:
+                f.write(relpath + "\n")
+    except Exception as e:
+        logging.warning(f"Could not write .aicodeprep: {e}")
+
+def _read_prefs_file():
+    checked = set()
+    try:
+        with open(_prefs_path(), "r", encoding="utf-8") as f:
+            for line in f:
+                checked.add(line.strip())
+    except Exception:
+        pass
+    return checked
+
+# Patch methods into FileSelectionGUI
+def load_prefs_if_exists(self):
+    prefs_path = _prefs_path()
+    if os.path.exists(prefs_path):
+        self.checked_files_from_prefs = _read_prefs_file()
+        self.prefs_loaded = True
+    else:
+        self.checked_files_from_prefs = set()
+        self.prefs_loaded = False
+
+def save_prefs(self):
+    checked_relpaths = []
+    # Recursively collect all checked relative paths
+    def collect_checked(item, relpath_prefix=""):
+        text = item.text(0)
+        curr_path = os.path.join(relpath_prefix, text) if relpath_prefix else text
+        if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.checkState(0) == QtCore.Qt.Checked:
+            checked_relpaths.append(curr_path)
+        for i in range(item.childCount()):
+            collect_checked(item.child(i), curr_path)
+    for i in range(self.tree_widget.topLevelItemCount()):
+        collect_checked(self.tree_widget.topLevelItem(i))
+    _write_prefs_file(checked_relpaths)
+
+FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
+FileSelectionGUI.save_prefs = save_prefs
