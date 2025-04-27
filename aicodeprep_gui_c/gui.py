@@ -51,30 +51,68 @@ class FileSelectionGUI(QtWidgets.QWidget):
 
         # Geometry
         self.setGeometry(100, 100, int(600 * scale_factor), int(400 * scale_factor))
-
+        
         # Layout
         main_layout = QtWidgets.QVBoxLayout(self)
         self.tree_widget = QtWidgets.QTreeWidget()
-        self.tree_widget.setHeaderLabels(["", "File Path"])
-        self.tree_widget.setColumnCount(2)
-        self.tree_widget.setColumnWidth(0, int(30 * scale_factor))
-        self.tree_widget.setColumnWidth(1, int(550 * scale_factor))
-        self.tree_widget.header().setStretchLastSection(True)
+        self.tree_widget.setHeaderLabels(["File/Folder"])
+        self.tree_widget.setColumnCount(1)
+        self.tree_widget.setColumnWidth(0, int(400 * scale_factor))  # Wider for file paths
+        self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         main_layout.addWidget(self.tree_widget)
-
-        # Add Files to Treeview
+        
+        # --- Build folder/file tree ---
+        self.path_to_item = {}  # Maps folder path to QTreeWidgetItem
+        self.checked_paths = set()
         for file_path, relative_path, is_included in files:
-            try:
-                item = QtWidgets.QTreeWidgetItem(self.tree_widget)
-                item.setText(1, relative_path)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
-                item.setData(1, QtCore.Qt.UserRole, file_path)
-                logging.debug(f"Added file to tree: {relative_path}")
-            except Exception as e:
-                logging.error(f"Failed to add file to tree: {relative_path}, Error: {str(e)}")
+            if is_included:
+                self.checked_paths.add(relative_path)
+            parts = relative_path.split(os.sep)
+            parent = self.tree_widget
+            parent_path = ""
+            for i, part in enumerate(parts):
+                curr_path = os.sep.join(parts[:i+1])
+                is_file = (i == len(parts) - 1)
+                if curr_path not in self.path_to_item:
+                    if is_file:
+                        item = QtWidgets.QTreeWidgetItem()
+                        item.setText(0, part)  # Show filename in column 0
+                        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                        item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
+                        item.setData(0, QtCore.Qt.UserRole, file_path)
+                        parent.addTopLevelItem(item) if parent is self.tree_widget else parent.addChild(item)
+                        self.path_to_item[curr_path] = item
+                    else:
+                        folder_item = QtWidgets.QTreeWidgetItem()
+                        folder_item.setText(0, part)
+                        # Make folders not checkable but keep them enabled
+                        folder_item.setFlags(folder_item.flags())
+                        parent.addTopLevelItem(folder_item) if parent is self.tree_widget else parent.addChild(folder_item)
+                        self.path_to_item[curr_path] = folder_item
+                    parent = self.path_to_item[curr_path]
+                else:
+                    parent = self.path_to_item[curr_path]
 
         self.tree_widget.itemChanged.connect(self.handle_item_changed)
+
+        # --- Auto-expand folders to checked files ---
+        def expand_to_checked(item):
+            expanded = False
+            for i in range(item.childCount()):
+                child = item.child(i)
+                if child.childCount() > 0:
+                    if expand_to_checked(child):
+                        self.tree_widget.expandItem(child)
+                        expanded = True
+                else:
+                    if child.checkState(0) == QtCore.Qt.Checked:
+                        expanded = True
+            return expanded
+
+        for i in range(self.tree_widget.topLevelItemCount()):
+            top_item = self.tree_widget.topLevelItem(i)
+            if expand_to_checked(top_item):
+                self.tree_widget.expandItem(top_item)
 
         # Button Layout
         button_layout = QtWidgets.QHBoxLayout()
@@ -121,34 +159,56 @@ class FileSelectionGUI(QtWidgets.QWidget):
         button_layout.addWidget(deselect_all_button)
 
         self.selected_files = []
+        
+        # No need for manual column resize handling with the new header settings
 
     def handle_item_changed(self, item, column):
         if column == 0:
-            file_path = item.data(1, QtCore.Qt.UserRole)
+            file_path = item.data(0, QtCore.Qt.UserRole)
             if item.checkState(0) == QtCore.Qt.Checked:
-                if file_path not in self.selected_files:
+                if file_path and file_path not in self.selected_files:
                     self.selected_files.append(file_path)
             else:
-                if file_path in self.selected_files:
+                if file_path and file_path in self.selected_files:
                     self.selected_files.remove(file_path)
-
+                    
     def select_all(self):
+        # Recursively select all file items
+        def check_all_items(item):
+            if item.flags() & QtCore.Qt.ItemIsUserCheckable:
+                item.setCheckState(0, QtCore.Qt.Checked)
+            for i in range(item.childCount()):
+                check_all_items(item.child(i))
+                
         for i in range(self.tree_widget.topLevelItemCount()):
-            item = self.tree_widget.topLevelItem(i)
-            item.setCheckState(0, QtCore.Qt.Checked)
+            check_all_items(self.tree_widget.topLevelItem(i))
 
     def deselect_all(self):
+        # Recursively deselect all file items
+        def uncheck_all_items(item):
+            if item.flags() & QtCore.Qt.ItemIsUserCheckable:
+                item.setCheckState(0, QtCore.Qt.Unchecked)
+            for i in range(item.childCount()):
+                uncheck_all_items(item.child(i))                
         for i in range(self.tree_widget.topLevelItemCount()):
-            item = self.tree_widget.topLevelItem(i)
-            item.setCheckState(0, QtCore.Qt.Unchecked)
-
+            uncheck_all_items(self.tree_widget.topLevelItem(i))
+            
     def get_selected_files(self):
         self.selected_files = []
+        
+        # Recursively collect all checked files
+        def collect_checked_files(item):
+            if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.checkState(0) == QtCore.Qt.Checked:
+                file_path = item.data(0, QtCore.Qt.UserRole)
+                if file_path:
+                    self.selected_files.append(file_path)
+            
+            for i in range(item.childCount()):
+                collect_checked_files(item.child(i))
+        
         for i in range(self.tree_widget.topLevelItemCount()):
-            item = self.tree_widget.topLevelItem(i)
-            if item.checkState(0) == QtCore.Qt.Checked:
-                file_path = item.data(1, QtCore.Qt.UserRole)
-                self.selected_files.append(file_path)
+            collect_checked_files(self.tree_widget.topLevelItem(i))
+            
         return self.selected_files
 
     def process_selected(self):

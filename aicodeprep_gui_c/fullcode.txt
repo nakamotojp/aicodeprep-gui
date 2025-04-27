@@ -1,0 +1,644 @@
+file_processor.py:
+<code>
+import os
+import sys
+import logging
+import pyperclip
+from typing import List
+
+def process_files(selected_files: List[str], output_file: str) -> int:
+    """Process selected files and write their contents to output_file"""
+    try:
+        # Get the directory passed from context menu (%V)
+        target_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+        logging.info(f"Target directory from context menu: {target_dir}")
+        logging.info(f"Current working directory: {os.getcwd()}")
+
+        # Use the target directory for output
+        output_path = os.path.join(target_dir, output_file)
+        logging.info(f"Writing output to: {output_path}")
+
+        with open(output_path, 'w', encoding='utf-8') as outfile:
+            for file_path in selected_files:
+                relative_path = os.path.relpath(file_path, target_dir)
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as infile:
+                        outfile.write(f"{relative_path}:\n<code>\n")
+                        outfile.write(infile.read())
+                        outfile.write("\n</code>\n\n")
+                        logging.info(f"Processed: {relative_path}")
+                except Exception as e:
+                    logging.error(f"Error processing {file_path}: {str(e)}")
+        return len(selected_files)
+    except Exception as e:
+        logging.error(f"Error writing to output file: {str(e)}")
+        return 0
+
+def copy_to_clipboard(output_path: str) -> bool:
+    """Copy the contents of output_path to clipboard"""
+    try:
+        with open(output_path, 'r', encoding='utf-8') as f:
+            full_code = f.read()
+        pyperclip.copy(full_code)
+#        logging.info("Code copied to clipboard!")
+        return True
+    except Exception as e:
+        logging.error(f"Error copying to clipboard: {str(e)}")
+        return False
+
+</code>
+
+gui.py:
+<code>
+import os
+import sys
+import platform
+import logging
+from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
+from typing import List, Tuple
+
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
+
+class FileSelectionGUI(QtWidgets.QWidget):
+    def __init__(self, files):
+        super().__init__()
+        self.setWindowTitle("AI Code Prep - File Selection")
+        self.app = QtWidgets.QApplication.instance()
+        if self.app is None:
+            self.app = QtWidgets.QApplication([])
+
+        # DPI Awareness and Scaling
+        if platform.system() == 'Windows':
+            screen = self.app.primaryScreen()
+            scale_factor = screen.logicalDotsPerInch() / 96.0
+        else:
+            scale_factor = self.app.primaryScreen().devicePixelRatio()
+
+        # Font Configuration
+        default_font_size = 9
+        try:
+            if platform.system() == 'Windows':
+                system_font = 'Segoe UI'
+            else:
+                system_font = 'Arial'
+
+            default_font_size = int(default_font_size * scale_factor)
+            self.default_font = QtGui.QFont(system_font, default_font_size)
+            self.tree_font = QtGui.QFont(system_font, default_font_size + 1)
+            self.checkbox_font = QtGui.QFont(system_font, int(default_font_size * 1.2))
+            self.setFont(self.default_font)
+            logging.info(f"Using system font: {system_font}, Size: {default_font_size}")
+        except Exception as e:
+            logging.warning(f"Font/scaling error: {e}")
+            self.default_font = QtGui.QFont('Arial', default_font_size)
+            self.tree_font = QtGui.QFont('Arial', default_font_size + 1)
+            self.checkbox_font = QtGui.QFont('Arial', int(default_font_size * 1.2))
+
+        # Geometry
+        self.setGeometry(100, 100, int(600 * scale_factor), int(400 * scale_factor))
+
+        # Layout
+        main_layout = QtWidgets.QVBoxLayout(self)
+        self.tree_widget = QtWidgets.QTreeWidget()
+        self.tree_widget.setHeaderLabels(["", "File Path"])
+        self.tree_widget.setColumnCount(2)
+        self.tree_widget.setColumnWidth(0, int(30 * scale_factor))
+        self.tree_widget.setColumnWidth(1, int(550 * scale_factor))
+        self.tree_widget.header().setStretchLastSection(True)
+        main_layout.addWidget(self.tree_widget)
+
+        # Add Files to Treeview
+        for file_path, relative_path, is_included in files:
+            try:
+                item = QtWidgets.QTreeWidgetItem(self.tree_widget)
+                item.setText(1, relative_path)
+                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
+                item.setData(1, QtCore.Qt.UserRole, file_path)
+                logging.debug(f"Added file to tree: {relative_path}")
+            except Exception as e:
+                logging.error(f"Failed to add file to tree: {relative_path}, Error: {str(e)}")
+
+        self.tree_widget.itemChanged.connect(self.handle_item_changed)
+
+        # Button Layout
+        button_layout = QtWidgets.QHBoxLayout()
+        main_layout.addLayout(button_layout)
+
+        # Website link
+        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">wuu73.org/aicp</a>")
+        website_label.setOpenExternalLinks(True)
+        website_label.setTextFormat(QtCore.Qt.RichText)
+        button_layout.addWidget(website_label)
+
+        # Create a network manager to handle requests
+        self.network_manager = QtNetwork.QNetworkAccessManager()
+        self.network_manager.finished.connect(self.handle_network_reply)
+
+        # Use a QLabel to display the text
+        self.text_label = QtWidgets.QLabel("")  # Start with an empty label
+        self.text_label.setTextFormat(QtCore.Qt.RichText)
+        self.text_label.setOpenExternalLinks(True)
+        self.text_label.setWordWrap(True)
+        # Insert the label into the layout
+        main_layout.insertWidget(main_layout.indexOf(website_label) + 1, self.text_label)
+
+        # Fetch content from the URL (silently)
+        self.fetch_text_content()
+
+        # Add some vertical space using QSpacerItem with a fixed height
+        vertical_spacer = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        main_layout.insertItem(main_layout.indexOf(self.text_label) + 1, vertical_spacer)  # Insert below text_label
+
+        button_layout.addStretch()
+
+        # Buttons
+        process_button = QtWidgets.QPushButton("Process Selected")
+        process_button.clicked.connect(self.process_selected)
+        button_layout.addWidget(process_button)
+
+        select_all_button = QtWidgets.QPushButton("Select All")
+        select_all_button.clicked.connect(self.select_all)
+        button_layout.addWidget(select_all_button)
+
+        deselect_all_button = QtWidgets.QPushButton("Deselect All")
+        deselect_all_button.clicked.connect(self.deselect_all)
+        button_layout.addWidget(deselect_all_button)
+
+        self.selected_files = []
+
+    def handle_item_changed(self, item, column):
+        if column == 0:
+            file_path = item.data(1, QtCore.Qt.UserRole)
+            if item.checkState(0) == QtCore.Qt.Checked:
+                if file_path not in self.selected_files:
+                    self.selected_files.append(file_path)
+            else:
+                if file_path in self.selected_files:
+                    self.selected_files.remove(file_path)
+
+    def select_all(self):
+        for i in range(self.tree_widget.topLevelItemCount()):
+            item = self.tree_widget.topLevelItem(i)
+            item.setCheckState(0, QtCore.Qt.Checked)
+
+    def deselect_all(self):
+        for i in range(self.tree_widget.topLevelItemCount()):
+            item = self.tree_widget.topLevelItem(i)
+            item.setCheckState(0, QtCore.Qt.Unchecked)
+
+    def get_selected_files(self):
+        self.selected_files = []
+        for i in range(self.tree_widget.topLevelItemCount()):
+            item = self.tree_widget.topLevelItem(i)
+            if item.checkState(0) == QtCore.Qt.Checked:
+                file_path = item.data(1, QtCore.Qt.UserRole)
+                self.selected_files.append(file_path)
+        return self.selected_files
+
+    def process_selected(self):
+        self.get_selected_files()
+        self.close()
+
+    def fetch_text_content(self):
+        url = "https://wuu73.org/aicp/display.txt"  # URL to fetch text from
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
+        self.network_manager.get(request)
+
+    def handle_network_reply(self, reply):
+        if reply.error() == QtNetwork.QNetworkReply.NoError:
+            text = reply.readAll().data().decode()
+            # Check if the text is not just whitespace
+            if text.strip():
+                # Convert plain text links to HTML links (basic link handling)
+                text_with_links = self.convert_text_links_to_html(text)
+                self.text_label.setText(text_with_links)
+        # If there's an error or the content is empty, do nothing (silent handling)
+
+    def convert_text_links_to_html(self, text):
+        """Converts URLs in plain text to clickable HTML links (very basic)."""
+        import re
+        url_pattern = re.compile(r'(https?://\S+)')
+        return url_pattern.sub(r'<a href="\1">\1</a>', text)
+
+def show_file_selection_gui(files):
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        app = QtWidgets.QApplication([])
+
+    gui = FileSelectionGUI(files)
+    gui.show()
+    app.exec_()
+    return gui.selected_files
+</code>
+
+main.py:
+<code>
+import os
+import sys
+import argparse
+import logging
+from typing import List
+from file_processor import process_files, copy_to_clipboard
+from smart_logic import collect_all_files, load_default_config, load_user_config
+from gui import show_file_selection_gui
+
+# Configure logging with explicit console handler only
+logger = logging.getLogger()
+
+# Remove any existing handlers to prevent duplicate logging
+for handler in logger.handlers:
+    logger.removeHandler(handler)
+
+logger.setLevel(logging.INFO)
+
+# Create console handler
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+
+# Add handler to root logger
+logger.addHandler(console_handler)
+
+def main():
+    parser = argparse.ArgumentParser(description="Concatenate code files into a single text file.")
+    parser.add_argument("-n", "--no-copy", action="store_true",
+                        help="Do NOT copy output to clipboard (default: copy to clipboard)")
+    parser.add_argument("-o", "--output", default="fullcode.txt",
+                        help="Output file name (default: fullcode.txt)")
+    parser.add_argument("-d", "--debug", action="store_true",
+                        help="Enable debug logging")
+    parser.add_argument("directory", nargs="?", default=".",
+                        help="Directory to process (default: current directory)")
+
+    args = parser.parse_args()
+
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+        console_handler.setLevel(logging.DEBUG)
+
+    # Get the target directory from command line argument (%V)
+    target_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    logger.info(f"Target directory: {target_dir}")
+
+    # Change to the specified directory
+    os.chdir(target_dir)
+
+    logger.info("Starting code concatenation...")
+
+    all_files_with_flags = collect_all_files()
+
+    if not all_files_with_flags:
+        logger.warning("No files found to process!")
+        return
+
+    selected_files = show_file_selection_gui(all_files_with_flags)
+
+    if not selected_files:
+        logger.info("No files selected. Exiting.")
+        return
+
+    files_processed = process_files(selected_files, args.output)
+
+    logger.info(f"Concatenation complete! Processed {files_processed} code files.")
+    logger.info(f"Output written to {args.output}")
+
+    if not args.no_copy:
+        output_path = os.path.join(target_dir, args.output)
+        if copy_to_clipboard(output_path):
+            logger.info("Code copied to clipboard!")
+        else:
+            logger.error("Failed to copy code to clipboard")
+
+    logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")
+    logger.info("https://wuu73.org/hello.html")
+
+if __name__ == "__main__":
+    main()
+
+</code>
+
+smart_logic.py:
+<code>
+from importlib import resources
+import os
+import sys
+import pathlib
+import yaml
+import logging
+from typing import List, Tuple
+
+def get_config_path():
+    """Get the path to the default configuration file."""
+    if getattr(sys, 'frozen', False):
+        # If the application is frozen (e.g., PyInstaller), use the _MEIPASS directory.
+        base_path = sys._MEIPASS
+        config_path = os.path.join(base_path, 'aicodeprep_gui', 'data', 'default_config.yaml')
+    else:
+        # If running as a script, use importlib.resources.
+        try:
+            with resources.path('aicodeprep_gui.data', 'default_config.yaml') as config_file:
+                config_path = str(config_file)
+        except ModuleNotFoundError:
+            # Fallback to a default path if the package structure is different.
+            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.yaml')
+
+    return config_path
+
+def get_exe_directory():
+    """Get the directory of the executable or script"""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+def load_default_config() -> dict:
+    """Load the default configuration from YAML file"""
+    try:
+        config_path = get_config_path()
+        logging.info(f"Looking for config at {config_path}")
+
+        try:
+            with open(config_path, 'r') as f:
+                config = yaml.safe_load(f)
+        except FileNotFoundError:
+            logging.warning("Default config file not found, using built-in defaults")
+            config = {
+                'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
+                                   '.rs', '.swift', '.kt'],
+                'exclude_extensions': ['.pyc', '.class', '.o', '.obj'],
+                'exclude_patterns': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
+                'exclude_dirs': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
+                'include_dirs': [],
+                'exclude_files': [],
+                'include_files': [],
+                'max_file_size': 1000000
+            }
+
+        if 'exclude_patterns' in config:
+            config['exclude_patterns'] = [pattern.lstrip('.') for pattern in config['exclude_patterns']]
+
+        if 'code_extensions' not in config or not config['code_extensions']:
+            config['code_extensions'] = ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb',
+                                         '.go', '.rs', '.swift', '.kt']
+
+        logging.info(f"Loaded configuration with {len(config.get('code_extensions', []))} code extensions")
+        return config
+
+    except Exception as e:
+        logging.error(f"Error in configuration handling: {str(e)}")
+        return {
+            'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
+                               '.rs', '.swift', '.kt'],
+            'exclude_extensions': ['.pyc', '.class', '.o', '.obj'],
+            'exclude_patterns': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
+            'exclude_dirs': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
+            'include_dirs': [],
+            'exclude_files': [],
+            'include_files': [],
+            'max_file_size': 1000000
+        }
+
+def load_user_config() -> dict:
+    """Load user-specific configuration from YAML file"""
+    try:
+        config_path = os.path.join(get_exe_directory(), 'aicodeprep_config.yaml')
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                config = yaml.safe_load(f)
+                if config and 'exclude_patterns' in config:
+                    config['exclude_patterns'] = [
+                        pattern.lstrip('.') for pattern in config['exclude_patterns']
+                    ]
+                return config
+    except Exception as e:
+        logging.error(f"Error loading user configuration: {str(e)}")
+    return {}
+
+def matches_pattern(filename: str, pattern: str) -> bool:
+    """Check if filename matches the given pattern"""
+    return pattern.lower() in filename.lower()
+
+def is_excluded_directory(path: str) -> bool:
+    """Check if the directory should be excluded"""
+    path_parts = pathlib.Path(path).parts
+    return any(part in EXCLUDE_DIRS for part in path_parts)
+
+def should_process_directory(dir_path: str) -> bool:
+    """Determine if a directory should be processed"""
+    if is_excluded_directory(dir_path):
+        return False
+
+    dir_name = os.path.basename(dir_path)
+    if dir_name in INCLUDE_DIRS:
+        return True
+    if dir_name in EXCLUDE_DIRS:
+        return False
+    return True
+
+def collect_all_files() -> List[Tuple[str, str, bool]]:
+    """Collect all files in the target directory with inclusion flags"""
+    all_files = []
+    logging.info("Starting file collection...")
+
+    if len(sys.argv) > 1:
+        root_dir = sys.argv[1]
+    else:
+        root_dir = os.getcwd()
+
+    logging.info(f"Processing directory: {root_dir}")
+    logging.info(f"Code extensions configured: {CODE_EXTENSIONS}")
+
+    for root, dirs, files in os.walk(root_dir):
+        dirs[:] = [d for d in dirs if not d.startswith('.')]
+
+        for file in files:
+            if file == "aicp_FULLCODE.txt":
+                continue
+
+            file_path = os.path.join(root, file)
+            relative_path = os.path.relpath(file_path, root_dir)
+
+            if any(part.startswith('.') for part in pathlib.Path(file_path).parts):
+                continue
+
+            try:
+                if os.path.getsize(file_path) > MAX_FILE_SIZE:
+                    continue
+            except (OSError, IOError):
+                continue
+
+            included = False
+
+            if file in INCLUDE_FILES:
+                included = True
+            elif os.path.basename(root) in INCLUDE_DIRS:
+                extension = pathlib.Path(file_path).suffix.lower()
+                if extension in CODE_EXTENSIONS:
+                    if (file not in EXCLUDE_FILES and
+                            extension not in EXCLUDE_EXTENSIONS and
+                            not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS)):
+                        included = True
+            else:
+                extension = pathlib.Path(file_path).suffix.lower()
+                if extension in CODE_EXTENSIONS:
+                    if (file not in EXCLUDE_FILES and
+                            extension not in EXCLUDE_EXTENSIONS and
+                            not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS) and
+                            not any(part in EXCLUDE_DIRS for part in pathlib.Path(root).parts)):
+                        included = True
+
+            all_files.append((file_path, relative_path, included))
+            logging.info(f"Collected file: {relative_path}, Included by default: {included}")
+
+    logging.info(f"Total files collected: {len(all_files)}")
+    return all_files
+
+# Load configurations
+default_config = load_default_config()
+user_config = load_user_config()
+config = {**default_config, **user_config}
+
+CODE_EXTENSIONS = set(config.get('code_extensions', []))
+EXCLUDE_EXTENSIONS = set(config.get('exclude_extensions', []))
+EXCLUDE_PATTERNS = set(config.get('exclude_patterns', []))
+EXCLUDE_DIRS = set(config.get('exclude_dirs', []))
+INCLUDE_DIRS = set(config.get('include_dirs', []))
+EXCLUDE_FILES = set(config.get('exclude_files', []))
+INCLUDE_FILES = set(config.get('include_files', []))
+MAX_FILE_SIZE = config.get('max_file_size', 1000000)
+
+</code>
+
+__init__.py:
+<code>
+from .main import main
+</code>
+
+data\default_config.yaml:
+<code>
+code_extensions:
+  - .py
+  - .js
+  - .jsx
+  - .ts
+  - .tsx
+  - .java
+  - .cpp
+  - .c
+  - .h
+  - .cs
+  - .php
+  - .rb
+  - .go
+  - .rs
+  - .swift
+  - .kt
+  - .scala
+  - .html
+  - .css
+  - .scss
+  - .sass
+  - .less
+  - .sql
+  - .sh
+  - .yaml
+  - .yml
+  - .json
+  - .xml
+  - .vue
+  - .r
+  - .m
+  - .f90
+  - .f95
+  - .f03
+  - .f08
+  - .gradle
+  - .groovy
+  - .ps1
+  - .psm1
+  - .ipynb
+  - .md
+  - .txt
+  - .lock
+  - .toml
+  - .ini
+  - .conf
+  - .cfg
+  - .properties
+
+exclude_extensions:
+  - .txt
+  - .log
+  - .temp
+
+include_files:
+  - README.md
+  - CONTRIBUTING.md
+  - important.txt   # Even if .txt is excluded, this specific file will be included
+
+include_dirs:
+  - important_docs  # Specifically include this directory even if parent is excluded
+
+exclude_dirs:
+  - .git
+  - node_modules
+  - venv
+  - __pycache__
+  - build
+  - dist
+  - .idea
+  - Lib
+  - site-packages
+  - .venv
+  - .vscode
+  - .github
+  - docs
+  - tests
+  - spec
+  - fixtures
+  - migrations
+  - logs
+  - tmp
+  - cache
+  - assets
+  - public
+  - static
+  - uploads
+  - vendor
+  - bin
+  - obj
+  - out
+  - target
+  - coverage
+  - reports
+
+exclude_files:
+  - package-lock.json
+  - yarn.lock
+  - requirements.txt
+  - Gemfile.lock
+  - composer.lock
+  - .DS_Store
+  - Thumbs.db
+
+exclude_patterns:
+  - min.js
+  - min.css
+  - bundle.js
+  - chunk.js
+  - test.js
+  - spec.js
+  - generated.ts
+
+max_file_size: 1000000  # 1MB default
+
+</code>
+
