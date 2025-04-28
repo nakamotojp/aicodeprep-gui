@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.7] - 2025-28-4
+
+### Added
+
+New .aicodeprep file that saves the size of the window, and also which files you last processed so the next time you use AI Code Prep GUI in that folder, it will know what you did last time
+
+New buttons for Smart Auto (to redo the smart file checking), Load from .aicodeprep (check the files you last had checked when last processed), Quit button
+
+Expandable and collapsable folders, will auto expand if any files recursively inside are checked
+
+Checkbox to disable creation of the .aicodeprep file if you for some reason don't want that feature
+
 ## [0.9.5] - 2025-24-1 (Mac GUI version seems to work)
 
 ### Added

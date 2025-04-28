@@ -4,6 +4,10 @@ import platform
 import logging
 from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
 from typing import List, Tuple
+from aicodeprep_gui_c.smart_logic import (
+    EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
+    matches_pattern, is_excluded_directory
+)
 
 def get_resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller"""
@@ -16,6 +20,7 @@ def get_resource_path(relative_path):
 
 class FileSelectionGUI(QtWidgets.QWidget):
     def __init__(self, files):
+        self.original_files = files  # Store the original files list for Smart Auto
         super().__init__()
         self.setWindowTitle("AI Code Prep - File Selection")
         self.app = QtWidgets.QApplication.instance()
@@ -27,6 +32,7 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.remember_checkbox = None
         self.checked_files_from_prefs = set()
         self.prefs_loaded = False
+        self.window_size_from_prefs = None
         self.load_prefs_if_exists()
 
         # DPI Awareness and Scaling
@@ -57,10 +63,18 @@ class FileSelectionGUI(QtWidgets.QWidget):
             self.checkbox_font = QtGui.QFont('Arial', int(default_font_size * 1.2))
 
         # Geometry
-        self.setGeometry(100, 100, int(600 * scale_factor), int(400 * scale_factor))
+        if self.window_size_from_prefs:
+            w, h = self.window_size_from_prefs
+            self.setGeometry(100, 100, w, h)
+        else:
+            self.setGeometry(100, 100, int(600 * scale_factor), int(400 * scale_factor))
         
         # Layout
         main_layout = QtWidgets.QVBoxLayout(self)
+        # Status label for messages
+        self.text_label = QtWidgets.QLabel("")
+        self.text_label.setWordWrap(True)
+        main_layout.addWidget(self.text_label)
         self.tree_widget = QtWidgets.QTreeWidget()
         self.tree_widget.setHeaderLabels(["File/Folder"])
         self.tree_widget.setColumnCount(1)
@@ -95,8 +109,9 @@ class FileSelectionGUI(QtWidgets.QWidget):
                     else:
                         folder_item = QtWidgets.QTreeWidgetItem()
                         folder_item.setText(0, part)
-                        # Make folders not checkable but keep them enabled
-                        folder_item.setFlags(folder_item.flags())
+                        # Make folders checkable
+                        folder_item.setFlags(folder_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                        folder_item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
                         parent.addTopLevelItem(folder_item) if parent is self.tree_widget else parent.addChild(folder_item)
                         self.path_to_item[curr_path] = folder_item
                     parent = self.path_to_item[curr_path]
@@ -124,10 +139,6 @@ class FileSelectionGUI(QtWidgets.QWidget):
             if expand_to_checked(top_item):
                 self.tree_widget.expandItem(top_item)
 
-        # Button Layout
-        button_layout = QtWidgets.QHBoxLayout()
-        main_layout.addLayout(button_layout)
-
         # --- Preferences Checkbox ---
         prefs_checkbox_layout = QtWidgets.QHBoxLayout()
         self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep)")
@@ -136,59 +147,96 @@ class FileSelectionGUI(QtWidgets.QWidget):
         prefs_checkbox_layout.addStretch()
         main_layout.addLayout(prefs_checkbox_layout)
 
-        # Website link
+        # --- Button Layout: two rows, right-aligned ---
+        button_layout1 = QtWidgets.QHBoxLayout()
+        button_layout2 = QtWidgets.QHBoxLayout()
+        main_layout.addLayout(button_layout1)
+        main_layout.addLayout(button_layout2)
+
+        # Website link (left side, above buttons)
         website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">wuu73.org/aicp</a>")
         website_label.setOpenExternalLinks(True)
         website_label.setTextFormat(QtCore.Qt.RichText)
-        button_layout.addWidget(website_label)
+        main_layout.insertWidget(main_layout.count() - 2, website_label)  # Place above buttons
 
-        # Create a network manager to handle requests
-        self.network_manager = QtNetwork.QNetworkAccessManager()
-        self.network_manager.finished.connect(self.handle_network_reply)
-
-        # Use a QLabel to display the text
-        self.text_label = QtWidgets.QLabel("")  # Start with an empty label
-        self.text_label.setTextFormat(QtCore.Qt.RichText)
-        self.text_label.setOpenExternalLinks(True)
-        self.text_label.setWordWrap(True)
-        # Insert the label into the layout
-        main_layout.insertWidget(main_layout.indexOf(website_label) + 1, self.text_label)
-
-        # Fetch content from the URL (silently)
-        self.fetch_text_content()
-
-        # Add some vertical space using QSpacerItem with a fixed height
-        vertical_spacer = QtWidgets.QSpacerItem(20, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        main_layout.insertItem(main_layout.indexOf(self.text_label) + 1, vertical_spacer)  # Insert below text_label
-
-        button_layout.addStretch()
-
-        # Buttons
+        # First row of buttons (right-aligned)
+        button_layout1.addStretch()
         process_button = QtWidgets.QPushButton("Process Selected")
         process_button.clicked.connect(self.process_selected)
-        button_layout.addWidget(process_button)
+        button_layout1.addWidget(process_button)
 
         select_all_button = QtWidgets.QPushButton("Select All")
         select_all_button.clicked.connect(self.select_all)
-        button_layout.addWidget(select_all_button)
+        button_layout1.addWidget(select_all_button)
 
         deselect_all_button = QtWidgets.QPushButton("Deselect All")
         deselect_all_button.clicked.connect(self.deselect_all)
-        button_layout.addWidget(deselect_all_button)
+        button_layout1.addWidget(deselect_all_button)
+
+        # Second row of buttons (right-aligned)
+        button_layout2.addStretch()
+        smart_auto_button = QtWidgets.QPushButton("Smart Auto")
+        smart_auto_button.clicked.connect(self.smart_auto_select)
+        button_layout2.addWidget(smart_auto_button)
+
+        load_prefs_button = QtWidgets.QPushButton("Load from .aicodeprep")
+        load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked)
+        button_layout2.addWidget(load_prefs_button)
+
+        quit_button = QtWidgets.QPushButton("Quit")
+        quit_button.clicked.connect(self.quit_without_processing)
+        button_layout2.addWidget(quit_button)
 
         self.selected_files = []
-        
-        # No need for manual column resize handling with the new header settings
 
     def handle_item_changed(self, item, column):
         if column == 0:
             file_path = item.data(0, QtCore.Qt.UserRole)
-            if item.checkState(0) == QtCore.Qt.Checked:
-                if file_path and file_path not in self.selected_files:
-                    self.selected_files.append(file_path)
+            # If it's a folder (no file_path), do smart recursive check/uncheck
+            if file_path is None:
+                def should_skip_folder(folder_item):
+                    # Compose full path from tree
+                    path_parts = []
+                    curr = folder_item
+                    while curr is not None and curr.parent() is not None:
+                        path_parts.insert(0, curr.text(0))
+                        curr = curr.parent()
+                    if curr is not None and curr.parent() is None:
+                        path_parts.insert(0, curr.text(0))
+                    folder_path = os.path.join(*path_parts)
+                    return (folder_item.text(0) in EXCLUDE_DIRS or
+                            is_excluded_directory(folder_path))
+                def smart_check(item, check_state):
+                    # Skip blocked folders
+                    if should_skip_folder(item):
+                        item.setCheckState(0, QtCore.Qt.Unchecked)
+                        return
+                    for i in range(item.childCount()):
+                        child = item.child(i)
+                        child_file_path = child.data(0, QtCore.Qt.UserRole)
+                        if child_file_path:
+                            # It's a file
+                            filename = os.path.basename(child_file_path)
+                            ext = os.path.splitext(filename)[1].lower()
+                            if (filename in EXCLUDE_FILES or
+                                ext in EXCLUDE_EXTENSIONS or
+                                any(matches_pattern(filename, pat) for pat in EXCLUDE_PATTERNS)):
+                                child.setCheckState(0, QtCore.Qt.Unchecked)
+                                continue
+                            child.setCheckState(0, check_state)
+                        else:
+                            # It's a folder
+                            smart_check(child, check_state)
+                    item.setCheckState(0, check_state)
+                smart_check(item, item.checkState(0))
             else:
-                if file_path and file_path in self.selected_files:
-                    self.selected_files.remove(file_path)
+                # File item: update selected_files as before
+                if item.checkState(0) == QtCore.Qt.Checked:
+                    if file_path and file_path not in self.selected_files:
+                        self.selected_files.append(file_path)
+                else:
+                    if file_path and file_path in self.selected_files:
+                        self.selected_files.remove(file_path)
                     
     def select_all(self):
         # Recursively select all file items
@@ -257,6 +305,45 @@ class FileSelectionGUI(QtWidgets.QWidget):
         url_pattern = re.compile(r'(https?://\S+)')
         return url_pattern.sub(r'<a href="\1">\1</a>', text)
 
+    def smart_auto_select(self):
+        # Uncheck all items first
+        self.deselect_all()
+        # Re-check only those that would be auto-checked on first launch (is_included=True)
+        for file_path, relative_path, is_included in self.original_files:
+            if is_included:
+                # Traverse the tree to find the item by relative_path
+                parts = relative_path.split(os.sep)
+                curr_path = os.sep.join(parts)
+                item = self.path_to_item.get(curr_path)
+                if item:
+                    item.setCheckState(0, QtCore.Qt.Checked)
+        # Unset prefs_loaded so that .aicodeprep is ignored for this session
+        self.prefs_loaded = False
+
+    def load_from_prefs_button_clicked(self):
+        import os
+        prefs_path = _prefs_path()
+        if os.path.exists(prefs_path):
+            self.load_prefs_if_exists()
+            # Uncheck all first, then check those in prefs
+            self.deselect_all()
+            for file_path, relative_path, is_included in self.original_files:
+                if relative_path in self.checked_files_from_prefs:
+                    parts = relative_path.split(os.sep)
+                    curr_path = os.sep.join(parts)
+                    item = self.path_to_item.get(curr_path)
+                    if item:
+                        item.setCheckState(0, QtCore.Qt.Checked)
+            # Optionally show a message
+            self.text_label.setText("Loaded selection from .aicodeprep")
+        else:
+            self.text_label.setText(".aicodeprep not found")
+
+    def quit_without_processing(self):
+        # Immediately close the window and exit the app without processing
+        self.close()
+        QtWidgets.QApplication.quit()
+
 def show_file_selection_gui(files):
     app = QtWidgets.QApplication.instance()
     if app is None:
@@ -273,32 +360,59 @@ def _prefs_path():
     # Always save/load in current working directory
     return os.path.join(os.getcwd(), ".aicodeprep")
 
-def _write_prefs_file(checked_relpaths):
+def _write_prefs_file(checked_relpaths, window_size=None):
     try:
         with open(_prefs_path(), "w", encoding="utf-8") as f:
+            if window_size:
+                f.write("[window]\n")
+                f.write(f"width={window_size[0]}\n")
+                f.write(f"height={window_size[1]}\n\n")
             for relpath in checked_relpaths:
                 f.write(relpath + "\n")
     except Exception as e:
         logging.warning(f"Could not write .aicodeprep: {e}")
 
+
 def _read_prefs_file():
     checked = set()
+    window_size = None
     try:
         with open(_prefs_path(), "r", encoding="utf-8") as f:
-            for line in f:
-                checked.add(line.strip())
+            lines = f.readlines()
+        i = 0
+        if lines and lines[0].strip() == '[window]':
+            width = height = None
+            for j in range(1, len(lines)):
+                line = lines[j].strip()
+                if line.startswith('width='):
+                    width = int(line.split('=', 1)[1])
+                elif line.startswith('height='):
+                    height = int(line.split('=', 1)[1])
+                elif line == '':
+                    i = j + 1
+                    break
+            if width and height:
+                window_size = (width, height)
+        for line in lines[i:]:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                checked.add(line)
     except Exception:
         pass
-    return checked
+    return checked, window_size
 
 # Patch methods into FileSelectionGUI
+
 def load_prefs_if_exists(self):
     prefs_path = _prefs_path()
     if os.path.exists(prefs_path):
-        self.checked_files_from_prefs = _read_prefs_file()
+        checked, window_size = _read_prefs_file()
+        self.checked_files_from_prefs = checked
+        self.window_size_from_prefs = window_size
         self.prefs_loaded = True
     else:
         self.checked_files_from_prefs = set()
+        self.window_size_from_prefs = None
         self.prefs_loaded = False
 
 def save_prefs(self):
@@ -313,7 +427,10 @@ def save_prefs(self):
             collect_checked(item.child(i), curr_path)
     for i in range(self.tree_widget.topLevelItemCount()):
         collect_checked(self.tree_widget.topLevelItem(i))
-    _write_prefs_file(checked_relpaths)
+    # Save window size
+    size = self.size()
+    window_size = (size.width(), size.height())
+    _write_prefs_file(checked_relpaths, window_size=window_size)
 
 FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
 FileSelectionGUI.save_prefs = save_prefs
