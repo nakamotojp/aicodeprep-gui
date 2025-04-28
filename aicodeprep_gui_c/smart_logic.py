@@ -5,6 +5,7 @@ import pathlib
 import yaml
 import logging
 from typing import List, Tuple
+import fnmatch
 
 def get_config_path():
     """Get the path to the default configuration file."""
@@ -93,8 +94,8 @@ def load_user_config() -> dict:
     return {}
 
 def matches_pattern(filename: str, pattern: str) -> bool:
-    """Check if filename matches the given pattern"""
-    return pattern.lower() in filename.lower()
+    """Check if filename matches the given glob-style pattern (supports *, ?, [])"""
+    return fnmatch.fnmatch(filename.lower(), pattern.lower())
 
 def is_excluded_directory(path: str) -> bool:
     """Check if the directory should be excluded"""
