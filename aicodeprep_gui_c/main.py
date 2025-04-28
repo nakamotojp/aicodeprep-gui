@@ -3,9 +3,9 @@ import sys
 import argparse
 import logging
 from typing import List
-from file_processor import process_files, copy_to_clipboard
-from smart_logic import collect_all_files, load_default_config, load_user_config
-from gui import show_file_selection_gui
+from aicodeprep_gui_c.file_processor import process_files, copy_to_clipboard
+from aicodeprep_gui_c.smart_logic import collect_all_files, load_default_config, load_user_config
+from aicodeprep_gui_c.gui import show_file_selection_gui
 
 # Configure logging with explicit console handler only
 logger = logging.getLogger()

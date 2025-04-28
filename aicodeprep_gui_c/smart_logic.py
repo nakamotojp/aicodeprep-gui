@@ -12,11 +12,11 @@ def get_config_path():
     if getattr(sys, 'frozen', False):
         # If the application is frozen (e.g., PyInstaller), use the _MEIPASS directory.
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui', 'data', 'default_config.yaml')
+        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.yaml')
     else:
         # If running as a script, use importlib.resources.
         try:
-            with resources.path('aicodeprep_gui.data', 'default_config.yaml') as config_file:
+            with resources.path('aicodeprep_gui_c.data', 'default_config.yaml') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
             # Fallback to a default path if the package structure is different.

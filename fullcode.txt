@@ -227,6 +227,127 @@ Found this useful? Support future development:
 *Linux version coming soon!*
 </code>
 
+README2.md:
+<code>
+# AI Code Prep GUI
+
+_Streamline code sharing with AI chatbots (macOS & Windows)_
+
+[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep/stargazers)
+
+**Latest Version: 0.9.7 (April 28, 2025)**
+
+---
+
+## What is AI Code Prep GUI?
+
+AI Code Prep GUI is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files, this tool automatically collects relevant code files into a single text file, copies it to your clipboard, and formats it with AI-friendly `<code>` tags.
+
+It supports **Windows** and **macOS (M1+)** with context menu/right-click integration, and a Linux version is coming soon.
+
+---
+
+## New Features in v0.9.7
+
+- **Persistent Preferences:** Automatically saves window size and the last selected files in a `.aicodeprep` file per project folder. When you re-open the tool in the same folder, your previous selections and window layout are restored.
+- **Folder Tree UI Improvements:**
+  - Expandable and collapsable folders for easier navigation
+  - Auto-expands folders containing checked files
+- **Enhanced Smart Auto-Selection:** Smarter file checking logic that respects exclusions and better filters irrelevant files
+- **Additional UI Buttons:**
+  - **Smart Auto** button to redo smart file checking at any time
+  - **Load from .aicodeprep** button to restore your last saved selection
+  - **Quit** button for quick exit without processing
+- **Better Visual Styling:** Improved fonts and DPI scaling for crisp display on high-resolution screens
+
+---
+
+## Screenshots & Usage
+
+See screenshots and a quick usage guide here:  
+[https://wuu73.org/aicp](https://wuu73.org/aicp)
+
+---
+
+## Installation
+
+### macOS
+
+1. Download and unzip the macOS package.
+2. Drag `AICodePrepGUI.app` to your Applications folder.
+3. Double-click `AICodePrepGUI.workflow` and follow instructions to add the right-click Quick Actions menu to Finder.
+4. Restart Finder if needed to activate the menu.
+5. To use: Right-click on a project folder → Quick Actions → AICodePrepGUI.
+6. Select/deselect files and folders as needed, then click **Process Selected**.
+7. The tool will create a `fullcode.txt` and copy all selected code to your clipboard, ready to paste into your AI chatbot.
+
+_Tested on macOS Ventura 13.4 (M1+)._
+
+### Windows
+
+1. Run `windows-easy-installer-dist.exe`.
+2. Follow the installation wizard (default directory: `Program Files\AICodePrep-GUI`).
+3. To use: Right-click in any folder's blank space in Windows File Explorer → `AI Code Prep GUI`.
+4. Restart Windows if the context menu does not appear immediately.
+5. Select/deselect files and folders, then click **Process Selected**.
+6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
+
+---
+
+## Features Summary
+
+- **Cross-platform GUI** for easy visual file selection
+- **Smart Preselection** of relevant code files based on configured extensions and exclusions
+- **Folder Tree View** with collapsible/expandable folders and auto-expansion for selected files
+- **Preferences Saving** via `.aicodeprep` per folder to remember your last selected files and window size
+- **Context Menu Integration** for quick access
+- **Clipboard & File Output** for seamless pasting into AI chatbots
+- **LLM-Optimized Formatting** with `<code>` tags around file contents
+- **Configurable via YAML** to suit various project needs
+- **Improved DPI & Font Scaling** for crisp UI on all displays
+
+---
+
+## Usage
+
+1. Open the tool from your project folder’s context menu (right-click).
+2. Review the preselected files and folders. Expand or collapse folders as needed.
+3. Use the **Smart Auto** button to auto-select files based on smart logic.
+4. Use **Load from .aicodeprep** to restore your previous session’s selection.
+5. Check or uncheck files/folders manually.
+6. If you want to save your preferences for the folder, ensure the **Remember checked files for this folder (.aicodeprep)** checkbox is ticked.
+7. Click **Process Selected** to generate the output file and copy it to your clipboard.
+
+---
+
+## Configuration
+
+You can customize file extensions, directories, and exclusion patterns via a `aicodeprep_config.yaml` file in your project folder. Refer to the [default_config.yaml](aicodeprep_gui_c/data/default_config.yaml) for examples.
+
+---
+
+## Contributing
+
+Contributions and pull requests are welcome! Please submit bug reports and feature requests via GitHub Issues.
+
+---
+
+## Support & Donations
+
+If you find this tool useful, consider supporting future development:
+
+| Method   | Address / Link                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------- |
+| Bitcoin  | `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`                                                      |
+| Litecoin | `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`                                                     |
+| Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
+| CashApp  | `$lightweb73`                                                                                     |
+| Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
+
+---
+
+</code>
+
 requirements.txt:
 <code>
 pyperclip==1.8.2
@@ -292,7 +413,7 @@ import platform
 import logging
 from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
 from typing import List, Tuple
-from aicodeprep_gui_c.smart_logic import (
+from .smart_logic import (
     EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
     matches_pattern, is_excluded_directory
 )
@@ -732,9 +853,9 @@ import sys
 import argparse
 import logging
 from typing import List
-from file_processor import process_files, copy_to_clipboard
-from smart_logic import collect_all_files, load_default_config, load_user_config
-from gui import show_file_selection_gui
+from .file_processor import process_files, copy_to_clipboard
+from .smart_logic import collect_all_files, load_default_config, load_user_config
+from .gui import show_file_selection_gui
 
 # Configure logging with explicit console handler only
 logger = logging.getLogger()
@@ -821,6 +942,7 @@ import pathlib
 import yaml
 import logging
 from typing import List, Tuple
+import fnmatch
 
 def get_config_path():
     """Get the path to the default configuration file."""
@@ -909,8 +1031,8 @@ def load_user_config() -> dict:
     return {}
 
 def matches_pattern(filename: str, pattern: str) -> bool:
-    """Check if filename matches the given pattern"""
-    return pattern.lower() in filename.lower()
+    """Check if filename matches the given glob-style pattern (supports *, ?, [])"""
+    return fnmatch.fnmatch(filename.lower(), pattern.lower())
 
 def is_excluded_directory(path: str) -> bool:
     """Check if the directory should be excluded"""
@@ -1064,6 +1186,15 @@ exclude_extensions:
   - .txt
   - .log
   - .temp
+  - .exe
+  - .dll
+  - .so
+  - .dylib
+  - .jar
+  - .war
+  - .ear
+  - .o
+  - .class
 
 include_files:
   - README.md
@@ -1105,6 +1236,31 @@ exclude_dirs:
   - target
   - coverage
   - reports
+  - .pytest_cache
+  - .mypy_cache
+  - .ipynb_checkpoints
+  - .nyc_output
+  - test-results
+  - __tests__
+  - __snapshots__
+  - __mocks__
+  - debug
+  - .jest
+  - .next
+  - .nuxt
+  - .svelte-kit
+  - .expo
+  - dist-ssr
+  - .parcel-cache
+  - .serverless
+  - .vercel
+  - .angular
+  - .quasar
+  - .redwood
+  - .fusebox
+  - .docusaurus
+  - .terraform
+  - snapshots
 
 exclude_files:
   - package-lock.json
@@ -1114,6 +1270,33 @@ exclude_files:
   - composer.lock
   - .DS_Store
   - Thumbs.db
+  - pnpm-lock.yaml
+  - bun.lock
+  - bun.lockb
+  - cargo.lock
+  - poetry.lock
+  - Pipfile.lock
+  - .npmrc
+  - .env
+  - .env.*
+  - .env.local
+  - .env.prod
+  - .env.staging
+  - .env.dev
+  - .flaskenv
+  - .dockerenv
+  - env.json
+  - credentials.yaml
+  - secret*.json
+  - *.key
+  - *.pem
+  - *.crt
+  - *.pub
+  - id_rsa
+  - id_dsa
+  - Dockerfile.*.cache
+  - coverage.xml
+  - *.lcov
 
 exclude_patterns:
   - min.js
@@ -1123,6 +1306,28 @@ exclude_patterns:
   - test.js
   - spec.js
   - generated.ts
+  - '*.swp'
+  - '*.swo'
+  - '*.un~'
+  - '~$*'
+  - '*.min.*'
+  - '*-lock.*'
+  - '*.snap'
+  - .test.
+  - .spec.
+  - .bench.
+  - .cache
+  - .temp
+  - '*.lock'
+  - '*.class'
+  - '*.exe'
+  - '*.dll'
+  - '*.so'
+  - '*.dylib'
+  - '*.jar'
+  - '*.war'
+  - '*.ear'
+  - '*.o'
 
 max_file_size: 1000000  # 1MB default
 
