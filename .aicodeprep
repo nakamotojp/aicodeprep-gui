@@ -3,7 +3,6 @@ width=793
 height=976
 
 CHANGELOG.md
-pyproject.toml
 README2.md
 aicodeprep_gui_c
 aicodeprep_gui_c\file_processor.py

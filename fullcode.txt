@@ -89,45 +89,6 @@ CHANGELOG.md:
 
 </code>
 
-pyproject.toml:
-<code>
-[build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "aicodeprep_gui_c"
-version = "0.9.7"
-description = "Prepare code for AI chatbot assistance"
-readme = "README.md"
-authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
-license = { file = "LICENSE" }
-classifiers = [
-    "License :: Proprietary",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-]
-keywords = ["ai", "code", "preparation", "chatbot"]
-dependencies = [
-    "pyperclip",
-    "pyyaml",
-    "pyqt5"
-]
-requires-python = ">=3.6"
-
-[project.scripts]
-aicodeprep_gui_c = "aicodeprep_gui_c.main:main" # Use an underscore here
-
-[project.urls]
-Homepage = "https://github.com/detroittommy879/aicodeprep"
-
-[tool.setuptools.packages.find]
-where = ["."]
-
-[tool.setuptools.package-data]
-aicodeprep_gui_c = ["data/default_config.yaml"]
-</code>
-
 README2.md:
 <code>
 # AI Code Prep GUI
@@ -260,25 +221,21 @@ aicodeprep_gui_c\file_processor.py:
 import os
 import sys
 import logging
-import pyperclip
 from typing import List
 
 def process_files(selected_files: List[str], output_file: str) -> int:
     """Process selected files and write their contents to output_file"""
     try:
-        # Get the directory passed from context menu (%V)
-        target_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
-        logging.info(f"Target directory from context menu: {target_dir}")
-        logging.info(f"Current working directory: {os.getcwd()}")
-
-        # Use the target directory for output
-        output_path = os.path.join(target_dir, output_file)
+        output_path = os.path.join(os.getcwd(), output_file)
         logging.info(f"Writing output to: {output_path}")
 
         with open(output_path, 'w', encoding='utf-8') as outfile:
             for file_path in selected_files:
-                relative_path = os.path.relpath(file_path, target_dir)
                 try:
+                    try:
+                        relative_path = os.path.relpath(file_path, os.getcwd())
+                    except ValueError:
+                        relative_path = file_path  # fallback to absolute path if unrelated
                     with open(file_path, 'r', encoding='utf-8', errors='ignore') as infile:
                         outfile.write(f"{relative_path}:\n<code>\n")
                         outfile.write(infile.read())
@@ -286,25 +243,12 @@ def process_files(selected_files: List[str], output_file: str) -> int:
                         logging.info(f"Processed: {relative_path}")
                 except Exception as e:
                     logging.error(f"Error processing {file_path}: {str(e)}")
-            
             # Add the note about skipped files
             outfile.write("\n<additional_information>Some files may have been skipped, to save tokens or because they didn't seem relevant. Ask about them if needed.</additional_information>\n")
         return len(selected_files)
     except Exception as e:
         logging.error(f"Error writing to output file: {str(e)}")
         return 0
-
-def copy_to_clipboard(output_path: str) -> bool:
-    """Copy the contents of output_path to clipboard"""
-    try:
-        with open(output_path, 'r', encoding='utf-8') as f:
-            full_code = f.read()
-        pyperclip.copy(full_code)
-#        logging.info("Code copied to clipboard!")
-        return True
-    except Exception as e:
-        logging.error(f"Error copying to clipboard: {str(e)}")
-        return False
 
 </code>
 
@@ -324,6 +268,7 @@ from aicodeprep_gui_c.smart_logic import (
     EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
     matches_pattern, is_excluded_directory
 )
+from aicodeprep_gui_c.file_processor import process_files
 
 def get_resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller"""
@@ -602,10 +547,26 @@ class FileSelectionGUI(QtWidgets.QWidget):
     def process_selected(self):
         self.action = 'process'  # Set action first
         logging.info(f"Process Selected clicked - action set to: {self.action}")
-        self.get_selected_files()
-        # Save prefs if checkbox is checked
-        if self.remember_checkbox and self.remember_checkbox.isChecked():
-            self.save_prefs()
+        selected_files = self.get_selected_files()
+        files_processed_count = process_files(selected_files, "fullcode.txt")
+        if files_processed_count > 0:
+            output_path = os.path.join(os.getcwd(), "fullcode.txt")
+            try:
+                with open(output_path, "r", encoding="utf-8") as f:
+                    full_code = f.read()
+                app = QtWidgets.QApplication.instance()
+                if app is None:
+                    app = QtWidgets.QApplication([])
+                clipboard = app.clipboard()
+                clipboard.setText(full_code)
+                logging.info(f"Copied {len(full_code)} characters to clipboard from {output_path}")
+            except Exception as e:
+                logging.error(f"Failed to copy to clipboard: {e}")
+            # Save prefs if checkbox is checked
+            if self.remember_checkbox and self.remember_checkbox.isChecked():
+                self.save_prefs()
+        else:
+            logging.warning("No files selected or processed; skipping clipboard operation.")
         logging.info(f"Process Selected closing - action is: {self.action}")
         self.close()
 
@@ -786,7 +747,6 @@ import sys
 import argparse
 import logging
 from typing import List
-from aicodeprep_gui_c.file_processor import process_files, copy_to_clipboard
 from aicodeprep_gui_c.smart_logic import collect_all_files, load_default_config, load_user_config
 from aicodeprep_gui_c.gui import show_file_selection_gui
 
@@ -829,8 +789,15 @@ def main():
     target_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
     logger.info(f"Target directory: {target_dir}")
 
-    # Change to the specified directory
-    os.chdir(target_dir)
+    # Change to the specified directory with error handling
+    try:
+        os.chdir(target_dir)
+    except FileNotFoundError:
+        logger.error(f"Directory not found: {target_dir}")
+        return
+    except Exception as e:
+        logger.error(f"Error changing directory: {e}")
+        return
 
     logger.info("Starting code concatenation...")
 
@@ -840,30 +807,11 @@ def main():
         logger.warning("No files found to process!")
         return
 
-    action, selected_files = show_file_selection_gui(all_files_with_flags)
+    action, _ = show_file_selection_gui(all_files_with_flags)
 
-    if action == 'quit':
-        logger.info("User quit without processing. Exiting.")
-        return
-
-    if not selected_files:
-        logger.info("No files selected. Exiting.")
-        return
-
-    files_processed = process_files(selected_files, args.output)
-
-    logger.info(f"Concatenation complete! Processed {files_processed} code files.")
-    logger.info(f"Output written to {args.output}")
-
-    if not args.no_copy:
-        output_path = os.path.join(target_dir, args.output)
-        if copy_to_clipboard(output_path):
-            logger.info("Code copied to clipboard!")
-        else:
-            logger.error("Failed to copy code to clipboard")
-
-    logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")
-    logger.info("https://wuu73.org/hello.html")
+    if action != 'quit':
+        logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")
+        logger.info("https://wuu73.org/hello.html")
 
 if __name__ == "__main__":
     main()

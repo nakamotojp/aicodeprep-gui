@@ -3,7 +3,6 @@ import sys
 import argparse
 import logging
 from typing import List
-from aicodeprep_gui_c.file_processor import process_files, copy_to_clipboard
 from aicodeprep_gui_c.smart_logic import collect_all_files, load_default_config, load_user_config
 from aicodeprep_gui_c.gui import show_file_selection_gui
 
@@ -46,8 +45,15 @@ def main():
     target_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
     logger.info(f"Target directory: {target_dir}")
 
-    # Change to the specified directory
-    os.chdir(target_dir)
+    # Change to the specified directory with error handling
+    try:
+        os.chdir(target_dir)
+    except FileNotFoundError:
+        logger.error(f"Directory not found: {target_dir}")
+        return
+    except Exception as e:
+        logger.error(f"Error changing directory: {e}")
+        return
 
     logger.info("Starting code concatenation...")
 
@@ -57,30 +63,11 @@ def main():
         logger.warning("No files found to process!")
         return
 
-    action, selected_files = show_file_selection_gui(all_files_with_flags)
+    action, _ = show_file_selection_gui(all_files_with_flags)
 
-    if action == 'quit':
-        logger.info("User quit without processing. Exiting.")
-        return
-
-    if not selected_files:
-        logger.info("No files selected. Exiting.")
-        return
-
-    files_processed = process_files(selected_files, args.output)
-
-    logger.info(f"Concatenation complete! Processed {files_processed} code files.")
-    logger.info(f"Output written to {args.output}")
-
-    if not args.no_copy:
-        output_path = os.path.join(target_dir, args.output)
-        if copy_to_clipboard(output_path):
-            logger.info("Code copied to clipboard!")
-        else:
-            logger.error("Failed to copy code to clipboard")
-
-    logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")
-    logger.info("https://wuu73.org/hello.html")
+    if action != 'quit':
+        logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")
+        logger.info("https://wuu73.org/hello.html")
 
 if __name__ == "__main__":
     main()

@@ -12,6 +12,7 @@ from aicodeprep_gui_c.smart_logic import (
     EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
     matches_pattern, is_excluded_directory
 )
+from aicodeprep_gui_c.file_processor import process_files
 
 def get_resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller"""
@@ -290,10 +291,26 @@ class FileSelectionGUI(QtWidgets.QWidget):
     def process_selected(self):
         self.action = 'process'  # Set action first
         logging.info(f"Process Selected clicked - action set to: {self.action}")
-        self.get_selected_files()
-        # Save prefs if checkbox is checked
-        if self.remember_checkbox and self.remember_checkbox.isChecked():
-            self.save_prefs()
+        selected_files = self.get_selected_files()
+        files_processed_count = process_files(selected_files, "fullcode.txt")
+        if files_processed_count > 0:
+            output_path = os.path.join(os.getcwd(), "fullcode.txt")
+            try:
+                with open(output_path, "r", encoding="utf-8") as f:
+                    full_code = f.read()
+                app = QtWidgets.QApplication.instance()
+                if app is None:
+                    app = QtWidgets.QApplication([])
+                clipboard = app.clipboard()
+                clipboard.setText(full_code)
+                logging.info(f"Copied {len(full_code)} characters to clipboard from {output_path}")
+            except Exception as e:
+                logging.error(f"Failed to copy to clipboard: {e}")
+            # Save prefs if checkbox is checked
+            if self.remember_checkbox and self.remember_checkbox.isChecked():
+                self.save_prefs()
+        else:
+            logging.warning("No files selected or processed; skipping clipboard operation.")
         logging.info(f"Process Selected closing - action is: {self.action}")
         self.close()
 

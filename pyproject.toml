@@ -16,7 +16,6 @@ classifiers = [
 ]
 keywords = ["ai", "code", "preparation", "chatbot"]
 dependencies = [
-    "pyperclip",
     "pyyaml",
     "pyqt5"
 ]
