@@ -1,4 +1,4 @@
-add token counting, look for libraries to help
+x add token counting, look for libraries to help
 tiktoken
 
 track user behavior like how much they use in a day etc,

@@ -1,6 +1,6 @@
 # AI Code Prep GUI
 
-_Streamline code sharing with AI chatbots (macOS & Windows)_
+_Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
 
 [![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep/stargazers)
 
@@ -19,12 +19,13 @@ It supports **Windows** and **macOS (M1+)** with context menu/right-click integr
 ## New Features in v0.9.7
 
 - **Persistent Preferences:** Automatically saves window size and the last selected files in a `.aicodeprep` file per project folder. When you re-open the tool in the same folder, your previous selections and window layout are restored.
+  - New checkbox lets you disable creation of the `.aicodeprep` file if you don't want this feature.
 - **Folder Tree UI Improvements:**
   - Expandable and collapsable folders for easier navigation
   - Auto-expands folders containing checked files
+- **Token Counter:** As you check or uncheck files, the token count is now displayed.
 - **Enhanced Smart Auto-Selection:** Smarter file checking logic that respects exclusions and better filters irrelevant files
 - **Additional UI Buttons:**
-  - **Smart Auto** button to redo smart file checking at any time
   - **Load from .aicodeprep** button to restore your last saved selection
   - **Quit** button for quick exit without processing
 - **Better Visual Styling:** Improved fonts and DPI scaling for crisp display on high-resolution screens
@@ -37,6 +38,10 @@ See screenshots and a quick usage guide here:
 [https://wuu73.org/aicp](https://wuu73.org/aicp)
 
 ---
+
+## Future idea's
+
+MCP Server to automatically attach to a browser, and automatically paste the output context into various AI/LLM chats like Gemini on AI Studio, ChatGPT, Openrouter, Poe, Deepseek, X, etc so even less copying and pasting.
 
 ## Installation
 
@@ -68,7 +73,8 @@ _Tested on macOS Ventura 13.4 (M1+)._
 - **Cross-platform GUI** for easy visual file selection
 - **Smart Preselection** of relevant code files based on configured extensions and exclusions
 - **Folder Tree View** with collapsible/expandable folders and auto-expansion for selected files
-- **Preferences Saving** via `.aicodeprep` per folder to remember your last selected files and window size
+- **Preferences Saving** via `.aicodeprep` per folder to remember your last selected files and window size (with option to disable)
+- **Token Counter** displays token count as you check/uncheck files
 - **Context Menu Integration** for quick access
 - **Clipboard & File Output** for seamless pasting into AI chatbots
 - **LLM-Optimized Formatting** with `<code>` tags around file contents
