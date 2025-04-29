@@ -57,7 +57,11 @@ def main():
         logger.warning("No files found to process!")
         return
 
-    selected_files = show_file_selection_gui(all_files_with_flags)
+    action, selected_files = show_file_selection_gui(all_files_with_flags)
+
+    if action == 'quit':
+        logger.info("User quit without processing. Exiting.")
+        return
 
     if not selected_files:
         logger.info("No files selected. Exiting.")

@@ -2,7 +2,7 @@ from importlib import resources
 import os
 import sys
 import pathlib
-import yaml
+import json
 import logging
 from typing import List, Tuple
 import fnmatch
@@ -12,15 +12,15 @@ def get_config_path():
     if getattr(sys, 'frozen', False):
         # If the application is frozen (e.g., PyInstaller), use the _MEIPASS directory.
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.yaml')
+        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.md')
     else:
         # If running as a script, use importlib.resources.
         try:
-            with resources.path('aicodeprep_gui_c.data', 'default_config.yaml') as config_file:
+            with resources.path('aicodeprep_gui_c.data', 'default_config.md') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
             # Fallback to a default path if the package structure is different.
-            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.yaml')
+            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.md')
 
     return config_path
 
@@ -31,16 +31,28 @@ def get_exe_directory():
     return os.path.dirname(os.path.abspath(__file__))
 
 def load_default_config() -> dict:
-    """Load the default configuration from YAML file"""
+    """Load the default configuration from Markdown file with JSON code block"""
     try:
         config_path = get_config_path()
         logging.info(f"Looking for config at {config_path}")
 
         try:
             with open(config_path, 'r') as f:
-                config = yaml.safe_load(f)
+                content = f.read()
+            # Extract JSON code block from Markdown
+            import re
+            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+                config = json.loads(json_str)
+            else:
+                logging.warning("No JSON code block found in config markdown, using defaults")
+                config = None
         except FileNotFoundError:
             logging.warning("Default config file not found, using built-in defaults")
+            config = None
+
+        if config is None:
             config = {
                 'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
                                    '.rs', '.swift', '.kt'],
@@ -78,17 +90,25 @@ def load_default_config() -> dict:
         }
 
 def load_user_config() -> dict:
-    """Load user-specific configuration from YAML file"""
+    """Load user-specific configuration from Markdown file with JSON code block"""
     try:
-        config_path = os.path.join(get_exe_directory(), 'aicodeprep_config.yaml')
+        config_path = os.path.join(get_exe_directory(), 'aicodeprep_config.md')
         if os.path.exists(config_path):
             with open(config_path, 'r') as f:
-                config = yaml.safe_load(f)
+                content = f.read()
+            import re
+            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+                config = json.loads(json_str)
                 if config and 'exclude_patterns' in config:
                     config['exclude_patterns'] = [
                         pattern.lstrip('.') for pattern in config['exclude_patterns']
                     ]
                 return config
+            else:
+                logging.warning("No JSON code block found in user config markdown")
+                return {}
     except Exception as e:
         logging.error(f"Error loading user configuration: {str(e)}")
     return {}

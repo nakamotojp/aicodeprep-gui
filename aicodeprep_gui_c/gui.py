@@ -26,6 +26,7 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.app = QtWidgets.QApplication.instance()
         if self.app is None:
             self.app = QtWidgets.QApplication([])
+        self.action = 'quit'  # Track user action: 'process' or 'quit'
 
         # .aicodeprep prefs
         self.prefs_filename = ".aicodeprep"
@@ -274,10 +275,13 @@ class FileSelectionGUI(QtWidgets.QWidget):
         return self.selected_files
 
     def process_selected(self):
+        self.action = 'process'  # Set action first
+        logging.info(f"Process Selected clicked - action set to: {self.action}")
         self.get_selected_files()
         # Save prefs if checkbox is checked
         if self.remember_checkbox and self.remember_checkbox.isChecked():
             self.save_prefs()
+        logging.info(f"Process Selected closing - action is: {self.action}")
         self.close()
 
     def fetch_text_content(self):
@@ -322,8 +326,9 @@ class FileSelectionGUI(QtWidgets.QWidget):
 
     def quit_without_processing(self):
         # Immediately close the window and exit the app without processing
+        logging.info("Quit button clicked - setting action to quit")
+        self.action = 'quit'
         self.close()
-        QtWidgets.QApplication.quit()
 
 def show_file_selection_gui(files):
     app = QtWidgets.QApplication.instance()
@@ -333,7 +338,8 @@ def show_file_selection_gui(files):
     gui = FileSelectionGUI(files)
     gui.show()
     app.exec_()
-    return gui.selected_files
+    logging.info(f"GUI event loop finished - final action value: {gui.action}")
+    return gui.action, gui.selected_files
 
 # --- Preferences Save/Load Methods ---
 
@@ -382,6 +388,15 @@ def _read_prefs_file():
         pass
     return checked, window_size
 
+# Add closeEvent to set action to 'quit' ONLY if window is closed via 'X'
+def closeEvent(self, event):
+    logging.info(f"closeEvent triggered - action before: {self.action}")
+    # Only set to 'quit' if it wasn't already set to 'process'
+    if self.action != 'process':
+        self.action = 'quit'
+    logging.info(f"closeEvent triggered - action after: {self.action}")
+    super(FileSelectionGUI, self).closeEvent(event)
+
 # Patch methods into FileSelectionGUI
 
 def load_prefs_if_exists(self):
@@ -415,3 +430,4 @@ def save_prefs(self):
 
 FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
 FileSelectionGUI.save_prefs = save_prefs
+FileSelectionGUI.closeEvent = closeEvent

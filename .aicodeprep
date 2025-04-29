@@ -1,18 +1,14 @@
 [window]
 width=793
-height=1002
+height=1048
 
 CHANGELOG.md
 pyproject.toml
 README2.md
-requirements.txt
 aicodeprep_gui_c
 aicodeprep_gui_c\file_processor.py
 aicodeprep_gui_c\gui.py
 aicodeprep_gui_c\main.py
-aicodeprep_gui_c\regmenu-win.py
-aicodeprep_gui_c\regmenu_gui.py
 aicodeprep_gui_c\smart_logic.py
 aicodeprep_gui_c\__init__.py
-aicodeprep_gui_c\data
-aicodeprep_gui_c\data\default_config.yaml
+aicodeprep_gui_c\data\default_config.md

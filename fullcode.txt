@@ -86,13 +86,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aicodeprep_gui_c"
-version = "0.9.0"
+version = "0.9.7"
 description = "Prepare code for AI chatbot assistance"
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
 license = { file = "LICENSE" }
 classifiers = [
-    "License :: OSI Approved :: MIT License",
+    "License :: Proprietary",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
@@ -238,13 +238,6 @@ If you find this tool useful, consider supporting future development:
 
 </code>
 
-requirements.txt:
-<code>
-pyperclip==1.8.2
-PyYAML==6.0
-PyQt5==5.15.10
-</code>
-
 aicodeprep_gui_c\file_processor.py:
 <code>
 import os
@@ -328,6 +321,7 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.app = QtWidgets.QApplication.instance()
         if self.app is None:
             self.app = QtWidgets.QApplication([])
+        self.action = 'quit'  # Track user action: 'process' or 'quit'
 
         # .aicodeprep prefs
         self.prefs_filename = ".aicodeprep"
@@ -576,10 +570,13 @@ class FileSelectionGUI(QtWidgets.QWidget):
         return self.selected_files
 
     def process_selected(self):
+        self.action = 'process'  # Set action first
+        logging.info(f"Process Selected clicked - action set to: {self.action}")
         self.get_selected_files()
         # Save prefs if checkbox is checked
         if self.remember_checkbox and self.remember_checkbox.isChecked():
             self.save_prefs()
+        logging.info(f"Process Selected closing - action is: {self.action}")
         self.close()
 
     def fetch_text_content(self):
@@ -624,8 +621,9 @@ class FileSelectionGUI(QtWidgets.QWidget):
 
     def quit_without_processing(self):
         # Immediately close the window and exit the app without processing
+        logging.info("Quit button clicked - setting action to quit")
+        self.action = 'quit'
         self.close()
-        QtWidgets.QApplication.quit()
 
 def show_file_selection_gui(files):
     app = QtWidgets.QApplication.instance()
@@ -635,7 +633,8 @@ def show_file_selection_gui(files):
     gui = FileSelectionGUI(files)
     gui.show()
     app.exec_()
-    return gui.selected_files
+    logging.info(f"GUI event loop finished - final action value: {gui.action}")
+    return gui.action, gui.selected_files
 
 # --- Preferences Save/Load Methods ---
 
@@ -684,6 +683,15 @@ def _read_prefs_file():
         pass
     return checked, window_size
 
+# Add closeEvent to set action to 'quit' ONLY if window is closed via 'X'
+def closeEvent(self, event):
+    logging.info(f"closeEvent triggered - action before: {self.action}")
+    # Only set to 'quit' if it wasn't already set to 'process'
+    if self.action != 'process':
+        self.action = 'quit'
+    logging.info(f"closeEvent triggered - action after: {self.action}")
+    super(FileSelectionGUI, self).closeEvent(event)
+
 # Patch methods into FileSelectionGUI
 
 def load_prefs_if_exists(self):
@@ -717,6 +725,7 @@ def save_prefs(self):
 
 FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
 FileSelectionGUI.save_prefs = save_prefs
+FileSelectionGUI.closeEvent = closeEvent
 
 </code>
 
@@ -781,7 +790,11 @@ def main():
         logger.warning("No files found to process!")
         return
 
-    selected_files = show_file_selection_gui(all_files_with_flags)
+    action, selected_files = show_file_selection_gui(all_files_with_flags)
+
+    if action == 'quit':
+        logger.info("User quit without processing. Exiting.")
+        return
 
     if not selected_files:
         logger.info("No files selected. Exiting.")
@@ -807,251 +820,13 @@ if __name__ == "__main__":
 
 </code>
 
-aicodeprep_gui_c\regmenu-win.py:
-<code>
-import winreg
-import os
-import sys
-import subprocess
-import argparse
-
-
-def add_classic_right_click_menu():
-    try:
-        # Define the registry path
-        key_path = r"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
-
-        # Check if the key exists
-        try:
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_READ):
-                print("Classic right-click menu registry entry already exists.")
-                return True
-        except FileNotFoundError:
-            # Key does not exist, so we proceed to create it
-            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
-                winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "")
-                print("Classic right-click menu enabled successfully.")
-                return True
-
-    except Exception as e:
-        print(f"An error occurred while adding classic right-click menu: {e}")
-        return False
-
-
-def remove_classic_right_click_menu():
-    try:
-        key_path = r"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
-
-        try:
-            winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key_path)
-            print("Classic right-click menu disabled successfully.")
-            return True
-        except FileNotFoundError:
-            print("Classic right-click menu registry entry not found.")
-            return False
-
-    except Exception as e:
-        print(f"An error occurred while removing classic right-click menu: {e}")
-        return False
-
-
-def restart_explorer():
-    # Restart Windows Explorer to apply changes
-    os.system("taskkill /f /im explorer.exe")
-    os.system("start explorer.exe")
-
-
-def add_to_context_menu():
-    # Get the path to the aicodeprep executable
-    try:
-        result = subprocess.run(['where', 'aicodeprep-gui-c'], capture_output=True, text=True)
-        if result.returncode != 0:
-            print("Error: aicodeprep-gui-c not found. Please install the package first.")
-            return False
-        script_path = result.stdout.strip().split('\n')[0]
-    except Exception as e:
-        print(f"Error finding aicodeprep-gui: {e}")
-        return False
-
-    # Create command string that handles spaces in paths
-    python_path = sys.executable
-    # Wrap paths in quotes and escape existing quotes if necessary
-    command = f'cmd /k "\"{python_path}\" \"{script_path}\" \"%V\""'
-
-    try:
-        # Create context menu for directories
-        key_path = r'Directory\Background\shell\aicodeprep-gui-c'
-        key = winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, key_path)
-        winreg.SetValue(key, '', winreg.REG_SZ, 'AI Code Prep GUI')
-
-        command_key = winreg.CreateKey(key, 'command')
-        winreg.SetValue(command_key, '', winreg.REG_SZ, command)
-
-        print("Context menu entry added successfully!")
-        return True
-
-    except Exception as e:
-        print(f"Error adding context menu: {str(e)}")
-        return False
-
-
-def remove_from_context_menu():
-    try:
-        key_path = r'Directory\Background\shell\aicodeprep-gui-c'
-        winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, f"{key_path}\\command")
-        winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, key_path)
-        print("Context menu entry removed successfully!")
-        return True
-    except Exception as e:
-        print(f"Error removing context menu: {str(e)}")
-        return False
-
-
-def main():
-    parser = argparse.ArgumentParser(description='Manage Windows Context Menus')
-
-    # Create mutually exclusive group for classic right-click menu
-    classic_group = parser.add_mutually_exclusive_group()
-    classic_group.add_argument('--enable-classic', action='store_true',
-                               help='Enable classic right-click menu')
-    classic_group.add_argument('--disable-classic', action='store_true',
-                               help='Disable classic right-click menu')
-
-    # Create mutually exclusive group for context menu
-    context_group = parser.add_mutually_exclusive_group()
-    context_group.add_argument('--add-context', action='store_true',
-                               help='Add AI Code Prep to context menu')
-    context_group.add_argument('--remove-context', action='store_true',
-                               help='Remove AI Code Prep from context menu')
-
-    args = parser.parse_args()
-
-    # Track if any changes were made to trigger explorer restart
-    changes_made = False
-
-    # Handle classic right-click menu
-    if args.enable_classic:
-        if add_classic_right_click_menu():
-            changes_made = True
-    elif args.disable_classic:
-        if remove_classic_right_click_menu():
-            changes_made = True
-
-    # Handle context menu
-    if args.add_context:
-        if add_to_context_menu():
-            changes_made = True
-    elif args.remove_context:
-        if remove_from_context_menu():
-            changes_made = True
-
-    # Restart explorer if changes were made
-    if changes_made:
-        restart_explorer()
-
-
-if __name__ == '__main__':
-    main()
-
-</code>
-
-aicodeprep_gui_c\regmenu_gui.py:
-<code>
-import sys
-import subprocess
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
-    QPushButton, QLabel, QMessageBox
-)
-from PyQt5.QtCore import Qt
-
-class RegMenuGUI(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.initUI()
-        
-    def initUI(self):
-        # Main layout
-        main_layout = QVBoxLayout()
-        
-        # Context Menu Section
-        context_label = QLabel("Context Menu:")
-        context_label.setAlignment(Qt.AlignCenter)
-        main_layout.addWidget(context_label)
-        
-        context_buttons = QHBoxLayout()
-        self.add_context_btn = QPushButton("Add to Context Menu")
-        self.remove_context_btn = QPushButton("Remove from Context Menu")
-        context_buttons.addWidget(self.add_context_btn)
-        context_buttons.addWidget(self.remove_context_btn)
-        main_layout.addLayout(context_buttons)
-        
-        # Classic Menu Section
-        classic_label = QLabel("Classic Right-Click Menu:")
-        classic_label.setAlignment(Qt.AlignCenter)
-        main_layout.addWidget(classic_label)
-        
-        classic_buttons = QHBoxLayout()
-        self.enable_classic_btn = QPushButton("Enable Classic Menu")
-        self.disable_classic_btn = QPushButton("Disable Classic Menu")
-        classic_buttons.addWidget(self.enable_classic_btn)
-        classic_buttons.addWidget(self.disable_classic_btn)
-        main_layout.addLayout(classic_buttons)
-        
-        # Status Section
-        self.status_label = QLabel("Status: Ready")
-        self.status_label.setAlignment(Qt.AlignCenter)
-        main_layout.addWidget(self.status_label)
-        
-        # Connect buttons
-        self.add_context_btn.clicked.connect(self.add_context)
-        self.remove_context_btn.clicked.connect(self.remove_context)
-        self.enable_classic_btn.clicked.connect(self.enable_classic)
-        self.disable_classic_btn.clicked.connect(self.disable_classic)
-        
-        # Window settings
-        self.setLayout(main_layout)
-        self.setWindowTitle("AI Code Prep GUI - Menu Manager")
-        self.setFixedSize(400, 250)
-        
-    def run_command(self, args):
-        """Run command in new cmd window that stays open"""
-        try:
-            # Create command string
-            command = f'cmd /k "python aicodeprep_gui_c/regmenu-win.py {args}"'
-            subprocess.Popen(command, shell=True)
-            self.status_label.setText(f"Status: Executed {args}")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to execute command: {str(e)}")
-            self.status_label.setText("Status: Error")
-        
-    def add_context(self):
-        self.run_command("--add-context")
-        
-    def remove_context(self):
-        self.run_command("--remove-context")
-        
-    def enable_classic(self):
-        self.run_command("--enable-classic")
-        
-    def disable_classic(self):
-        self.run_command("--disable-classic")
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = RegMenuGUI()
-    window.show()
-    sys.exit(app.exec_())
-
-</code>
-
 aicodeprep_gui_c\smart_logic.py:
 <code>
 from importlib import resources
 import os
 import sys
 import pathlib
-import yaml
+import json
 import logging
 from typing import List, Tuple
 import fnmatch
@@ -1061,15 +836,15 @@ def get_config_path():
     if getattr(sys, 'frozen', False):
         # If the application is frozen (e.g., PyInstaller), use the _MEIPASS directory.
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.yaml')
+        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.md')
     else:
         # If running as a script, use importlib.resources.
         try:
-            with resources.path('aicodeprep_gui_c.data', 'default_config.yaml') as config_file:
+            with resources.path('aicodeprep_gui_c.data', 'default_config.md') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
             # Fallback to a default path if the package structure is different.
-            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.yaml')
+            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.md')
 
     return config_path
 
@@ -1080,16 +855,28 @@ def get_exe_directory():
     return os.path.dirname(os.path.abspath(__file__))
 
 def load_default_config() -> dict:
-    """Load the default configuration from YAML file"""
+    """Load the default configuration from Markdown file with JSON code block"""
     try:
         config_path = get_config_path()
         logging.info(f"Looking for config at {config_path}")
 
         try:
             with open(config_path, 'r') as f:
-                config = yaml.safe_load(f)
+                content = f.read()
+            # Extract JSON code block from Markdown
+            import re
+            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+                config = json.loads(json_str)
+            else:
+                logging.warning("No JSON code block found in config markdown, using defaults")
+                config = None
         except FileNotFoundError:
             logging.warning("Default config file not found, using built-in defaults")
+            config = None
+
+        if config is None:
             config = {
                 'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
                                    '.rs', '.swift', '.kt'],
@@ -1127,17 +914,25 @@ def load_default_config() -> dict:
         }
 
 def load_user_config() -> dict:
-    """Load user-specific configuration from YAML file"""
+    """Load user-specific configuration from Markdown file with JSON code block"""
     try:
-        config_path = os.path.join(get_exe_directory(), 'aicodeprep_config.yaml')
+        config_path = os.path.join(get_exe_directory(), 'aicodeprep_config.md')
         if os.path.exists(config_path):
             with open(config_path, 'r') as f:
-                config = yaml.safe_load(f)
+                content = f.read()
+            import re
+            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+                config = json.loads(json_str)
                 if config and 'exclude_patterns' in config:
                     config['exclude_patterns'] = [
                         pattern.lstrip('.') for pattern in config['exclude_patterns']
                     ]
                 return config
+            else:
+                logging.warning("No JSON code block found in user config markdown")
+                return {}
     except Exception as e:
         logging.error(f"Error loading user configuration: {str(e)}")
     return {}
@@ -1267,207 +1062,207 @@ aicodeprep_gui_c\__init__.py:
 from .main import main
 </code>
 
-aicodeprep_gui_c\data\default_config.yaml:
+aicodeprep_gui_c\data\default_config.md:
 <code>
-code_extensions:
-  - .py
-  - .js
-  - .jsx
-  - .ts
-  - .tsx
-  - .java
-  - .cpp
-  - .c
-  - .h
-  - .cs
-  - .php
-  - .rb
-  - .go
-  - .rs
-  - .swift
-  - .kt
-  - .scala
-  - .html
-  - .css
-  - .scss
-  - .sass
-  - .less
-  - .sql
-  - .sh
-  - .yaml
-  - .yml
-  - .json
-  - .xml
-  - .vue
-  - .r
-  - .m
-  - .f90
-  - .f95
-  - .f03
-  - .f08
-  - .gradle
-  - .groovy
-  - .ps1
-  - .psm1
-  - .ipynb
-  - .md
-  - .txt
-  - .lock
-  - .toml
-  - .ini
-  - .conf
-  - .cfg
-  - .properties
+# Default Configuration
 
-exclude_extensions:
-  - .txt
-  - .log
-  - .temp
-  - .exe
-  - .dll
-  - .so
-  - .dylib
-  - .jar
-  - .war
-  - .ear
-  - .o
-  - .class
-
-include_files:
-  - README.md
-  - CONTRIBUTING.md
-  - important.txt   # Even if .txt is excluded, this specific file will be included
-
-include_dirs:
-  - important_docs  # Specifically include this directory even if parent is excluded
-
-exclude_dirs:
-  - .git
-  - node_modules
-  - venv
-  - __pycache__
-  - build
-  - dist
-  - .idea
-  - Lib
-  - site-packages  
-  - .venv
-  - venv
-  - .vscode
-  - .github
-  - docs
-  - tests
-  - spec
-  - fixtures
-  - migrations
-  - logs
-  - tmp
-  - cache
-  - assets
-  - public
-  - static
-  - uploads
-  - vendor
-  - bin
-  - obj
-  - out
-  - target
-  - coverage
-  - reports
-  - .pytest_cache
-  - .mypy_cache
-  - .ipynb_checkpoints
-  - .nyc_output
-  - test-results
-  - __tests__
-  - __snapshots__
-  - __mocks__
-  - debug
-  - .jest
-  - .next
-  - .nuxt
-  - .svelte-kit
-  - .expo
-  - dist-ssr
-  - .parcel-cache
-  - .serverless
-  - .vercel
-  - .angular
-  - .quasar
-  - .redwood
-  - .fusebox
-  - .docusaurus
-  - .terraform
-  - snapshots
-
-exclude_files:
-  - package-lock.json
-  - yarn.lock
-  - requirements.txt
-  - Gemfile.lock
-  - composer.lock
-  - .DS_Store
-  - Thumbs.db
-  - pnpm-lock.yaml
-  - bun.lock
-  - bun.lockb
-  - cargo.lock
-  - poetry.lock
-  - Pipfile.lock
-  - .npmrc
-  - .env
-  - .env.*
-  - .env.local
-  - .env.prod
-  - .env.staging
-  - .env.dev
-  - .flaskenv
-  - .dockerenv
-  - env.json
-  - credentials.yaml
-  - secret*.json
-  - *.key
-  - *.pem
-  - *.crt
-  - *.pub
-  - id_rsa
-  - id_dsa
-  - Dockerfile.*.cache
-  - coverage.xml
-  - *.lcov
-
-exclude_patterns:
-  - min.js
-  - min.css
-  - bundle.js
-  - chunk.js
-  - test.js
-  - spec.js
-  - generated.ts
-  - '*.swp'
-  - '*.swo'
-  - '*.un~'
-  - '~$*'
-  - '*.min.*'
-  - '*-lock.*'
-  - '*.snap'
-  - .test.
-  - .spec.
-  - .bench.
-  - .cache
-  - .temp
-  - '*.lock'
-  - '*.class'
-  - '*.exe'
-  - '*.dll'
-  - '*.so'
-  - '*.dylib'
-  - '*.jar'
-  - '*.war'
-  - '*.ear'
-  - '*.o'
-
-max_file_size: 1000000  # 1MB default
+```json
+{
+  "code_extensions": [
+    ".py",
+    ".js",
+    ".jsx",
+    ".ts",
+    ".tsx",
+    ".java",
+    ".cpp",
+    ".c",
+    ".h",
+    ".cs",
+    ".php",
+    ".rb",
+    ".go",
+    ".rs",
+    ".swift",
+    ".kt",
+    ".scala",
+    ".html",
+    ".css",
+    ".scss",
+    ".sass",
+    ".less",
+    ".sql",
+    ".sh",
+    ".yaml",
+    ".yml",
+    ".json",
+    ".xml",
+    ".vue",
+    ".r",
+    ".m",
+    ".f90",
+    ".f95",
+    ".f03",
+    ".f08",
+    ".gradle",
+    ".groovy",
+    ".ps1",
+    ".psm1",
+    ".ipynb",
+    ".md",
+    ".txt",
+    ".lock",
+    ".toml",
+    ".ini",
+    ".conf",
+    ".cfg",
+    ".properties"
+  ],
+  "exclude_extensions": [
+    ".txt",
+    ".log",
+    ".temp",
+    ".exe",
+    ".dll",
+    ".so",
+    ".dylib",
+    ".jar",
+    ".war",
+    ".ear",
+    ".o",
+    ".class"
+  ],
+  "include_files": ["README.md", "CONTRIBUTING.md", "important.txt"],
+  "include_dirs": ["important_docs"],
+  "exclude_dirs": [
+    ".git",
+    "node_modules",
+    "venv",
+    "__pycache__",
+    "build",
+    "dist",
+    ".idea",
+    "Lib",
+    "site-packages",
+    ".venv",
+    "venv",
+    ".vscode",
+    ".github",
+    "docs",
+    "tests",
+    "spec",
+    "fixtures",
+    "migrations",
+    "logs",
+    "tmp",
+    "cache",
+    "assets",
+    "public",
+    "static",
+    "uploads",
+    "vendor",
+    "bin",
+    "obj",
+    "out",
+    "target",
+    "coverage",
+    "reports",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ipynb_checkpoints",
+    ".nyc_output",
+    "test-results",
+    "__tests__",
+    "__snapshots__",
+    "__mocks__",
+    "debug",
+    ".jest",
+    ".next",
+    ".nuxt",
+    ".svelte-kit",
+    ".expo",
+    "dist-ssr",
+    ".parcel-cache",
+    ".serverless",
+    ".vercel",
+    ".angular",
+    ".quasar",
+    ".redwood",
+    ".fusebox",
+    ".docusaurus",
+    ".terraform",
+    "snapshots"
+  ],
+  "exclude_files": [
+    "package-lock.json",
+    "yarn.lock",
+    "requirements.txt",
+    "Gemfile.lock",
+    "composer.lock",
+    ".DS_Store",
+    "Thumbs.db",
+    "pnpm-lock.yaml",
+    "bun.lock",
+    "bun.lockb",
+    "cargo.lock",
+    "poetry.lock",
+    "Pipfile.lock",
+    ".npmrc",
+    ".env",
+    ".env.*",
+    ".env.local",
+    ".env.prod",
+    ".env.staging",
+    ".env.dev",
+    ".flaskenv",
+    ".dockerenv",
+    "env.json",
+    "credentials.yaml",
+    "secret*.json",
+    "*.key",
+    "*.pem",
+    "*.crt",
+    "*.pub",
+    "id_rsa",
+    "id_dsa",
+    "Dockerfile.*.cache",
+    "coverage.xml",
+    "*.lcov"
+  ],
+  "exclude_patterns": [
+    "min.js",
+    "min.css",
+    "bundle.js",
+    "chunk.js",
+    "test.js",
+    "spec.js",
+    "generated.ts",
+    "*.swp",
+    "*.swo",
+    "*.un~",
+    "~$*",
+    "*.min.*",
+    "*-lock.*",
+    "*.snap",
+    ".test.",
+    ".spec.",
+    ".bench.",
+    ".cache",
+    ".temp",
+    "*.lock",
+    "*.class",
+    "*.exe",
+    "*.dll",
+    "*.so",
+    "*.dylib",
+    "*.jar",
+    "*.war",
+    "*.ear",
+    "*.o"
+  ],
+  "max_file_size": 1000000
+}
+```
 
 </code>
 
