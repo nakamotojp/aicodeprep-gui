@@ -27,6 +27,9 @@ def process_files(selected_files: List[str], output_file: str) -> int:
                         logging.info(f"Processed: {relative_path}")
                 except Exception as e:
                     logging.error(f"Error processing {file_path}: {str(e)}")
+            
+            # Add the note about skipped files
+            outfile.write("\n<additional_information>Some files may have been skipped, to save tokens or because they didn't seem relevant. Ask about them if needed.</additional_information>\n")
         return len(selected_files)
     except Exception as e:
         logging.error(f"Error writing to output file: {str(e)}")

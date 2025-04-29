@@ -20,8 +20,8 @@ def get_resource_path(relative_path):
 
 class FileSelectionGUI(QtWidgets.QWidget):
     def __init__(self, files):
-        self.original_files = files  # Store the original files list for Smart Auto
         super().__init__()
+        self.files = files  # Store files for preferences loading
         self.setWindowTitle("AI Code Prep - File Selection")
         self.app = QtWidgets.QApplication.instance()
         if self.app is None:
@@ -141,7 +141,7 @@ class FileSelectionGUI(QtWidgets.QWidget):
 
         # --- Preferences Checkbox ---
         prefs_checkbox_layout = QtWidgets.QHBoxLayout()
-        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep)")
+        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep) and window size")
         self.remember_checkbox.setChecked(True)
         prefs_checkbox_layout.addWidget(self.remember_checkbox)
         prefs_checkbox_layout.addStretch()
@@ -175,10 +175,6 @@ class FileSelectionGUI(QtWidgets.QWidget):
 
         # Second row of buttons (right-aligned)
         button_layout2.addStretch()
-        smart_auto_button = QtWidgets.QPushButton("Smart Auto")
-        smart_auto_button.clicked.connect(self.smart_auto_select)
-        button_layout2.addWidget(smart_auto_button)
-
         load_prefs_button = QtWidgets.QPushButton("Load from .aicodeprep")
         load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked)
         button_layout2.addWidget(load_prefs_button)
@@ -305,21 +301,6 @@ class FileSelectionGUI(QtWidgets.QWidget):
         url_pattern = re.compile(r'(https?://\S+)')
         return url_pattern.sub(r'<a href="\1">\1</a>', text)
 
-    def smart_auto_select(self):
-        # Uncheck all items first
-        self.deselect_all()
-        # Re-check only those that would be auto-checked on first launch (is_included=True)
-        for file_path, relative_path, is_included in self.original_files:
-            if is_included:
-                # Traverse the tree to find the item by relative_path
-                parts = relative_path.split(os.sep)
-                curr_path = os.sep.join(parts)
-                item = self.path_to_item.get(curr_path)
-                if item:
-                    item.setCheckState(0, QtCore.Qt.Checked)
-        # Unset prefs_loaded so that .aicodeprep is ignored for this session
-        self.prefs_loaded = False
-
     def load_from_prefs_button_clicked(self):
         import os
         prefs_path = _prefs_path()
@@ -327,7 +308,7 @@ class FileSelectionGUI(QtWidgets.QWidget):
             self.load_prefs_if_exists()
             # Uncheck all first, then check those in prefs
             self.deselect_all()
-            for file_path, relative_path, is_included in self.original_files:
+            for file_path, relative_path, is_included in self.files:
                 if relative_path in self.checked_files_from_prefs:
                     parts = relative_path.split(os.sep)
                     curr_path = os.sep.join(parts)

@@ -78,46 +78,6 @@ Minor tweaks
 
 </code>
 
-LICENSE:
-<code>
-AI Code Prep GUI End User License Agreement (EULA)
-
-1. Definitions
-
-"Software" refers to AI Code Prep GUI, including all associated documentation, and any updates or modifications thereto.
-"Licensee" refers to the individual or entity that has purchased the right to use the Software under the terms of this EULA.
-"Copyright Holder" refers to [Your Name/Company], the owner of the Software's intellectual property.
-
-2. Grant of License
-
-The Copyright Holder grants the Licensee a non-exclusive, non-transferable license to use one (1) copy of the Software, solely for the Licensee's personal or internal business use.
-This license does not include the right to distribute, sublicense, sell, or offer for sale the Software, or any portion thereof.
-
-3. Restrictions
-
-The Licensee shall not:
-Distribute or sublicense the Software to any third party.
-Sell, offer for sale, or otherwise commercially exploit the Software.
-Modify, reverse engineer, decompile, or disassemble the Software.
-Use the Software for any unlawful or unauthorized purpose. 4. Disclaimer of Warranty and Limitation of Liability
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-5. Termination
-
-This EULA will terminate immediately upon any breach by the Licensee of any term or condition herein.
-Upon termination, the Licensee must destroy all copies of the Software. 6. Governing Law
-
-This EULA shall be governed by and construed in accordance with the laws of [Your Country/State].
-Any disputes arising out of or related to this EULA shall be resolved through [Specify Dispute Resolution Process, e.g., arbitration in accordance with the rules of [Arbitration Institution]].
-
-7. Entire Agreement
-
-This EULA constitutes the entire agreement between the parties with respect to the subject matter hereof and supersedes all prior or contemporaneous agreements or understandings.
-
-</code>
-
 pyproject.toml:
 <code>
 [build-system]
@@ -155,76 +115,6 @@ where = ["."]
 
 [tool.setuptools.package-data]
 aicodeprep_gui_c = ["data/default_config.yaml"]
-</code>
-
-README.md:
-<code>
-# AI Code Prep GUI  
-*Streamline code sharing with AI chatbots (macOS & Windows)*  
-
-**New in v0.9.5**  
-✓ Added macOS installation & support  
-✓ Improved file selection logic  
-✓ Context menu integration for both platforms  
-
----
-Pictures of how to use it are here:
-[wuu73.org/aicp](https://wuu73.org/aicp)
-
-## Installation
-
-### macOS
-1. Download and unzip the macOS package
-2. Drag `AICodePrepGUI.app` to your Applications folder
-3. Double-click `AICodePrepGUI.workflow`, follow instructions to add the menu
-4. You may need to restart Finder to activate menu (but often not)
-5. **To use:** Select one folder with project/code, Right-click → Quick Actions → AICodePrepGUI
-6. Select and unselect any files you want to be added to the context
-7. Click Process Selected which will copy it all to clipboard and save it to fullcode.txt. Paste into LLM chat
-
-*Tested on macOS Ventura 13.4 - report issues to wuu73@yahoo.com*
-
-### Windows
-1. Run `windows-easy-installer-dist.exe`
-2. Follow installation wizard (default: `Program Files\AICodePrep-GUI`)
-3. **To use:** Right-click in any folder's blank space in windows file explorer → `AI Code Prep GUI`
-     (you might have to click show more options if you don't have 'classic menu' enabled)
-4. You may need to restart Windows to activate menu (if it doesn't work right away)
-5. Select and unselect any files you want to be added to the context
-6. Click Process Selected which will copy it all to clipboard and save it to fullcode.txt. Paste into LLM chat
-
----
-
-## Features
-- **Cross-platform GUI** - Visual file selection beats command line
-- **Smart Preselection** - Auto-detects likely code files
-- **Context-Aware** - Maintains folder structure in output, uses <> tags that LLMs understand
-- **Clipboard & File** - Copies to clipboard AND creates `fullcode.txt`
-- **LLM Optimized** - Filters non-essential files for better AI responses
-
----
-
-## Usage
-1. Right-click in project folder blank space (Windows) or use Quick Actions (in macOS, you have to select one folder before right clicking for the menu)
-2. Review preselected files:
-   - Check/Uncheck individual files
-   - Expand/collapse directory trees
-3. Click **Process Selected** to:
-   - Generate structured code overview
-   - Copy sanitized content to clipboard
-   - Create `fullcode.txt` in project root
-
-
-## Support & Development
-Found this useful? Support future development:
-
-₿ **Bitcoin:** `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`  
-Ł **Litecoin:** `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`  
-ɱ **Monero:** `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ`  
-💵 **CashApp:** `$lightweb73`
-
-*Report issues/ideas:* wuu73@yahoo.com  
-*Linux version coming soon!*
 </code>
 
 README2.md:
@@ -386,6 +276,9 @@ def process_files(selected_files: List[str], output_file: str) -> int:
                         logging.info(f"Processed: {relative_path}")
                 except Exception as e:
                     logging.error(f"Error processing {file_path}: {str(e)}")
+            
+            # Add the note about skipped files
+            outfile.write("\n<additional_information>Some files may have been skipped, to save tokens or because they didn't seem relevant. Ask about them if needed.</additional_information>\n")
         return len(selected_files)
     except Exception as e:
         logging.error(f"Error writing to output file: {str(e)}")
@@ -413,7 +306,7 @@ import platform
 import logging
 from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
 from typing import List, Tuple
-from .smart_logic import (
+from aicodeprep_gui_c.smart_logic import (
     EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
     matches_pattern, is_excluded_directory
 )
@@ -429,8 +322,8 @@ def get_resource_path(relative_path):
 
 class FileSelectionGUI(QtWidgets.QWidget):
     def __init__(self, files):
-        self.original_files = files  # Store the original files list for Smart Auto
         super().__init__()
+        self.files = files  # Store files for preferences loading
         self.setWindowTitle("AI Code Prep - File Selection")
         self.app = QtWidgets.QApplication.instance()
         if self.app is None:
@@ -550,7 +443,7 @@ class FileSelectionGUI(QtWidgets.QWidget):
 
         # --- Preferences Checkbox ---
         prefs_checkbox_layout = QtWidgets.QHBoxLayout()
-        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep)")
+        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep) and window size")
         self.remember_checkbox.setChecked(True)
         prefs_checkbox_layout.addWidget(self.remember_checkbox)
         prefs_checkbox_layout.addStretch()
@@ -584,10 +477,6 @@ class FileSelectionGUI(QtWidgets.QWidget):
 
         # Second row of buttons (right-aligned)
         button_layout2.addStretch()
-        smart_auto_button = QtWidgets.QPushButton("Smart Auto")
-        smart_auto_button.clicked.connect(self.smart_auto_select)
-        button_layout2.addWidget(smart_auto_button)
-
         load_prefs_button = QtWidgets.QPushButton("Load from .aicodeprep")
         load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked)
         button_layout2.addWidget(load_prefs_button)
@@ -714,21 +603,6 @@ class FileSelectionGUI(QtWidgets.QWidget):
         url_pattern = re.compile(r'(https?://\S+)')
         return url_pattern.sub(r'<a href="\1">\1</a>', text)
 
-    def smart_auto_select(self):
-        # Uncheck all items first
-        self.deselect_all()
-        # Re-check only those that would be auto-checked on first launch (is_included=True)
-        for file_path, relative_path, is_included in self.original_files:
-            if is_included:
-                # Traverse the tree to find the item by relative_path
-                parts = relative_path.split(os.sep)
-                curr_path = os.sep.join(parts)
-                item = self.path_to_item.get(curr_path)
-                if item:
-                    item.setCheckState(0, QtCore.Qt.Checked)
-        # Unset prefs_loaded so that .aicodeprep is ignored for this session
-        self.prefs_loaded = False
-
     def load_from_prefs_button_clicked(self):
         import os
         prefs_path = _prefs_path()
@@ -736,7 +610,7 @@ class FileSelectionGUI(QtWidgets.QWidget):
             self.load_prefs_if_exists()
             # Uncheck all first, then check those in prefs
             self.deselect_all()
-            for file_path, relative_path, is_included in self.original_files:
+            for file_path, relative_path, is_included in self.files:
                 if relative_path in self.checked_files_from_prefs:
                     parts = relative_path.split(os.sep)
                     curr_path = os.sep.join(parts)
@@ -853,9 +727,9 @@ import sys
 import argparse
 import logging
 from typing import List
-from .file_processor import process_files, copy_to_clipboard
-from .smart_logic import collect_all_files, load_default_config, load_user_config
-from .gui import show_file_selection_gui
+from aicodeprep_gui_c.file_processor import process_files, copy_to_clipboard
+from aicodeprep_gui_c.smart_logic import collect_all_files, load_default_config, load_user_config
+from aicodeprep_gui_c.gui import show_file_selection_gui
 
 # Configure logging with explicit console handler only
 logger = logging.getLogger()
@@ -933,6 +807,244 @@ if __name__ == "__main__":
 
 </code>
 
+aicodeprep_gui_c\regmenu-win.py:
+<code>
+import winreg
+import os
+import sys
+import subprocess
+import argparse
+
+
+def add_classic_right_click_menu():
+    try:
+        # Define the registry path
+        key_path = r"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+
+        # Check if the key exists
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_READ):
+                print("Classic right-click menu registry entry already exists.")
+                return True
+        except FileNotFoundError:
+            # Key does not exist, so we proceed to create it
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+                winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "")
+                print("Classic right-click menu enabled successfully.")
+                return True
+
+    except Exception as e:
+        print(f"An error occurred while adding classic right-click menu: {e}")
+        return False
+
+
+def remove_classic_right_click_menu():
+    try:
+        key_path = r"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+
+        try:
+            winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key_path)
+            print("Classic right-click menu disabled successfully.")
+            return True
+        except FileNotFoundError:
+            print("Classic right-click menu registry entry not found.")
+            return False
+
+    except Exception as e:
+        print(f"An error occurred while removing classic right-click menu: {e}")
+        return False
+
+
+def restart_explorer():
+    # Restart Windows Explorer to apply changes
+    os.system("taskkill /f /im explorer.exe")
+    os.system("start explorer.exe")
+
+
+def add_to_context_menu():
+    # Get the path to the aicodeprep executable
+    try:
+        result = subprocess.run(['where', 'aicodeprep-gui-c'], capture_output=True, text=True)
+        if result.returncode != 0:
+            print("Error: aicodeprep-gui-c not found. Please install the package first.")
+            return False
+        script_path = result.stdout.strip().split('\n')[0]
+    except Exception as e:
+        print(f"Error finding aicodeprep-gui: {e}")
+        return False
+
+    # Create command string that handles spaces in paths
+    python_path = sys.executable
+    # Wrap paths in quotes and escape existing quotes if necessary
+    command = f'cmd /k "\"{python_path}\" \"{script_path}\" \"%V\""'
+
+    try:
+        # Create context menu for directories
+        key_path = r'Directory\Background\shell\aicodeprep-gui-c'
+        key = winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, key_path)
+        winreg.SetValue(key, '', winreg.REG_SZ, 'AI Code Prep GUI')
+
+        command_key = winreg.CreateKey(key, 'command')
+        winreg.SetValue(command_key, '', winreg.REG_SZ, command)
+
+        print("Context menu entry added successfully!")
+        return True
+
+    except Exception as e:
+        print(f"Error adding context menu: {str(e)}")
+        return False
+
+
+def remove_from_context_menu():
+    try:
+        key_path = r'Directory\Background\shell\aicodeprep-gui-c'
+        winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, f"{key_path}\\command")
+        winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, key_path)
+        print("Context menu entry removed successfully!")
+        return True
+    except Exception as e:
+        print(f"Error removing context menu: {str(e)}")
+        return False
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Manage Windows Context Menus')
+
+    # Create mutually exclusive group for classic right-click menu
+    classic_group = parser.add_mutually_exclusive_group()
+    classic_group.add_argument('--enable-classic', action='store_true',
+                               help='Enable classic right-click menu')
+    classic_group.add_argument('--disable-classic', action='store_true',
+                               help='Disable classic right-click menu')
+
+    # Create mutually exclusive group for context menu
+    context_group = parser.add_mutually_exclusive_group()
+    context_group.add_argument('--add-context', action='store_true',
+                               help='Add AI Code Prep to context menu')
+    context_group.add_argument('--remove-context', action='store_true',
+                               help='Remove AI Code Prep from context menu')
+
+    args = parser.parse_args()
+
+    # Track if any changes were made to trigger explorer restart
+    changes_made = False
+
+    # Handle classic right-click menu
+    if args.enable_classic:
+        if add_classic_right_click_menu():
+            changes_made = True
+    elif args.disable_classic:
+        if remove_classic_right_click_menu():
+            changes_made = True
+
+    # Handle context menu
+    if args.add_context:
+        if add_to_context_menu():
+            changes_made = True
+    elif args.remove_context:
+        if remove_from_context_menu():
+            changes_made = True
+
+    # Restart explorer if changes were made
+    if changes_made:
+        restart_explorer()
+
+
+if __name__ == '__main__':
+    main()
+
+</code>
+
+aicodeprep_gui_c\regmenu_gui.py:
+<code>
+import sys
+import subprocess
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
+    QPushButton, QLabel, QMessageBox
+)
+from PyQt5.QtCore import Qt
+
+class RegMenuGUI(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+        
+    def initUI(self):
+        # Main layout
+        main_layout = QVBoxLayout()
+        
+        # Context Menu Section
+        context_label = QLabel("Context Menu:")
+        context_label.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(context_label)
+        
+        context_buttons = QHBoxLayout()
+        self.add_context_btn = QPushButton("Add to Context Menu")
+        self.remove_context_btn = QPushButton("Remove from Context Menu")
+        context_buttons.addWidget(self.add_context_btn)
+        context_buttons.addWidget(self.remove_context_btn)
+        main_layout.addLayout(context_buttons)
+        
+        # Classic Menu Section
+        classic_label = QLabel("Classic Right-Click Menu:")
+        classic_label.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(classic_label)
+        
+        classic_buttons = QHBoxLayout()
+        self.enable_classic_btn = QPushButton("Enable Classic Menu")
+        self.disable_classic_btn = QPushButton("Disable Classic Menu")
+        classic_buttons.addWidget(self.enable_classic_btn)
+        classic_buttons.addWidget(self.disable_classic_btn)
+        main_layout.addLayout(classic_buttons)
+        
+        # Status Section
+        self.status_label = QLabel("Status: Ready")
+        self.status_label.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(self.status_label)
+        
+        # Connect buttons
+        self.add_context_btn.clicked.connect(self.add_context)
+        self.remove_context_btn.clicked.connect(self.remove_context)
+        self.enable_classic_btn.clicked.connect(self.enable_classic)
+        self.disable_classic_btn.clicked.connect(self.disable_classic)
+        
+        # Window settings
+        self.setLayout(main_layout)
+        self.setWindowTitle("AI Code Prep GUI - Menu Manager")
+        self.setFixedSize(400, 250)
+        
+    def run_command(self, args):
+        """Run command in new cmd window that stays open"""
+        try:
+            # Create command string
+            command = f'cmd /k "python aicodeprep_gui_c/regmenu-win.py {args}"'
+            subprocess.Popen(command, shell=True)
+            self.status_label.setText(f"Status: Executed {args}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to execute command: {str(e)}")
+            self.status_label.setText("Status: Error")
+        
+    def add_context(self):
+        self.run_command("--add-context")
+        
+    def remove_context(self):
+        self.run_command("--remove-context")
+        
+    def enable_classic(self):
+        self.run_command("--enable-classic")
+        
+    def disable_classic(self):
+        self.run_command("--disable-classic")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = RegMenuGUI()
+    window.show()
+    sys.exit(app.exec_())
+
+</code>
+
 aicodeprep_gui_c\smart_logic.py:
 <code>
 from importlib import resources
@@ -949,11 +1061,11 @@ def get_config_path():
     if getattr(sys, 'frozen', False):
         # If the application is frozen (e.g., PyInstaller), use the _MEIPASS directory.
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui', 'data', 'default_config.yaml')
+        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.yaml')
     else:
         # If running as a script, use importlib.resources.
         try:
-            with resources.path('aicodeprep_gui.data', 'default_config.yaml') as config_file:
+            with resources.path('aicodeprep_gui_c.data', 'default_config.yaml') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
             # Fallback to a default path if the package structure is different.
@@ -1037,7 +1149,16 @@ def matches_pattern(filename: str, pattern: str) -> bool:
 def is_excluded_directory(path: str) -> bool:
     """Check if the directory should be excluded"""
     path_parts = pathlib.Path(path).parts
-    return any(part in EXCLUDE_DIRS for part in path_parts)
+    
+    # Check if any part of the path exactly matches an excluded directory
+    if any(part in EXCLUDE_DIRS for part in path_parts):
+        return True
+        
+    # Specifically check for venv directories with case insensitivity
+    if any('venv' in part.lower() for part in path_parts):
+        return True
+        
+    return False
 
 def should_process_directory(dir_path: str) -> bool:
     """Determine if a directory should be processed"""
@@ -1047,8 +1168,15 @@ def should_process_directory(dir_path: str) -> bool:
     dir_name = os.path.basename(dir_path)
     if dir_name in INCLUDE_DIRS:
         return True
-    if dir_name in EXCLUDE_DIRS:
+    if dir_name in EXCLUDE_DIRS or 'venv' in dir_name.lower():
         return False
+    
+    # Check if any parent directory should be excluded
+    path_parts = pathlib.Path(dir_path).parts
+    if any(excluded in part.lower() for part in path_parts 
+           for excluded in ['venv', '.venv']):
+        return False
+        
     return True
 
 def collect_all_files() -> List[Tuple[str, str, bool]]:
@@ -1060,12 +1188,15 @@ def collect_all_files() -> List[Tuple[str, str, bool]]:
         root_dir = sys.argv[1]
     else:
         root_dir = os.getcwd()
-
-    logging.info(f"Processing directory: {root_dir}")
+        logging.info(f"Processing directory: {root_dir}")
     logging.info(f"Code extensions configured: {CODE_EXTENSIONS}")
-
+    
     for root, dirs, files in os.walk(root_dir):
-        dirs[:] = [d for d in dirs if not d.startswith('.')]
+        # Filter out directories to skip them entirely based on EXCLUDE_DIRS
+        # This is more effective than just checking the name
+        dirs[:] = [d for d in dirs if not d.startswith('.') and 
+                  d not in EXCLUDE_DIRS and 
+                  not any(excluded_dir in d.lower() for excluded_dir in ['venv', '.venv'])]
 
         for file in files:
             if file == "aicp_FULLCODE.txt":
@@ -1097,10 +1228,16 @@ def collect_all_files() -> List[Tuple[str, str, bool]]:
             else:
                 extension = pathlib.Path(file_path).suffix.lower()
                 if extension in CODE_EXTENSIONS:
+                    # Check if the file should be excluded based on path or name
+                    path_parts = pathlib.Path(root).parts
+                    excluded_by_dir = any(excluded_dir in part.lower() for part in path_parts 
+                                         for excluded_dir in EXCLUDE_DIRS)
+                    
                     if (file not in EXCLUDE_FILES and
                             extension not in EXCLUDE_EXTENSIONS and
                             not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS) and
-                            not any(part in EXCLUDE_DIRS for part in pathlib.Path(root).parts)):
+                            not excluded_by_dir and
+                            not any(excluded_dir in root.lower() for excluded_dir in ['venv', '.venv'])):
                         included = True
 
             all_files.append((file_path, relative_path, included))
@@ -1213,8 +1350,9 @@ exclude_dirs:
   - dist
   - .idea
   - Lib
-  - site-packages
+  - site-packages  
   - .venv
+  - venv
   - .vscode
   - .github
   - docs
@@ -1333,3 +1471,5 @@ max_file_size: 1000000  # 1MB default
 
 </code>
 
+
+<additional_information>Some files may have been skipped, to save tokens or because they didn't seem relevant. Ask about them if needed.</additional_information>

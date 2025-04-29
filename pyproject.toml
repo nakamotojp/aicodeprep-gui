@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aicodeprep_gui_c"
-version = "0.9.0"
+version = "0.9.7"
 description = "Prepare code for AI chatbot assistance"
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
 license = { file = "LICENSE" }
 classifiers = [
-    "License :: OSI Approved :: MIT License",
+    "License :: Proprietary",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]

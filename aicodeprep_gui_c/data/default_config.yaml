@@ -79,8 +79,9 @@ exclude_dirs:
   - dist
   - .idea
   - Lib
-  - site-packages
+  - site-packages  
   - .venv
+  - venv
   - .vscode
   - .github
   - docs

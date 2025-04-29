@@ -100,7 +100,16 @@ def matches_pattern(filename: str, pattern: str) -> bool:
 def is_excluded_directory(path: str) -> bool:
     """Check if the directory should be excluded"""
     path_parts = pathlib.Path(path).parts
-    return any(part in EXCLUDE_DIRS for part in path_parts)
+    
+    # Check if any part of the path exactly matches an excluded directory
+    if any(part in EXCLUDE_DIRS for part in path_parts):
+        return True
+        
+    # Specifically check for venv directories with case insensitivity
+    if any('venv' in part.lower() for part in path_parts):
+        return True
+        
+    return False
 
 def should_process_directory(dir_path: str) -> bool:
     """Determine if a directory should be processed"""
@@ -110,8 +119,15 @@ def should_process_directory(dir_path: str) -> bool:
     dir_name = os.path.basename(dir_path)
     if dir_name in INCLUDE_DIRS:
         return True
-    if dir_name in EXCLUDE_DIRS:
+    if dir_name in EXCLUDE_DIRS or 'venv' in dir_name.lower():
         return False
+    
+    # Check if any parent directory should be excluded
+    path_parts = pathlib.Path(dir_path).parts
+    if any(excluded in part.lower() for part in path_parts 
+           for excluded in ['venv', '.venv']):
+        return False
+        
     return True
 
 def collect_all_files() -> List[Tuple[str, str, bool]]:
@@ -123,12 +139,15 @@ def collect_all_files() -> List[Tuple[str, str, bool]]:
         root_dir = sys.argv[1]
     else:
         root_dir = os.getcwd()
-
-    logging.info(f"Processing directory: {root_dir}")
+        logging.info(f"Processing directory: {root_dir}")
     logging.info(f"Code extensions configured: {CODE_EXTENSIONS}")
-
+    
     for root, dirs, files in os.walk(root_dir):
-        dirs[:] = [d for d in dirs if not d.startswith('.')]
+        # Filter out directories to skip them entirely based on EXCLUDE_DIRS
+        # This is more effective than just checking the name
+        dirs[:] = [d for d in dirs if not d.startswith('.') and 
+                  d not in EXCLUDE_DIRS and 
+                  not any(excluded_dir in d.lower() for excluded_dir in ['venv', '.venv'])]
 
         for file in files:
             if file == "aicp_FULLCODE.txt":
@@ -160,10 +179,16 @@ def collect_all_files() -> List[Tuple[str, str, bool]]:
             else:
                 extension = pathlib.Path(file_path).suffix.lower()
                 if extension in CODE_EXTENSIONS:
+                    # Check if the file should be excluded based on path or name
+                    path_parts = pathlib.Path(root).parts
+                    excluded_by_dir = any(excluded_dir in part.lower() for part in path_parts 
+                                         for excluded_dir in EXCLUDE_DIRS)
+                    
                     if (file not in EXCLUDE_FILES and
                             extension not in EXCLUDE_EXTENSIONS and
                             not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS) and
-                            not any(part in EXCLUDE_DIRS for part in pathlib.Path(root).parts)):
+                            not excluded_by_dir and
+                            not any(excluded_dir in root.lower() for excluded_dir in ['venv', '.venv'])):
                         included = True
 
             all_files.append((file_path, relative_path, included))
