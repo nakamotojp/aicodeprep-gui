@@ -1,70 +1,81 @@
 CHANGELOG.md:
 <code>
-# Changelog
+# 📦 Changelog
+
+---
 
 ## [0.9.7] - 2025-28-4
 
-### Added
+### 🎉 Added
 
-New .aicodeprep file that saves the size of the window, and also which files you last processed so the next time you use AI Code Prep GUI in that folder, it will know what you did last time
+- New `.aicodeprep` file that saves the size of the window, and also which files you had checked last time you processed in that folder. So the next time you use AI Code Prep GUI in that folder, it will be set up with those same files checked (often when bug fixing I need custom files sent to the AI chat over and over, so this helps save time).
+- New buttons for **Load from .aicodeprep** (check the files you last had checked when last processed), **Quit** button.
+- Expandable and collapsable folders, will auto expand if any files recursively inside are checked.
+- Checkbox to disable creation of the `.aicodeprep` file if you for some reason don't want that feature.
+- 🧮 Added a token counter: as you check or uncheck files, the token count is now displayed.
 
-New buttons for Smart Auto (to redo the smart file checking), Load from .aicodeprep (check the files you last had checked when last processed), Quit button
+---
 
-Expandable and collapsable folders, will auto expand if any files recursively inside are checked
+## [0.9.5] - 2025-24-1 _(Mac GUI version seems to work)_
 
-Checkbox to disable creation of the .aicodeprep file if you for some reason don't want that feature
+### 🎉 Added
 
-## [0.9.5] - 2025-24-1 (Mac GUI version seems to work)
+- 🍏 Mac OS app and workflow file that installs a right click menu to Finder.
+- Switched to PyQt5.
 
-### Added
+---
 
-- Mac OS app and workflow file that installs a right click menu to Finder. Switched to PyQt5 also.
+## [0.5.0] - 2024-14-11 _(GUI Release)_
 
-## [0.5.0] - 2024-14-11 (GUI Release)
+### 🎉 Added
 
-### Added
+- 🪟 Windows GUI Version
+- 🖱️ Right-click context menu integration for Windows
+- 📂 Enhanced file selection GUI with granular file inclusion/exclusion
+- 🖥️ DPI awareness for better display on high-resolution screens
 
-- Windows GUI Version
-- Right-click context menu integration for Windows
-- Enhanced file selection GUI with granular file inclusion/exclusion
-- DPI awareness for better display on high-resolution screens
+### ✨ New Features
 
-### New Features
+- 🗂️ Interactive file selection before code preparation
+- ☑️ Checkbox-based file inclusion/exclusion
+- 🎨 Scalable UI with multiple theme options
+- 🗃️ Windows Explorer context menu integration
 
-- Interactive file selection before code preparation
-- Checkbox-based file inclusion/exclusion
-- Scalable UI with multiple theme options
-- Windows Explorer context menu integration
+### 🔄 Changed
 
-### Changed
+- 💸 Moved from free to premium model
+- 🏷️ Lifetime license available for $7
+- ⚙️ Enhanced configuration options
+- 🪲 Improved logging and error handling
 
-- Moved from free to premium model
-- Lifetime license available for $7
-- Enhanced configuration options
-- Improved logging and error handling
+---
 
 ## [0.2.2] - 2024-02-11
 
-Minor tweaks and improvements
+- 🛠️ Minor tweaks and improvements
 
-## [0.2.2] - 2024-07-11 (Nov 2nd 2024)
+---
 
-Minor tweaks
+## [0.2.2] - 2024-07-11 _(Nov 2nd 2024)_
 
-## [0.2.0] - 2024-02-11 (Nov 2nd 2024)
+- 🛠️ Minor tweaks
 
-### Moved all hard coded options to the default_config.yaml file
+---
 
-### Added
+## [0.2.0] - 2024-02-11 _(Nov 2nd 2024)_
+
+### 🔧 Moved all hard coded options to the `default_config.yaml` file
+
+### 🎉 Added
 
 - New `exclude_extensions` configuration option to exclude file types globally
-- New `exclude_extensions` configuration option to exclude patterns like .min.js
+- New `exclude_extensions` configuration option to exclude patterns like `.min.js`
 - New `include_dirs` configuration option to explicitly include specific directories
 - Enhanced priority system for file inclusion/exclusion rules
 - Better support for user configuration overrides
 - Updated and added some more exclusions that came up later when it would add unnecessary files
 
-### Changed
+### 🔄 Changed
 
 - Improved file processing logic with clearer priority rules:
   1. Explicitly included files (highest priority)
@@ -75,6 +86,172 @@ Minor tweaks
   1. Explicitly included directories (highest priority)
   2. Explicitly excluded directories
   3. Normal directory processing
+
+</code>
+
+pyproject.toml:
+<code>
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aicodeprep_gui_c"
+version = "0.9.7"
+description = "Prepare code for AI chatbot assistance"
+readme = "README.md"
+authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: Proprietary",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["ai", "code", "preparation", "chatbot"]
+dependencies = [
+    "pyperclip",
+    "pyyaml",
+    "pyqt5"
+]
+requires-python = ">=3.6"
+
+[project.scripts]
+aicodeprep_gui_c = "aicodeprep_gui_c.main:main" # Use an underscore here
+
+[project.urls]
+Homepage = "https://github.com/detroittommy879/aicodeprep"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+aicodeprep_gui_c = ["data/default_config.yaml"]
+</code>
+
+README2.md:
+<code>
+# AI Code Prep GUI
+
+_Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
+
+[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep/stargazers)
+
+**Latest Version: 0.9.7 (April 28, 2025)**
+
+---
+
+## What is AI Code Prep GUI?
+
+AI Code Prep GUI is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files, this tool automatically collects relevant code files into a single text file, copies it to your clipboard, and formats it with AI-friendly `<code>` tags.
+
+It supports **Windows** and **macOS (M1+)** with context menu/right-click integration, and a Linux version is coming soon.
+
+---
+
+## New Features in v0.9.7
+
+- **Persistent Preferences:** Automatically saves window size and the last selected files in a `.aicodeprep` file per project folder. When you re-open the tool in the same folder, your previous selections and window layout are restored.
+  - New checkbox lets you disable creation of the `.aicodeprep` file if you don't want this feature.
+- **Folder Tree UI Improvements:**
+  - Expandable and collapsable folders for easier navigation
+  - Auto-expands folders containing checked files
+- **Token Counter:** As you check or uncheck files, the token count is now displayed.
+- **Enhanced Smart Auto-Selection:** Smarter file checking logic that respects exclusions and better filters irrelevant files
+- **Additional UI Buttons:**
+  - **Load from .aicodeprep** button to restore your last saved selection
+  - **Quit** button for quick exit without processing
+- **Better Visual Styling:** Improved fonts and DPI scaling for crisp display on high-resolution screens
+
+---
+
+## Screenshots & Usage
+
+See screenshots and a quick usage guide here:  
+[https://wuu73.org/aicp](https://wuu73.org/aicp)
+
+---
+
+## Future idea's
+
+MCP Server to automatically attach to a browser, and automatically paste the output context into various AI/LLM chats like Gemini on AI Studio, ChatGPT, Openrouter, Poe, Deepseek, X, etc so even less copying and pasting.
+
+## Installation
+
+### macOS
+
+1. Download and unzip the macOS package.
+2. Drag `AICodePrepGUI.app` to your Applications folder.
+3. Double-click `AICodePrepGUI.workflow` and follow instructions to add the right-click Quick Actions menu to Finder.
+4. Restart Finder if needed to activate the menu.
+5. To use: Right-click on a project folder → Quick Actions → AICodePrepGUI.
+6. Select/deselect files and folders as needed, then click **Process Selected**.
+7. The tool will create a `fullcode.txt` and copy all selected code to your clipboard, ready to paste into your AI chatbot.
+
+_Tested on macOS Ventura 13.4 (M1+)._
+
+### Windows
+
+1. Run `windows-easy-installer-dist.exe`.
+2. Follow the installation wizard (default directory: `Program Files\AICodePrep-GUI`).
+3. To use: Right-click in any folder's blank space in Windows File Explorer → `AI Code Prep GUI`.
+4. Restart Windows if the context menu does not appear immediately.
+5. Select/deselect files and folders, then click **Process Selected**.
+6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
+
+---
+
+## Features Summary
+
+- **Cross-platform GUI** for easy visual file selection
+- **Smart Preselection** of relevant code files based on configured extensions and exclusions
+- **Folder Tree View** with collapsible/expandable folders and auto-expansion for selected files
+- **Preferences Saving** via `.aicodeprep` per folder to remember your last selected files and window size (with option to disable)
+- **Token Counter** displays token count as you check/uncheck files
+- **Context Menu Integration** for quick access
+- **Clipboard & File Output** for seamless pasting into AI chatbots
+- **LLM-Optimized Formatting** with `<code>` tags around file contents
+- **Configurable via YAML** to suit various project needs
+- **Improved DPI & Font Scaling** for crisp UI on all displays
+
+---
+
+## Usage
+
+1. Open the tool from your project folder’s context menu (right-click).
+2. Review the preselected files and folders. Expand or collapse folders as needed.
+3. Use the **Smart Auto** button to auto-select files based on smart logic.
+4. Use **Load from .aicodeprep** to restore your previous session’s selection.
+5. Check or uncheck files/folders manually.
+6. If you want to save your preferences for the folder, ensure the **Remember checked files for this folder (.aicodeprep)** checkbox is ticked.
+7. Click **Process Selected** to generate the output file and copy it to your clipboard.
+
+---
+
+## Configuration
+
+You can customize file extensions, directories, and exclusion patterns via a `aicodeprep_config.yaml` file in your project folder. Refer to the [default_config.yaml](aicodeprep_gui_c/data/default_config.yaml) for examples.
+
+---
+
+## Contributing
+
+Contributions and pull requests are welcome! Please submit bug reports and feature requests via GitHub Issues.
+
+---
+
+## Support & Donations
+
+If you find this tool useful, consider supporting future development:
+
+| Method   | Address / Link                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------- |
+| Bitcoin  | `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`                                                      |
+| Litecoin | `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`                                                     |
+| Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
+| CashApp  | `$lightweb73`                                                                                     |
+| Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
+
+---
 
 </code>
 
@@ -602,6 +779,339 @@ FileSelectionGUI.closeEvent = closeEvent
 
 </code>
 
+aicodeprep_gui_c\main.py:
+<code>
+import os
+import sys
+import argparse
+import logging
+from typing import List
+from aicodeprep_gui_c.file_processor import process_files, copy_to_clipboard
+from aicodeprep_gui_c.smart_logic import collect_all_files, load_default_config, load_user_config
+from aicodeprep_gui_c.gui import show_file_selection_gui
+
+# Configure logging with explicit console handler only
+logger = logging.getLogger()
+
+# Remove any existing handlers to prevent duplicate logging
+for handler in logger.handlers:
+    logger.removeHandler(handler)
+
+logger.setLevel(logging.INFO)
+
+# Create console handler
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+
+# Add handler to root logger
+logger.addHandler(console_handler)
+
+def main():
+    parser = argparse.ArgumentParser(description="Concatenate code files into a single text file.")
+    parser.add_argument("-n", "--no-copy", action="store_true",
+                        help="Do NOT copy output to clipboard (default: copy to clipboard)")
+    parser.add_argument("-o", "--output", default="fullcode.txt",
+                        help="Output file name (default: fullcode.txt)")
+    parser.add_argument("-d", "--debug", action="store_true",
+                        help="Enable debug logging")
+    parser.add_argument("directory", nargs="?", default=".",
+                        help="Directory to process (default: current directory)")
+
+    args = parser.parse_args()
+
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+        console_handler.setLevel(logging.DEBUG)
+
+    # Get the target directory from command line argument (%V)
+    target_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    logger.info(f"Target directory: {target_dir}")
+
+    # Change to the specified directory
+    os.chdir(target_dir)
+
+    logger.info("Starting code concatenation...")
+
+    all_files_with_flags = collect_all_files()
+
+    if not all_files_with_flags:
+        logger.warning("No files found to process!")
+        return
+
+    action, selected_files = show_file_selection_gui(all_files_with_flags)
+
+    if action == 'quit':
+        logger.info("User quit without processing. Exiting.")
+        return
+
+    if not selected_files:
+        logger.info("No files selected. Exiting.")
+        return
+
+    files_processed = process_files(selected_files, args.output)
+
+    logger.info(f"Concatenation complete! Processed {files_processed} code files.")
+    logger.info(f"Output written to {args.output}")
+
+    if not args.no_copy:
+        output_path = os.path.join(target_dir, args.output)
+        if copy_to_clipboard(output_path):
+            logger.info("Code copied to clipboard!")
+        else:
+            logger.error("Failed to copy code to clipboard")
+
+    logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")
+    logger.info("https://wuu73.org/hello.html")
+
+if __name__ == "__main__":
+    main()
+
+</code>
+
+aicodeprep_gui_c\smart_logic.py:
+<code>
+from importlib import resources
+import os
+import sys
+import pathlib
+import json
+import logging
+from typing import List, Tuple
+import fnmatch
+
+def get_config_path():
+    """Get the path to the default configuration file."""
+    if getattr(sys, 'frozen', False):
+        # If the application is frozen (e.g., PyInstaller), use the _MEIPASS directory.
+        base_path = sys._MEIPASS
+        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.md')
+    else:
+        # If running as a script, use importlib.resources.
+        try:
+            with resources.path('aicodeprep_gui_c.data', 'default_config.md') as config_file:
+                config_path = str(config_file)
+        except ModuleNotFoundError:
+            # Fallback to a default path if the package structure is different.
+            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.md')
+
+    return config_path
+
+def get_exe_directory():
+    """Get the directory of the executable or script"""
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+def load_default_config() -> dict:
+    """Load the default configuration from Markdown file with JSON code block"""
+    try:
+        config_path = get_config_path()
+        logging.info(f"Looking for config at {config_path}")
+
+        try:
+            with open(config_path, 'r') as f:
+                content = f.read()
+            # Extract JSON code block from Markdown
+            import re
+            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+                config = json.loads(json_str)
+            else:
+                logging.warning("No JSON code block found in config markdown, using defaults")
+                config = None
+        except FileNotFoundError:
+            logging.warning("Default config file not found, using built-in defaults")
+            config = None
+
+        if config is None:
+            config = {
+                'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
+                                   '.rs', '.swift', '.kt'],
+                'exclude_extensions': ['.pyc', '.class', '.o', '.obj'],
+                'exclude_patterns': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
+                'exclude_dirs': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
+                'include_dirs': [],
+                'exclude_files': [],
+                'include_files': [],
+                'max_file_size': 1000000
+            }
+
+        if 'exclude_patterns' in config:
+            config['exclude_patterns'] = [pattern.lstrip('.') for pattern in config['exclude_patterns']]
+
+        if 'code_extensions' not in config or not config['code_extensions']:
+            config['code_extensions'] = ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb',
+                                         '.go', '.rs', '.swift', '.kt']
+
+        logging.info(f"Loaded configuration with {len(config.get('code_extensions', []))} code extensions")
+        return config
+
+    except Exception as e:
+        logging.error(f"Error in configuration handling: {str(e)}")
+        return {
+            'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
+                               '.rs', '.swift', '.kt'],
+            'exclude_extensions': ['.pyc', '.class', '.o', '.obj'],
+            'exclude_patterns': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
+            'exclude_dirs': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
+            'include_dirs': [],
+            'exclude_files': [],
+            'include_files': [],
+            'max_file_size': 1000000
+        }
+
+def load_user_config() -> dict:
+    """Load user-specific configuration from Markdown file with JSON code block"""
+    try:
+        config_path = os.path.join(get_exe_directory(), 'aicodeprep_config.md')
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                content = f.read()
+            import re
+            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
+            if match:
+                json_str = match.group(1)
+                config = json.loads(json_str)
+                if config and 'exclude_patterns' in config:
+                    config['exclude_patterns'] = [
+                        pattern.lstrip('.') for pattern in config['exclude_patterns']
+                    ]
+                return config
+            else:
+                logging.warning("No JSON code block found in user config markdown")
+                return {}
+    except Exception as e:
+        logging.error(f"Error loading user configuration: {str(e)}")
+    return {}
+
+def matches_pattern(filename: str, pattern: str) -> bool:
+    """Check if filename matches the given glob-style pattern (supports *, ?, [])"""
+    return fnmatch.fnmatch(filename.lower(), pattern.lower())
+
+def is_excluded_directory(path: str) -> bool:
+    """Check if the directory should be excluded"""
+    path_parts = pathlib.Path(path).parts
+    
+    # Check if any part of the path exactly matches an excluded directory
+    if any(part in EXCLUDE_DIRS for part in path_parts):
+        return True
+        
+    # Specifically check for venv directories with case insensitivity
+    if any('venv' in part.lower() for part in path_parts):
+        return True
+        
+    return False
+
+def should_process_directory(dir_path: str) -> bool:
+    """Determine if a directory should be processed"""
+    if is_excluded_directory(dir_path):
+        return False
+
+    dir_name = os.path.basename(dir_path)
+    if dir_name in INCLUDE_DIRS:
+        return True
+    if dir_name in EXCLUDE_DIRS or 'venv' in dir_name.lower():
+        return False
+    
+    # Check if any parent directory should be excluded
+    path_parts = pathlib.Path(dir_path).parts
+    if any(excluded in part.lower() for part in path_parts 
+           for excluded in ['venv', '.venv']):
+        return False
+        
+    return True
+
+def collect_all_files() -> List[Tuple[str, str, bool]]:
+    """Collect all files in the target directory with inclusion flags"""
+    all_files = []
+    logging.info("Starting file collection...")
+
+    if len(sys.argv) > 1:
+        root_dir = sys.argv[1]
+    else:
+        root_dir = os.getcwd()
+        logging.info(f"Processing directory: {root_dir}")
+    logging.info(f"Code extensions configured: {CODE_EXTENSIONS}")
+    
+    for root, dirs, files in os.walk(root_dir):
+        # Filter out directories to skip them entirely based on EXCLUDE_DIRS
+        # This is more effective than just checking the name
+        dirs[:] = [d for d in dirs if not d.startswith('.') and 
+                  d not in EXCLUDE_DIRS and 
+                  not any(excluded_dir in d.lower() for excluded_dir in ['venv', '.venv'])]
+
+        for file in files:
+            if file == "aicp_FULLCODE.txt":
+                continue
+
+            file_path = os.path.join(root, file)
+            relative_path = os.path.relpath(file_path, root_dir)
+
+            if any(part.startswith('.') for part in pathlib.Path(file_path).parts):
+                continue
+
+            try:
+                if os.path.getsize(file_path) > MAX_FILE_SIZE:
+                    continue
+            except (OSError, IOError):
+                continue
+
+            included = False
+
+            if file in INCLUDE_FILES:
+                included = True
+            elif os.path.basename(root) in INCLUDE_DIRS:
+                extension = pathlib.Path(file_path).suffix.lower()
+                if extension in CODE_EXTENSIONS:
+                    if (file not in EXCLUDE_FILES and
+                            extension not in EXCLUDE_EXTENSIONS and
+                            not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS)):
+                        included = True
+            else:
+                extension = pathlib.Path(file_path).suffix.lower()
+                if extension in CODE_EXTENSIONS:
+                    # Check if the file should be excluded based on path or name
+                    path_parts = pathlib.Path(root).parts
+                    excluded_by_dir = any(excluded_dir in part.lower() for part in path_parts 
+                                         for excluded_dir in EXCLUDE_DIRS)
+                    
+                    if (file not in EXCLUDE_FILES and
+                            extension not in EXCLUDE_EXTENSIONS and
+                            not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS) and
+                            not excluded_by_dir and
+                            not any(excluded_dir in root.lower() for excluded_dir in ['venv', '.venv'])):
+                        included = True
+
+            all_files.append((file_path, relative_path, included))
+            logging.info(f"Collected file: {relative_path}, Included by default: {included}")
+
+    logging.info(f"Total files collected: {len(all_files)}")
+    return all_files
+
+# Load configurations
+default_config = load_default_config()
+user_config = load_user_config()
+config = {**default_config, **user_config}
+
+CODE_EXTENSIONS = set(config.get('code_extensions', []))
+EXCLUDE_EXTENSIONS = set(config.get('exclude_extensions', []))
+EXCLUDE_PATTERNS = set(config.get('exclude_patterns', []))
+EXCLUDE_DIRS = set(config.get('exclude_dirs', []))
+INCLUDE_DIRS = set(config.get('include_dirs', []))
+EXCLUDE_FILES = set(config.get('exclude_files', []))
+INCLUDE_FILES = set(config.get('include_files', []))
+MAX_FILE_SIZE = config.get('max_file_size', 1000000)
+
+</code>
+
+aicodeprep_gui_c\__init__.py:
+<code>
+from .main import main
+</code>
+
 aicodeprep_gui_c\data\default_config.md:
 <code>
 # Default Configuration
@@ -803,210 +1313,6 @@ aicodeprep_gui_c\data\default_config.md:
   "max_file_size": 1000000
 }
 ```
-
-</code>
-
-aicodeprep_gui_c\data\default_config_old.yaml:
-<code>
-code_extensions:
-  - .py
-  - .js
-  - .jsx
-  - .ts
-  - .tsx
-  - .java
-  - .cpp
-  - .c
-  - .h
-  - .cs
-  - .php
-  - .rb
-  - .go
-  - .rs
-  - .swift
-  - .kt
-  - .scala
-  - .html
-  - .css
-  - .scss
-  - .sass
-  - .less
-  - .sql
-  - .sh
-  - .yaml
-  - .yml
-  - .json
-  - .xml
-  - .vue
-  - .r
-  - .m
-  - .f90
-  - .f95
-  - .f03
-  - .f08
-  - .gradle
-  - .groovy
-  - .ps1
-  - .psm1
-  - .ipynb
-  - .md
-  - .txt
-  - .lock
-  - .toml
-  - .ini
-  - .conf
-  - .cfg
-  - .properties
-
-exclude_extensions:
-  - .txt
-  - .log
-  - .temp
-  - .exe
-  - .dll
-  - .so
-  - .dylib
-  - .jar
-  - .war
-  - .ear
-  - .o
-  - .class
-
-include_files:
-  - README.md
-  - CONTRIBUTING.md
-  - important.txt   # Even if .txt is excluded, this specific file will be included
-
-include_dirs:
-  - important_docs  # Specifically include this directory even if parent is excluded
-
-exclude_dirs:
-  - .git
-  - node_modules
-  - venv
-  - __pycache__
-  - build
-  - dist
-  - .idea
-  - Lib
-  - site-packages  
-  - .venv
-  - venv
-  - .vscode
-  - .github
-  - docs
-  - tests
-  - spec
-  - fixtures
-  - migrations
-  - logs
-  - tmp
-  - cache
-  - assets
-  - public
-  - static
-  - uploads
-  - vendor
-  - bin
-  - obj
-  - out
-  - target
-  - coverage
-  - reports
-  - .pytest_cache
-  - .mypy_cache
-  - .ipynb_checkpoints
-  - .nyc_output
-  - test-results
-  - __tests__
-  - __snapshots__
-  - __mocks__
-  - debug
-  - .jest
-  - .next
-  - .nuxt
-  - .svelte-kit
-  - .expo
-  - dist-ssr
-  - .parcel-cache
-  - .serverless
-  - .vercel
-  - .angular
-  - .quasar
-  - .redwood
-  - .fusebox
-  - .docusaurus
-  - .terraform
-  - snapshots
-
-exclude_files:
-  - package-lock.json
-  - yarn.lock
-  - requirements.txt
-  - Gemfile.lock
-  - composer.lock
-  - .DS_Store
-  - Thumbs.db
-  - pnpm-lock.yaml
-  - bun.lock
-  - bun.lockb
-  - cargo.lock
-  - poetry.lock
-  - Pipfile.lock
-  - .npmrc
-  - .env
-  - .env.*
-  - .env.local
-  - .env.prod
-  - .env.staging
-  - .env.dev
-  - .flaskenv
-  - .dockerenv
-  - env.json
-  - credentials.yaml
-  - secret*.json
-  - *.key
-  - *.pem
-  - *.crt
-  - *.pub
-  - id_rsa
-  - id_dsa
-  - Dockerfile.*.cache
-  - coverage.xml
-  - *.lcov
-
-exclude_patterns:
-  - min.js
-  - min.css
-  - bundle.js
-  - chunk.js
-  - test.js
-  - spec.js
-  - generated.ts
-  - '*.swp'
-  - '*.swo'
-  - '*.un~'
-  - '~$*'
-  - '*.min.*'
-  - '*-lock.*'
-  - '*.snap'
-  - .test.
-  - .spec.
-  - .bench.
-  - .cache
-  - .temp
-  - '*.lock'
-  - '*.class'
-  - '*.exe'
-  - '*.dll'
-  - '*.so'
-  - '*.dylib'
-  - '*.jar'
-  - '*.war'
-  - '*.ear'
-  - '*.o'
-
-max_file_size: 1000000  # 1MB default
 
 </code>
 
