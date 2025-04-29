@@ -4,6 +4,10 @@ import platform
 import logging
 from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
 from typing import List, Tuple
+try:
+    import tiktoken
+except ImportError:
+    tiktoken = None
 from aicodeprep_gui_c.smart_logic import (
     EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
     matches_pattern, is_excluded_directory
@@ -72,6 +76,9 @@ class FileSelectionGUI(QtWidgets.QWidget):
         
         # Layout
         main_layout = QtWidgets.QVBoxLayout(self)
+        # Token count label
+        self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
+        main_layout.addWidget(self.token_label)
         # Status label for messages
         self.text_label = QtWidgets.QLabel("")
         self.text_label.setWordWrap(True)
@@ -185,6 +192,8 @@ class FileSelectionGUI(QtWidgets.QWidget):
         button_layout2.addWidget(quit_button)
 
         self.selected_files = []
+        self.file_token_counts = {}
+        self.update_token_counter()
 
     def handle_item_changed(self, item, column):
         if column == 0:
@@ -234,7 +243,8 @@ class FileSelectionGUI(QtWidgets.QWidget):
                 else:
                     if file_path and file_path in self.selected_files:
                         self.selected_files.remove(file_path)
-                    
+            self.update_token_counter()
+
     def select_all(self):
         # Recursively select all file items
         def check_all_items(item):
@@ -242,9 +252,10 @@ class FileSelectionGUI(QtWidgets.QWidget):
                 item.setCheckState(0, QtCore.Qt.Checked)
             for i in range(item.childCount()):
                 check_all_items(item.child(i))
-                
+
         for i in range(self.tree_widget.topLevelItemCount()):
             check_all_items(self.tree_widget.topLevelItem(i))
+        self.update_token_counter()
 
     def deselect_all(self):
         # Recursively deselect all file items
@@ -252,26 +263,28 @@ class FileSelectionGUI(QtWidgets.QWidget):
             if item.flags() & QtCore.Qt.ItemIsUserCheckable:
                 item.setCheckState(0, QtCore.Qt.Unchecked)
             for i in range(item.childCount()):
-                uncheck_all_items(item.child(i))                
+                uncheck_all_items(item.child(i))
+
         for i in range(self.tree_widget.topLevelItemCount()):
             uncheck_all_items(self.tree_widget.topLevelItem(i))
-            
+        self.update_token_counter()
+
     def get_selected_files(self):
         self.selected_files = []
-        
+
         # Recursively collect all checked files
         def collect_checked_files(item):
             if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.checkState(0) == QtCore.Qt.Checked:
                 file_path = item.data(0, QtCore.Qt.UserRole)
                 if file_path:
                     self.selected_files.append(file_path)
-            
+
             for i in range(item.childCount()):
                 collect_checked_files(item.child(i))
-        
+
         for i in range(self.tree_widget.topLevelItemCount()):
             collect_checked_files(self.tree_widget.topLevelItem(i))
-            
+
         return self.selected_files
 
     def process_selected(self):
@@ -321,6 +334,7 @@ class FileSelectionGUI(QtWidgets.QWidget):
                         item.setCheckState(0, QtCore.Qt.Checked)
             # Optionally show a message
             self.text_label.setText("Loaded selection from .aicodeprep")
+            self.update_token_counter()
         else:
             self.text_label.setText(".aicodeprep not found")
 
@@ -329,6 +343,25 @@ class FileSelectionGUI(QtWidgets.QWidget):
         logging.info("Quit button clicked - setting action to quit")
         self.action = 'quit'
         self.close()
+
+    def update_token_counter(self):
+        selected_files = self.get_selected_files()
+        total_tokens = 0
+        for file_path in selected_files:
+            if file_path not in self.file_token_counts:
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        text = f.read()
+                    if tiktoken:
+                        enc = tiktoken.get_encoding("cl100k_base")
+                        token_count = len(enc.encode(text))
+                    else:
+                        token_count = len(text) // 4
+                    self.file_token_counts[file_path] = token_count
+                except Exception as e:
+                    self.file_token_counts[file_path] = 0
+            total_tokens += self.file_token_counts[file_path]
+        self.token_label.setText(f"Estimated tokens: {total_tokens:,}")
 
 def show_file_selection_gui(files):
     app = QtWidgets.QApplication.instance()

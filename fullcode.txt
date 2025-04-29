@@ -1,1067 +1,3 @@
-CHANGELOG.md:
-<code>
-# Changelog
-
-## [0.9.7] - 2025-28-4
-
-### Added
-
-New .aicodeprep file that saves the size of the window, and also which files you last processed so the next time you use AI Code Prep GUI in that folder, it will know what you did last time
-
-New buttons for Smart Auto (to redo the smart file checking), Load from .aicodeprep (check the files you last had checked when last processed), Quit button
-
-Expandable and collapsable folders, will auto expand if any files recursively inside are checked
-
-Checkbox to disable creation of the .aicodeprep file if you for some reason don't want that feature
-
-## [0.9.5] - 2025-24-1 (Mac GUI version seems to work)
-
-### Added
-
-- Mac OS app and workflow file that installs a right click menu to Finder. Switched to PyQt5 also.
-
-## [0.5.0] - 2024-14-11 (GUI Release)
-
-### Added
-
-- Windows GUI Version
-- Right-click context menu integration for Windows
-- Enhanced file selection GUI with granular file inclusion/exclusion
-- DPI awareness for better display on high-resolution screens
-
-### New Features
-
-- Interactive file selection before code preparation
-- Checkbox-based file inclusion/exclusion
-- Scalable UI with multiple theme options
-- Windows Explorer context menu integration
-
-### Changed
-
-- Moved from free to premium model
-- Lifetime license available for $7
-- Enhanced configuration options
-- Improved logging and error handling
-
-## [0.2.2] - 2024-02-11
-
-Minor tweaks and improvements
-
-## [0.2.2] - 2024-07-11 (Nov 2nd 2024)
-
-Minor tweaks
-
-## [0.2.0] - 2024-02-11 (Nov 2nd 2024)
-
-### Moved all hard coded options to the default_config.yaml file
-
-### Added
-
-- New `exclude_extensions` configuration option to exclude file types globally
-- New `exclude_extensions` configuration option to exclude patterns like .min.js
-- New `include_dirs` configuration option to explicitly include specific directories
-- Enhanced priority system for file inclusion/exclusion rules
-- Better support for user configuration overrides
-- Updated and added some more exclusions that came up later when it would add unnecessary files
-
-### Changed
-
-- Improved file processing logic with clearer priority rules:
-  1. Explicitly included files (highest priority)
-  2. Explicitly excluded files
-  3. Excluded extensions
-  4. Code extensions (lowest priority)
-- Enhanced directory processing logic:
-  1. Explicitly included directories (highest priority)
-  2. Explicitly excluded directories
-  3. Normal directory processing
-
-</code>
-
-pyproject.toml:
-<code>
-[build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "aicodeprep_gui_c"
-version = "0.9.7"
-description = "Prepare code for AI chatbot assistance"
-readme = "README.md"
-authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
-license = { file = "LICENSE" }
-classifiers = [
-    "License :: Proprietary",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-]
-keywords = ["ai", "code", "preparation", "chatbot"]
-dependencies = [
-    "pyperclip",
-    "pyyaml",
-    "pyqt5"
-]
-requires-python = ">=3.6"
-
-[project.scripts]
-aicodeprep_gui_c = "aicodeprep_gui_c.main:main" # Use an underscore here
-
-[project.urls]
-Homepage = "https://github.com/detroittommy879/aicodeprep"
-
-[tool.setuptools.packages.find]
-where = ["."]
-
-[tool.setuptools.package-data]
-aicodeprep_gui_c = ["data/default_config.yaml"]
-</code>
-
-README2.md:
-<code>
-# AI Code Prep GUI
-
-_Streamline code sharing with AI chatbots (macOS & Windows)_
-
-[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep/stargazers)
-
-**Latest Version: 0.9.7 (April 28, 2025)**
-
----
-
-## What is AI Code Prep GUI?
-
-AI Code Prep GUI is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files, this tool automatically collects relevant code files into a single text file, copies it to your clipboard, and formats it with AI-friendly `<code>` tags.
-
-It supports **Windows** and **macOS (M1+)** with context menu/right-click integration, and a Linux version is coming soon.
-
----
-
-## New Features in v0.9.7
-
-- **Persistent Preferences:** Automatically saves window size and the last selected files in a `.aicodeprep` file per project folder. When you re-open the tool in the same folder, your previous selections and window layout are restored.
-- **Folder Tree UI Improvements:**
-  - Expandable and collapsable folders for easier navigation
-  - Auto-expands folders containing checked files
-- **Enhanced Smart Auto-Selection:** Smarter file checking logic that respects exclusions and better filters irrelevant files
-- **Additional UI Buttons:**
-  - **Smart Auto** button to redo smart file checking at any time
-  - **Load from .aicodeprep** button to restore your last saved selection
-  - **Quit** button for quick exit without processing
-- **Better Visual Styling:** Improved fonts and DPI scaling for crisp display on high-resolution screens
-
----
-
-## Screenshots & Usage
-
-See screenshots and a quick usage guide here:  
-[https://wuu73.org/aicp](https://wuu73.org/aicp)
-
----
-
-## Installation
-
-### macOS
-
-1. Download and unzip the macOS package.
-2. Drag `AICodePrepGUI.app` to your Applications folder.
-3. Double-click `AICodePrepGUI.workflow` and follow instructions to add the right-click Quick Actions menu to Finder.
-4. Restart Finder if needed to activate the menu.
-5. To use: Right-click on a project folder → Quick Actions → AICodePrepGUI.
-6. Select/deselect files and folders as needed, then click **Process Selected**.
-7. The tool will create a `fullcode.txt` and copy all selected code to your clipboard, ready to paste into your AI chatbot.
-
-_Tested on macOS Ventura 13.4 (M1+)._
-
-### Windows
-
-1. Run `windows-easy-installer-dist.exe`.
-2. Follow the installation wizard (default directory: `Program Files\AICodePrep-GUI`).
-3. To use: Right-click in any folder's blank space in Windows File Explorer → `AI Code Prep GUI`.
-4. Restart Windows if the context menu does not appear immediately.
-5. Select/deselect files and folders, then click **Process Selected**.
-6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
-
----
-
-## Features Summary
-
-- **Cross-platform GUI** for easy visual file selection
-- **Smart Preselection** of relevant code files based on configured extensions and exclusions
-- **Folder Tree View** with collapsible/expandable folders and auto-expansion for selected files
-- **Preferences Saving** via `.aicodeprep` per folder to remember your last selected files and window size
-- **Context Menu Integration** for quick access
-- **Clipboard & File Output** for seamless pasting into AI chatbots
-- **LLM-Optimized Formatting** with `<code>` tags around file contents
-- **Configurable via YAML** to suit various project needs
-- **Improved DPI & Font Scaling** for crisp UI on all displays
-
----
-
-## Usage
-
-1. Open the tool from your project folder’s context menu (right-click).
-2. Review the preselected files and folders. Expand or collapse folders as needed.
-3. Use the **Smart Auto** button to auto-select files based on smart logic.
-4. Use **Load from .aicodeprep** to restore your previous session’s selection.
-5. Check or uncheck files/folders manually.
-6. If you want to save your preferences for the folder, ensure the **Remember checked files for this folder (.aicodeprep)** checkbox is ticked.
-7. Click **Process Selected** to generate the output file and copy it to your clipboard.
-
----
-
-## Configuration
-
-You can customize file extensions, directories, and exclusion patterns via a `aicodeprep_config.yaml` file in your project folder. Refer to the [default_config.yaml](aicodeprep_gui_c/data/default_config.yaml) for examples.
-
----
-
-## Contributing
-
-Contributions and pull requests are welcome! Please submit bug reports and feature requests via GitHub Issues.
-
----
-
-## Support & Donations
-
-If you find this tool useful, consider supporting future development:
-
-| Method   | Address / Link                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------- |
-| Bitcoin  | `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`                                                      |
-| Litecoin | `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`                                                     |
-| Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
-| CashApp  | `$lightweb73`                                                                                     |
-| Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
-
----
-
-</code>
-
-aicodeprep_gui_c\file_processor.py:
-<code>
-import os
-import sys
-import logging
-import pyperclip
-from typing import List
-
-def process_files(selected_files: List[str], output_file: str) -> int:
-    """Process selected files and write their contents to output_file"""
-    try:
-        # Get the directory passed from context menu (%V)
-        target_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
-        logging.info(f"Target directory from context menu: {target_dir}")
-        logging.info(f"Current working directory: {os.getcwd()}")
-
-        # Use the target directory for output
-        output_path = os.path.join(target_dir, output_file)
-        logging.info(f"Writing output to: {output_path}")
-
-        with open(output_path, 'w', encoding='utf-8') as outfile:
-            for file_path in selected_files:
-                relative_path = os.path.relpath(file_path, target_dir)
-                try:
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as infile:
-                        outfile.write(f"{relative_path}:\n<code>\n")
-                        outfile.write(infile.read())
-                        outfile.write("\n</code>\n\n")
-                        logging.info(f"Processed: {relative_path}")
-                except Exception as e:
-                    logging.error(f"Error processing {file_path}: {str(e)}")
-            
-            # Add the note about skipped files
-            outfile.write("\n<additional_information>Some files may have been skipped, to save tokens or because they didn't seem relevant. Ask about them if needed.</additional_information>\n")
-        return len(selected_files)
-    except Exception as e:
-        logging.error(f"Error writing to output file: {str(e)}")
-        return 0
-
-def copy_to_clipboard(output_path: str) -> bool:
-    """Copy the contents of output_path to clipboard"""
-    try:
-        with open(output_path, 'r', encoding='utf-8') as f:
-            full_code = f.read()
-        pyperclip.copy(full_code)
-#        logging.info("Code copied to clipboard!")
-        return True
-    except Exception as e:
-        logging.error(f"Error copying to clipboard: {str(e)}")
-        return False
-
-</code>
-
-aicodeprep_gui_c\gui.py:
-<code>
-import os
-import sys
-import platform
-import logging
-from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
-from typing import List, Tuple
-from aicodeprep_gui_c.smart_logic import (
-    EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
-    matches_pattern, is_excluded_directory
-)
-
-def get_resource_path(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_path, relative_path)
-
-class FileSelectionGUI(QtWidgets.QWidget):
-    def __init__(self, files):
-        super().__init__()
-        self.files = files  # Store files for preferences loading
-        self.setWindowTitle("AI Code Prep - File Selection")
-        self.app = QtWidgets.QApplication.instance()
-        if self.app is None:
-            self.app = QtWidgets.QApplication([])
-        self.action = 'quit'  # Track user action: 'process' or 'quit'
-
-        # .aicodeprep prefs
-        self.prefs_filename = ".aicodeprep"
-        self.remember_checkbox = None
-        self.checked_files_from_prefs = set()
-        self.prefs_loaded = False
-        self.window_size_from_prefs = None
-        self.load_prefs_if_exists()
-
-        # DPI Awareness and Scaling
-        if platform.system() == 'Windows':
-            screen = self.app.primaryScreen()
-            scale_factor = screen.logicalDotsPerInch() / 96.0
-        else:
-            scale_factor = self.app.primaryScreen().devicePixelRatio()
-
-        # Font Configuration
-        default_font_size = 9
-        try:
-            if platform.system() == 'Windows':
-                system_font = 'Segoe UI'
-            else:
-                system_font = 'Arial'
-
-            default_font_size = int(default_font_size * scale_factor)
-            self.default_font = QtGui.QFont(system_font, default_font_size)
-            self.tree_font = QtGui.QFont(system_font, default_font_size + 1)
-            self.checkbox_font = QtGui.QFont(system_font, int(default_font_size * 1.2))
-            self.setFont(self.default_font)
-            logging.info(f"Using system font: {system_font}, Size: {default_font_size}")
-        except Exception as e:
-            logging.warning(f"Font/scaling error: {e}")
-            self.default_font = QtGui.QFont('Arial', default_font_size)
-            self.tree_font = QtGui.QFont('Arial', default_font_size + 1)
-            self.checkbox_font = QtGui.QFont('Arial', int(default_font_size * 1.2))
-
-        # Geometry
-        if self.window_size_from_prefs:
-            w, h = self.window_size_from_prefs
-            self.setGeometry(100, 100, w, h)
-        else:
-            self.setGeometry(100, 100, int(600 * scale_factor), int(400 * scale_factor))
-        
-        # Layout
-        main_layout = QtWidgets.QVBoxLayout(self)
-        # Status label for messages
-        self.text_label = QtWidgets.QLabel("")
-        self.text_label.setWordWrap(True)
-        main_layout.addWidget(self.text_label)
-        self.tree_widget = QtWidgets.QTreeWidget()
-        self.tree_widget.setHeaderLabels(["File/Folder"])
-        self.tree_widget.setColumnCount(1)
-        self.tree_widget.setColumnWidth(0, int(400 * scale_factor))  # Wider for file paths
-        self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        main_layout.addWidget(self.tree_widget)
-
-        # --- Build folder/file tree ---
-        self.path_to_item = {}  # Maps folder path to QTreeWidgetItem
-        self.checked_paths = set()
-        for file_path, relative_path, is_included in files:
-            # If prefs loaded, override: only check files in prefs, uncheck all others
-            if self.prefs_loaded:
-                is_included = relative_path in self.checked_files_from_prefs
-            if is_included:
-                self.checked_paths.add(relative_path)
-            parts = relative_path.split(os.sep)
-            parent = self.tree_widget
-            parent_path = ""
-            for i, part in enumerate(parts):
-                curr_path = os.sep.join(parts[:i+1])
-                is_file = (i == len(parts) - 1)
-                if curr_path not in self.path_to_item:
-                    if is_file:
-                        item = QtWidgets.QTreeWidgetItem()
-                        item.setText(0, part)  # Show filename in column 0
-                        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                        item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
-                        item.setData(0, QtCore.Qt.UserRole, file_path)
-                        parent.addTopLevelItem(item) if parent is self.tree_widget else parent.addChild(item)
-                        self.path_to_item[curr_path] = item
-                    else:
-                        folder_item = QtWidgets.QTreeWidgetItem()
-                        folder_item.setText(0, part)
-                        # Make folders checkable
-                        folder_item.setFlags(folder_item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                        folder_item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
-                        parent.addTopLevelItem(folder_item) if parent is self.tree_widget else parent.addChild(folder_item)
-                        self.path_to_item[curr_path] = folder_item
-                    parent = self.path_to_item[curr_path]
-                else:
-                    parent = self.path_to_item[curr_path]
-
-        self.tree_widget.itemChanged.connect(self.handle_item_changed)
-
-        # --- Auto-expand folders to checked files ---
-        def expand_to_checked(item):
-            expanded = False
-            for i in range(item.childCount()):
-                child = item.child(i)
-                if child.childCount() > 0:
-                    if expand_to_checked(child):
-                        self.tree_widget.expandItem(child)
-                        expanded = True
-                else:
-                    if child.checkState(0) == QtCore.Qt.Checked:
-                        expanded = True
-            return expanded
-
-        for i in range(self.tree_widget.topLevelItemCount()):
-            top_item = self.tree_widget.topLevelItem(i)
-            if expand_to_checked(top_item):
-                self.tree_widget.expandItem(top_item)
-
-        # --- Preferences Checkbox ---
-        prefs_checkbox_layout = QtWidgets.QHBoxLayout()
-        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep) and window size")
-        self.remember_checkbox.setChecked(True)
-        prefs_checkbox_layout.addWidget(self.remember_checkbox)
-        prefs_checkbox_layout.addStretch()
-        main_layout.addLayout(prefs_checkbox_layout)
-
-        # --- Button Layout: two rows, right-aligned ---
-        button_layout1 = QtWidgets.QHBoxLayout()
-        button_layout2 = QtWidgets.QHBoxLayout()
-        main_layout.addLayout(button_layout1)
-        main_layout.addLayout(button_layout2)
-
-        # Website link (left side, above buttons)
-        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">wuu73.org/aicp</a>")
-        website_label.setOpenExternalLinks(True)
-        website_label.setTextFormat(QtCore.Qt.RichText)
-        main_layout.insertWidget(main_layout.count() - 2, website_label)  # Place above buttons
-
-        # First row of buttons (right-aligned)
-        button_layout1.addStretch()
-        process_button = QtWidgets.QPushButton("Process Selected")
-        process_button.clicked.connect(self.process_selected)
-        button_layout1.addWidget(process_button)
-
-        select_all_button = QtWidgets.QPushButton("Select All")
-        select_all_button.clicked.connect(self.select_all)
-        button_layout1.addWidget(select_all_button)
-
-        deselect_all_button = QtWidgets.QPushButton("Deselect All")
-        deselect_all_button.clicked.connect(self.deselect_all)
-        button_layout1.addWidget(deselect_all_button)
-
-        # Second row of buttons (right-aligned)
-        button_layout2.addStretch()
-        load_prefs_button = QtWidgets.QPushButton("Load from .aicodeprep")
-        load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked)
-        button_layout2.addWidget(load_prefs_button)
-
-        quit_button = QtWidgets.QPushButton("Quit")
-        quit_button.clicked.connect(self.quit_without_processing)
-        button_layout2.addWidget(quit_button)
-
-        self.selected_files = []
-
-    def handle_item_changed(self, item, column):
-        if column == 0:
-            file_path = item.data(0, QtCore.Qt.UserRole)
-            # If it's a folder (no file_path), do smart recursive check/uncheck
-            if file_path is None:
-                def should_skip_folder(folder_item):
-                    # Compose full path from tree
-                    path_parts = []
-                    curr = folder_item
-                    while curr is not None and curr.parent() is not None:
-                        path_parts.insert(0, curr.text(0))
-                        curr = curr.parent()
-                    if curr is not None and curr.parent() is None:
-                        path_parts.insert(0, curr.text(0))
-                    folder_path = os.path.join(*path_parts)
-                    return (folder_item.text(0) in EXCLUDE_DIRS or
-                            is_excluded_directory(folder_path))
-                def smart_check(item, check_state):
-                    # Skip blocked folders
-                    if should_skip_folder(item):
-                        item.setCheckState(0, QtCore.Qt.Unchecked)
-                        return
-                    for i in range(item.childCount()):
-                        child = item.child(i)
-                        child_file_path = child.data(0, QtCore.Qt.UserRole)
-                        if child_file_path:
-                            # It's a file
-                            filename = os.path.basename(child_file_path)
-                            ext = os.path.splitext(filename)[1].lower()
-                            if (filename in EXCLUDE_FILES or
-                                ext in EXCLUDE_EXTENSIONS or
-                                any(matches_pattern(filename, pat) for pat in EXCLUDE_PATTERNS)):
-                                child.setCheckState(0, QtCore.Qt.Unchecked)
-                                continue
-                            child.setCheckState(0, check_state)
-                        else:
-                            # It's a folder
-                            smart_check(child, check_state)
-                    item.setCheckState(0, check_state)
-                smart_check(item, item.checkState(0))
-            else:
-                # File item: update selected_files as before
-                if item.checkState(0) == QtCore.Qt.Checked:
-                    if file_path and file_path not in self.selected_files:
-                        self.selected_files.append(file_path)
-                else:
-                    if file_path and file_path in self.selected_files:
-                        self.selected_files.remove(file_path)
-                    
-    def select_all(self):
-        # Recursively select all file items
-        def check_all_items(item):
-            if item.flags() & QtCore.Qt.ItemIsUserCheckable:
-                item.setCheckState(0, QtCore.Qt.Checked)
-            for i in range(item.childCount()):
-                check_all_items(item.child(i))
-                
-        for i in range(self.tree_widget.topLevelItemCount()):
-            check_all_items(self.tree_widget.topLevelItem(i))
-
-    def deselect_all(self):
-        # Recursively deselect all file items
-        def uncheck_all_items(item):
-            if item.flags() & QtCore.Qt.ItemIsUserCheckable:
-                item.setCheckState(0, QtCore.Qt.Unchecked)
-            for i in range(item.childCount()):
-                uncheck_all_items(item.child(i))                
-        for i in range(self.tree_widget.topLevelItemCount()):
-            uncheck_all_items(self.tree_widget.topLevelItem(i))
-            
-    def get_selected_files(self):
-        self.selected_files = []
-        
-        # Recursively collect all checked files
-        def collect_checked_files(item):
-            if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.checkState(0) == QtCore.Qt.Checked:
-                file_path = item.data(0, QtCore.Qt.UserRole)
-                if file_path:
-                    self.selected_files.append(file_path)
-            
-            for i in range(item.childCount()):
-                collect_checked_files(item.child(i))
-        
-        for i in range(self.tree_widget.topLevelItemCount()):
-            collect_checked_files(self.tree_widget.topLevelItem(i))
-            
-        return self.selected_files
-
-    def process_selected(self):
-        self.action = 'process'  # Set action first
-        logging.info(f"Process Selected clicked - action set to: {self.action}")
-        self.get_selected_files()
-        # Save prefs if checkbox is checked
-        if self.remember_checkbox and self.remember_checkbox.isChecked():
-            self.save_prefs()
-        logging.info(f"Process Selected closing - action is: {self.action}")
-        self.close()
-
-    def fetch_text_content(self):
-        url = "https://wuu73.org/aicp/display.txt"  # URL to fetch text from
-        request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
-        self.network_manager.get(request)
-
-    def handle_network_reply(self, reply):
-        if reply.error() == QtNetwork.QNetworkReply.NoError:
-            text = reply.readAll().data().decode()
-            # Check if the text is not just whitespace
-            if text.strip():
-                # Convert plain text links to HTML links (basic link handling)
-                text_with_links = self.convert_text_links_to_html(text)
-                self.text_label.setText(text_with_links)
-        # If there's an error or the content is empty, do nothing (silent handling)
-
-    def convert_text_links_to_html(self, text):
-        """Converts URLs in plain text to clickable HTML links (very basic)."""
-        import re
-        url_pattern = re.compile(r'(https?://\S+)')
-        return url_pattern.sub(r'<a href="\1">\1</a>', text)
-
-    def load_from_prefs_button_clicked(self):
-        import os
-        prefs_path = _prefs_path()
-        if os.path.exists(prefs_path):
-            self.load_prefs_if_exists()
-            # Uncheck all first, then check those in prefs
-            self.deselect_all()
-            for file_path, relative_path, is_included in self.files:
-                if relative_path in self.checked_files_from_prefs:
-                    parts = relative_path.split(os.sep)
-                    curr_path = os.sep.join(parts)
-                    item = self.path_to_item.get(curr_path)
-                    if item:
-                        item.setCheckState(0, QtCore.Qt.Checked)
-            # Optionally show a message
-            self.text_label.setText("Loaded selection from .aicodeprep")
-        else:
-            self.text_label.setText(".aicodeprep not found")
-
-    def quit_without_processing(self):
-        # Immediately close the window and exit the app without processing
-        logging.info("Quit button clicked - setting action to quit")
-        self.action = 'quit'
-        self.close()
-
-def show_file_selection_gui(files):
-    app = QtWidgets.QApplication.instance()
-    if app is None:
-        app = QtWidgets.QApplication([])
-
-    gui = FileSelectionGUI(files)
-    gui.show()
-    app.exec_()
-    logging.info(f"GUI event loop finished - final action value: {gui.action}")
-    return gui.action, gui.selected_files
-
-# --- Preferences Save/Load Methods ---
-
-def _prefs_path():
-    # Always save/load in current working directory
-    return os.path.join(os.getcwd(), ".aicodeprep")
-
-def _write_prefs_file(checked_relpaths, window_size=None):
-    try:
-        with open(_prefs_path(), "w", encoding="utf-8") as f:
-            if window_size:
-                f.write("[window]\n")
-                f.write(f"width={window_size[0]}\n")
-                f.write(f"height={window_size[1]}\n\n")
-            for relpath in checked_relpaths:
-                f.write(relpath + "\n")
-    except Exception as e:
-        logging.warning(f"Could not write .aicodeprep: {e}")
-
-
-def _read_prefs_file():
-    checked = set()
-    window_size = None
-    try:
-        with open(_prefs_path(), "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        i = 0
-        if lines and lines[0].strip() == '[window]':
-            width = height = None
-            for j in range(1, len(lines)):
-                line = lines[j].strip()
-                if line.startswith('width='):
-                    width = int(line.split('=', 1)[1])
-                elif line.startswith('height='):
-                    height = int(line.split('=', 1)[1])
-                elif line == '':
-                    i = j + 1
-                    break
-            if width and height:
-                window_size = (width, height)
-        for line in lines[i:]:
-            line = line.strip()
-            if line and not line.startswith('#'):
-                checked.add(line)
-    except Exception:
-        pass
-    return checked, window_size
-
-# Add closeEvent to set action to 'quit' ONLY if window is closed via 'X'
-def closeEvent(self, event):
-    logging.info(f"closeEvent triggered - action before: {self.action}")
-    # Only set to 'quit' if it wasn't already set to 'process'
-    if self.action != 'process':
-        self.action = 'quit'
-    logging.info(f"closeEvent triggered - action after: {self.action}")
-    super(FileSelectionGUI, self).closeEvent(event)
-
-# Patch methods into FileSelectionGUI
-
-def load_prefs_if_exists(self):
-    prefs_path = _prefs_path()
-    if os.path.exists(prefs_path):
-        checked, window_size = _read_prefs_file()
-        self.checked_files_from_prefs = checked
-        self.window_size_from_prefs = window_size
-        self.prefs_loaded = True
-    else:
-        self.checked_files_from_prefs = set()
-        self.window_size_from_prefs = None
-        self.prefs_loaded = False
-
-def save_prefs(self):
-    checked_relpaths = []
-    # Recursively collect all checked relative paths
-    def collect_checked(item, relpath_prefix=""):
-        text = item.text(0)
-        curr_path = os.path.join(relpath_prefix, text) if relpath_prefix else text
-        if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.checkState(0) == QtCore.Qt.Checked:
-            checked_relpaths.append(curr_path)
-        for i in range(item.childCount()):
-            collect_checked(item.child(i), curr_path)
-    for i in range(self.tree_widget.topLevelItemCount()):
-        collect_checked(self.tree_widget.topLevelItem(i))
-    # Save window size
-    size = self.size()
-    window_size = (size.width(), size.height())
-    _write_prefs_file(checked_relpaths, window_size=window_size)
-
-FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
-FileSelectionGUI.save_prefs = save_prefs
-FileSelectionGUI.closeEvent = closeEvent
-
-</code>
-
-aicodeprep_gui_c\main.py:
-<code>
-import os
-import sys
-import argparse
-import logging
-from typing import List
-from aicodeprep_gui_c.file_processor import process_files, copy_to_clipboard
-from aicodeprep_gui_c.smart_logic import collect_all_files, load_default_config, load_user_config
-from aicodeprep_gui_c.gui import show_file_selection_gui
-
-# Configure logging with explicit console handler only
-logger = logging.getLogger()
-
-# Remove any existing handlers to prevent duplicate logging
-for handler in logger.handlers:
-    logger.removeHandler(handler)
-
-logger.setLevel(logging.INFO)
-
-# Create console handler
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-console_handler.setFormatter(formatter)
-
-# Add handler to root logger
-logger.addHandler(console_handler)
-
-def main():
-    parser = argparse.ArgumentParser(description="Concatenate code files into a single text file.")
-    parser.add_argument("-n", "--no-copy", action="store_true",
-                        help="Do NOT copy output to clipboard (default: copy to clipboard)")
-    parser.add_argument("-o", "--output", default="fullcode.txt",
-                        help="Output file name (default: fullcode.txt)")
-    parser.add_argument("-d", "--debug", action="store_true",
-                        help="Enable debug logging")
-    parser.add_argument("directory", nargs="?", default=".",
-                        help="Directory to process (default: current directory)")
-
-    args = parser.parse_args()
-
-    if args.debug:
-        logger.setLevel(logging.DEBUG)
-        console_handler.setLevel(logging.DEBUG)
-
-    # Get the target directory from command line argument (%V)
-    target_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
-    logger.info(f"Target directory: {target_dir}")
-
-    # Change to the specified directory
-    os.chdir(target_dir)
-
-    logger.info("Starting code concatenation...")
-
-    all_files_with_flags = collect_all_files()
-
-    if not all_files_with_flags:
-        logger.warning("No files found to process!")
-        return
-
-    action, selected_files = show_file_selection_gui(all_files_with_flags)
-
-    if action == 'quit':
-        logger.info("User quit without processing. Exiting.")
-        return
-
-    if not selected_files:
-        logger.info("No files selected. Exiting.")
-        return
-
-    files_processed = process_files(selected_files, args.output)
-
-    logger.info(f"Concatenation complete! Processed {files_processed} code files.")
-    logger.info(f"Output written to {args.output}")
-
-    if not args.no_copy:
-        output_path = os.path.join(target_dir, args.output)
-        if copy_to_clipboard(output_path):
-            logger.info("Code copied to clipboard!")
-        else:
-            logger.error("Failed to copy code to clipboard")
-
-    logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")
-    logger.info("https://wuu73.org/hello.html")
-
-if __name__ == "__main__":
-    main()
-
-</code>
-
-aicodeprep_gui_c\smart_logic.py:
-<code>
-from importlib import resources
-import os
-import sys
-import pathlib
-import json
-import logging
-from typing import List, Tuple
-import fnmatch
-
-def get_config_path():
-    """Get the path to the default configuration file."""
-    if getattr(sys, 'frozen', False):
-        # If the application is frozen (e.g., PyInstaller), use the _MEIPASS directory.
-        base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.md')
-    else:
-        # If running as a script, use importlib.resources.
-        try:
-            with resources.path('aicodeprep_gui_c.data', 'default_config.md') as config_file:
-                config_path = str(config_file)
-        except ModuleNotFoundError:
-            # Fallback to a default path if the package structure is different.
-            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.md')
-
-    return config_path
-
-def get_exe_directory():
-    """Get the directory of the executable or script"""
-    if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
-    return os.path.dirname(os.path.abspath(__file__))
-
-def load_default_config() -> dict:
-    """Load the default configuration from Markdown file with JSON code block"""
-    try:
-        config_path = get_config_path()
-        logging.info(f"Looking for config at {config_path}")
-
-        try:
-            with open(config_path, 'r') as f:
-                content = f.read()
-            # Extract JSON code block from Markdown
-            import re
-            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
-            if match:
-                json_str = match.group(1)
-                config = json.loads(json_str)
-            else:
-                logging.warning("No JSON code block found in config markdown, using defaults")
-                config = None
-        except FileNotFoundError:
-            logging.warning("Default config file not found, using built-in defaults")
-            config = None
-
-        if config is None:
-            config = {
-                'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
-                                   '.rs', '.swift', '.kt'],
-                'exclude_extensions': ['.pyc', '.class', '.o', '.obj'],
-                'exclude_patterns': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-                'exclude_dirs': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-                'include_dirs': [],
-                'exclude_files': [],
-                'include_files': [],
-                'max_file_size': 1000000
-            }
-
-        if 'exclude_patterns' in config:
-            config['exclude_patterns'] = [pattern.lstrip('.') for pattern in config['exclude_patterns']]
-
-        if 'code_extensions' not in config or not config['code_extensions']:
-            config['code_extensions'] = ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb',
-                                         '.go', '.rs', '.swift', '.kt']
-
-        logging.info(f"Loaded configuration with {len(config.get('code_extensions', []))} code extensions")
-        return config
-
-    except Exception as e:
-        logging.error(f"Error in configuration handling: {str(e)}")
-        return {
-            'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
-                               '.rs', '.swift', '.kt'],
-            'exclude_extensions': ['.pyc', '.class', '.o', '.obj'],
-            'exclude_patterns': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-            'exclude_dirs': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-            'include_dirs': [],
-            'exclude_files': [],
-            'include_files': [],
-            'max_file_size': 1000000
-        }
-
-def load_user_config() -> dict:
-    """Load user-specific configuration from Markdown file with JSON code block"""
-    try:
-        config_path = os.path.join(get_exe_directory(), 'aicodeprep_config.md')
-        if os.path.exists(config_path):
-            with open(config_path, 'r') as f:
-                content = f.read()
-            import re
-            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
-            if match:
-                json_str = match.group(1)
-                config = json.loads(json_str)
-                if config and 'exclude_patterns' in config:
-                    config['exclude_patterns'] = [
-                        pattern.lstrip('.') for pattern in config['exclude_patterns']
-                    ]
-                return config
-            else:
-                logging.warning("No JSON code block found in user config markdown")
-                return {}
-    except Exception as e:
-        logging.error(f"Error loading user configuration: {str(e)}")
-    return {}
-
-def matches_pattern(filename: str, pattern: str) -> bool:
-    """Check if filename matches the given glob-style pattern (supports *, ?, [])"""
-    return fnmatch.fnmatch(filename.lower(), pattern.lower())
-
-def is_excluded_directory(path: str) -> bool:
-    """Check if the directory should be excluded"""
-    path_parts = pathlib.Path(path).parts
-    
-    # Check if any part of the path exactly matches an excluded directory
-    if any(part in EXCLUDE_DIRS for part in path_parts):
-        return True
-        
-    # Specifically check for venv directories with case insensitivity
-    if any('venv' in part.lower() for part in path_parts):
-        return True
-        
-    return False
-
-def should_process_directory(dir_path: str) -> bool:
-    """Determine if a directory should be processed"""
-    if is_excluded_directory(dir_path):
-        return False
-
-    dir_name = os.path.basename(dir_path)
-    if dir_name in INCLUDE_DIRS:
-        return True
-    if dir_name in EXCLUDE_DIRS or 'venv' in dir_name.lower():
-        return False
-    
-    # Check if any parent directory should be excluded
-    path_parts = pathlib.Path(dir_path).parts
-    if any(excluded in part.lower() for part in path_parts 
-           for excluded in ['venv', '.venv']):
-        return False
-        
-    return True
-
-def collect_all_files() -> List[Tuple[str, str, bool]]:
-    """Collect all files in the target directory with inclusion flags"""
-    all_files = []
-    logging.info("Starting file collection...")
-
-    if len(sys.argv) > 1:
-        root_dir = sys.argv[1]
-    else:
-        root_dir = os.getcwd()
-        logging.info(f"Processing directory: {root_dir}")
-    logging.info(f"Code extensions configured: {CODE_EXTENSIONS}")
-    
-    for root, dirs, files in os.walk(root_dir):
-        # Filter out directories to skip them entirely based on EXCLUDE_DIRS
-        # This is more effective than just checking the name
-        dirs[:] = [d for d in dirs if not d.startswith('.') and 
-                  d not in EXCLUDE_DIRS and 
-                  not any(excluded_dir in d.lower() for excluded_dir in ['venv', '.venv'])]
-
-        for file in files:
-            if file == "aicp_FULLCODE.txt":
-                continue
-
-            file_path = os.path.join(root, file)
-            relative_path = os.path.relpath(file_path, root_dir)
-
-            if any(part.startswith('.') for part in pathlib.Path(file_path).parts):
-                continue
-
-            try:
-                if os.path.getsize(file_path) > MAX_FILE_SIZE:
-                    continue
-            except (OSError, IOError):
-                continue
-
-            included = False
-
-            if file in INCLUDE_FILES:
-                included = True
-            elif os.path.basename(root) in INCLUDE_DIRS:
-                extension = pathlib.Path(file_path).suffix.lower()
-                if extension in CODE_EXTENSIONS:
-                    if (file not in EXCLUDE_FILES and
-                            extension not in EXCLUDE_EXTENSIONS and
-                            not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS)):
-                        included = True
-            else:
-                extension = pathlib.Path(file_path).suffix.lower()
-                if extension in CODE_EXTENSIONS:
-                    # Check if the file should be excluded based on path or name
-                    path_parts = pathlib.Path(root).parts
-                    excluded_by_dir = any(excluded_dir in part.lower() for part in path_parts 
-                                         for excluded_dir in EXCLUDE_DIRS)
-                    
-                    if (file not in EXCLUDE_FILES and
-                            extension not in EXCLUDE_EXTENSIONS and
-                            not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS) and
-                            not excluded_by_dir and
-                            not any(excluded_dir in root.lower() for excluded_dir in ['venv', '.venv'])):
-                        included = True
-
-            all_files.append((file_path, relative_path, included))
-            logging.info(f"Collected file: {relative_path}, Included by default: {included}")
-
-    logging.info(f"Total files collected: {len(all_files)}")
-    return all_files
-
-# Load configurations
-default_config = load_default_config()
-user_config = load_user_config()
-config = {**default_config, **user_config}
-
-CODE_EXTENSIONS = set(config.get('code_extensions', []))
-EXCLUDE_EXTENSIONS = set(config.get('exclude_extensions', []))
-EXCLUDE_PATTERNS = set(config.get('exclude_patterns', []))
-EXCLUDE_DIRS = set(config.get('exclude_dirs', []))
-INCLUDE_DIRS = set(config.get('include_dirs', []))
-EXCLUDE_FILES = set(config.get('exclude_files', []))
-INCLUDE_FILES = set(config.get('include_files', []))
-MAX_FILE_SIZE = config.get('max_file_size', 1000000)
-
-</code>
-
-aicodeprep_gui_c\__init__.py:
-<code>
-from .main import main
-</code>
-
 aicodeprep_gui_c\data\default_config.md:
 <code>
 # Default Configuration
@@ -1263,6 +199,210 @@ aicodeprep_gui_c\data\default_config.md:
   "max_file_size": 1000000
 }
 ```
+
+</code>
+
+aicodeprep_gui_c\data\default_config_old.yaml:
+<code>
+code_extensions:
+  - .py
+  - .js
+  - .jsx
+  - .ts
+  - .tsx
+  - .java
+  - .cpp
+  - .c
+  - .h
+  - .cs
+  - .php
+  - .rb
+  - .go
+  - .rs
+  - .swift
+  - .kt
+  - .scala
+  - .html
+  - .css
+  - .scss
+  - .sass
+  - .less
+  - .sql
+  - .sh
+  - .yaml
+  - .yml
+  - .json
+  - .xml
+  - .vue
+  - .r
+  - .m
+  - .f90
+  - .f95
+  - .f03
+  - .f08
+  - .gradle
+  - .groovy
+  - .ps1
+  - .psm1
+  - .ipynb
+  - .md
+  - .txt
+  - .lock
+  - .toml
+  - .ini
+  - .conf
+  - .cfg
+  - .properties
+
+exclude_extensions:
+  - .txt
+  - .log
+  - .temp
+  - .exe
+  - .dll
+  - .so
+  - .dylib
+  - .jar
+  - .war
+  - .ear
+  - .o
+  - .class
+
+include_files:
+  - README.md
+  - CONTRIBUTING.md
+  - important.txt   # Even if .txt is excluded, this specific file will be included
+
+include_dirs:
+  - important_docs  # Specifically include this directory even if parent is excluded
+
+exclude_dirs:
+  - .git
+  - node_modules
+  - venv
+  - __pycache__
+  - build
+  - dist
+  - .idea
+  - Lib
+  - site-packages  
+  - .venv
+  - venv
+  - .vscode
+  - .github
+  - docs
+  - tests
+  - spec
+  - fixtures
+  - migrations
+  - logs
+  - tmp
+  - cache
+  - assets
+  - public
+  - static
+  - uploads
+  - vendor
+  - bin
+  - obj
+  - out
+  - target
+  - coverage
+  - reports
+  - .pytest_cache
+  - .mypy_cache
+  - .ipynb_checkpoints
+  - .nyc_output
+  - test-results
+  - __tests__
+  - __snapshots__
+  - __mocks__
+  - debug
+  - .jest
+  - .next
+  - .nuxt
+  - .svelte-kit
+  - .expo
+  - dist-ssr
+  - .parcel-cache
+  - .serverless
+  - .vercel
+  - .angular
+  - .quasar
+  - .redwood
+  - .fusebox
+  - .docusaurus
+  - .terraform
+  - snapshots
+
+exclude_files:
+  - package-lock.json
+  - yarn.lock
+  - requirements.txt
+  - Gemfile.lock
+  - composer.lock
+  - .DS_Store
+  - Thumbs.db
+  - pnpm-lock.yaml
+  - bun.lock
+  - bun.lockb
+  - cargo.lock
+  - poetry.lock
+  - Pipfile.lock
+  - .npmrc
+  - .env
+  - .env.*
+  - .env.local
+  - .env.prod
+  - .env.staging
+  - .env.dev
+  - .flaskenv
+  - .dockerenv
+  - env.json
+  - credentials.yaml
+  - secret*.json
+  - *.key
+  - *.pem
+  - *.crt
+  - *.pub
+  - id_rsa
+  - id_dsa
+  - Dockerfile.*.cache
+  - coverage.xml
+  - *.lcov
+
+exclude_patterns:
+  - min.js
+  - min.css
+  - bundle.js
+  - chunk.js
+  - test.js
+  - spec.js
+  - generated.ts
+  - '*.swp'
+  - '*.swo'
+  - '*.un~'
+  - '~$*'
+  - '*.min.*'
+  - '*-lock.*'
+  - '*.snap'
+  - .test.
+  - .spec.
+  - .bench.
+  - .cache
+  - .temp
+  - '*.lock'
+  - '*.class'
+  - '*.exe'
+  - '*.dll'
+  - '*.so'
+  - '*.dylib'
+  - '*.jar'
+  - '*.war'
+  - '*.ear'
+  - '*.o'
+
+max_file_size: 1000000  # 1MB default
 
 </code>
 
