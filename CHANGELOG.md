@@ -11,6 +11,8 @@
 - Expandable and collapsable folders, will auto expand if any files recursively inside are checked.
 - Checkbox to disable creation of the `.aicodeprep` file if you for some reason don't want that feature.
 - 🧮 Added a token counter: as you check or uncheck files, the token count is now displayed.
+- Added a prompt box, where you can optionally add text that will be added to the end of the context/fullcode.txt/clipboard. So you can type a question or describe what you want the LLM to do with the code (instead of having to use some other editor)
+- Linux version! Looks and works the same as Windows/Mac versions.
 
 ---
 

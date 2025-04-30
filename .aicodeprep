@@ -1,12 +1,15 @@
 [window]
-width=638
-height=1147
+width=793
+height=1094
 splitter=000000ff000000010000000200000300000000e001ffffffff010000000200
 
 CHANGELOG.md
 README2.md
+AICodePrepGUI.workflow\Contents\document.wflow
+AICodePrepGUI.workflow\Contents\Info.plist
 aicodeprep_gui_c\file_processor.py
 aicodeprep_gui_c\gui.py
 aicodeprep_gui_c\main.py
 aicodeprep_gui_c\smart_logic.py
+aicodeprep_gui_c\__init__.py
 aicodeprep_gui_c\data\default_config.md

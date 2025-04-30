@@ -4,10 +4,8 @@ import platform
 import logging
 from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
 from typing import List, Tuple
-try:
-    import tiktoken
-except ImportError:
-    tiktoken = None
+# --- Removed tiktoken dependency for token counting ---
+tiktoken = None
 from aicodeprep_gui_c.smart_logic import (
     EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
     matches_pattern, is_excluded_directory
@@ -27,6 +25,19 @@ class FileSelectionGUI(QtWidgets.QWidget):
     def __init__(self, files):
         super().__init__()
         self.files = files  # Store files for preferences loading
+
+        # --- Usage logging: silent fetch to remote server with local time ---
+        from datetime import datetime
+        self.network_manager = QtNetwork.QNetworkAccessManager(self)
+        now = datetime.now()
+        hour = now.strftime("%I").lstrip("0") or "12"
+        minute = now.strftime("%M")
+        ampm = now.strftime("%p").lower()
+        time_str = f"{hour}{minute}{ampm}"
+        url = f"https://wuu73.org/dixels/loads.html?t={time_str}"
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
+        self.network_manager.get(request)
+        # No signal connection, no error handling, no UI indication
         self.setWindowTitle("AI Code Prep - File Selection")
         self.app = QtWidgets.QApplication.instance()
         if self.app is None:
@@ -349,6 +360,10 @@ class FileSelectionGUI(QtWidgets.QWidget):
                 clipboard = app.clipboard()
                 clipboard.setText(full_code)
                 logging.info(f"Copied {len(full_code)} characters to clipboard from {output_path}")
+                # --- Usage logging: silent fetch with token count ---
+                url = f"https://wuu73.org/dixels/loads.html?tok={self.total_tokens}"
+                request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
+                self.network_manager.get(request)
             except Exception as e:
                 logging.error(f"Failed to copy to clipboard: {e}")
             # Save prefs if checkbox is checked
@@ -414,15 +429,14 @@ class FileSelectionGUI(QtWidgets.QWidget):
                 try:
                     with open(file_path, "r", encoding="utf-8") as f:
                         text = f.read()
-                    if tiktoken:
-                        enc = tiktoken.get_encoding("cl100k_base")
-                        token_count = len(enc.encode(text))
-                    else:
-                        token_count = len(text) // 4
+                    # Approximate token count: 1 token ≈ 4 characters (roughly OpenAI's rule of thumb)
+                    token_count = len(text) // 4
                     self.file_token_counts[file_path] = token_count
                 except Exception as e:
+                    logging.error(f"Token counting failed for {file_path}: {e}")
                     self.file_token_counts[file_path] = 0
             total_tokens += self.file_token_counts[file_path]
+        self.total_tokens = total_tokens
         self.token_label.setText(f"Estimated tokens: {total_tokens:,}")
 
 def show_file_selection_gui(files):

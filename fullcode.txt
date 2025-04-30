@@ -13,6 +13,8 @@ CHANGELOG.md:
 - Expandable and collapsable folders, will auto expand if any files recursively inside are checked.
 - Checkbox to disable creation of the `.aicodeprep` file if you for some reason don't want that feature.
 - 🧮 Added a token counter: as you check or uncheck files, the token count is now displayed.
+- Added a prompt box, where you can optionally add text that will be added to the end of the context/fullcode.txt/clipboard. So you can type a question or describe what you want the LLM to do with the code (instead of having to use some other editor)
+- Linux version! Looks and works the same as Windows/Mac versions.
 
 ---
 
@@ -216,6 +218,289 @@ If you find this tool useful, consider supporting future development:
 
 </code>
 
+AICodePrepGUI.workflow\Contents\document.wflow:
+<code>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AMApplicationBuild</key>
+	<string>526</string>
+	<key>AMApplicationVersion</key>
+	<string>2.10</string>
+	<key>AMDocumentVersion</key>
+	<string>2</string>
+	<key>actions</key>
+	<array>
+		<dict>
+			<key>action</key>
+			<dict>
+				<key>AMAccepts</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Optional</key>
+					<true/>
+					<key>Types</key>
+					<array>
+						<string>com.apple.cocoa.string</string>
+					</array>
+				</dict>
+				<key>AMActionVersion</key>
+				<string>2.0.3</string>
+				<key>AMApplication</key>
+				<array>
+					<string>Automator</string>
+				</array>
+				<key>AMParameterProperties</key>
+				<dict>
+					<key>COMMAND_STRING</key>
+					<dict/>
+					<key>CheckedForUserDefaultShell</key>
+					<dict/>
+					<key>inputMethod</key>
+					<dict/>
+					<key>shell</key>
+					<dict/>
+					<key>source</key>
+					<dict/>
+				</dict>
+				<key>AMProvides</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Types</key>
+					<array>
+						<string>com.apple.cocoa.string</string>
+					</array>
+				</dict>
+				<key>ActionBundlePath</key>
+				<string>/System/Library/Automator/Run Shell Script.action</string>
+				<key>ActionName</key>
+				<string>Run Shell Script</string>
+				<key>ActionParameters</key>
+				<dict>
+					<key>COMMAND_STRING</key>
+					<string>#!/bin/bash
+# Ensure exactly one folder is selected
+if [ "$#" -ne 1 ]; then
+  osascript -e 'display dialog "Select exactly ONE folder." buttons {"OK"} default button 1'
+  exit 1
+fi
+
+# Get the folder path
+FOLDER_PATH="$1"
+
+# Open Terminal and run the command visibly
+osascript &lt;&lt;EOD
+tell application "Terminal"
+  activate
+  do script "'/Applications/AICodePrepGUI.app/Contents/MacOS/main' '$FOLDER_PATH'"
+end tell
+EOD</string>
+					<key>CheckedForUserDefaultShell</key>
+					<true/>
+					<key>inputMethod</key>
+					<integer>1</integer>
+					<key>shell</key>
+					<string>/bin/bash</string>
+					<key>source</key>
+					<string></string>
+				</dict>
+				<key>BundleIdentifier</key>
+				<string>com.apple.RunShellScript</string>
+				<key>CFBundleVersion</key>
+				<string>2.0.3</string>
+				<key>CanShowSelectedItemsWhenRun</key>
+				<false/>
+				<key>CanShowWhenRun</key>
+				<true/>
+				<key>Category</key>
+				<array>
+					<string>AMCategoryUtilities</string>
+				</array>
+				<key>Class Name</key>
+				<string>RunShellScriptAction</string>
+				<key>InputUUID</key>
+				<string>BD3EC33B-803C-414A-853D-C6C14C401602</string>
+				<key>Keywords</key>
+				<array>
+					<string>Shell</string>
+					<string>Script</string>
+					<string>Command</string>
+					<string>Run</string>
+					<string>Unix</string>
+				</array>
+				<key>OutputUUID</key>
+				<string>E67DCBB2-F6AF-4A82-8B48-5656193C9F2D</string>
+				<key>UUID</key>
+				<string>725FD07E-C1D8-4B66-8B0D-751256D26C99</string>
+				<key>UnlocalizedApplications</key>
+				<array>
+					<string>Automator</string>
+				</array>
+				<key>arguments</key>
+				<dict>
+					<key>0</key>
+					<dict>
+						<key>default value</key>
+						<integer>0</integer>
+						<key>name</key>
+						<string>inputMethod</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<string>0</string>
+						<key>uuid</key>
+						<string>0</string>
+					</dict>
+					<key>1</key>
+					<dict>
+						<key>default value</key>
+						<false/>
+						<key>name</key>
+						<string>CheckedForUserDefaultShell</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<string>0</string>
+						<key>uuid</key>
+						<string>1</string>
+					</dict>
+					<key>2</key>
+					<dict>
+						<key>default value</key>
+						<string></string>
+						<key>name</key>
+						<string>source</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<string>0</string>
+						<key>uuid</key>
+						<string>2</string>
+					</dict>
+					<key>3</key>
+					<dict>
+						<key>default value</key>
+						<string></string>
+						<key>name</key>
+						<string>COMMAND_STRING</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<string>0</string>
+						<key>uuid</key>
+						<string>3</string>
+					</dict>
+					<key>4</key>
+					<dict>
+						<key>default value</key>
+						<string>/bin/sh</string>
+						<key>name</key>
+						<string>shell</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<string>0</string>
+						<key>uuid</key>
+						<string>4</string>
+					</dict>
+				</dict>
+				<key>isViewVisible</key>
+				<integer>1</integer>
+				<key>location</key>
+				<string>332.000000:305.000000</string>
+				<key>nibPath</key>
+				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
+			</dict>
+			<key>isViewVisible</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>connectors</key>
+	<dict/>
+	<key>workflowMetaData</key>
+	<dict>
+		<key>applicationBundleID</key>
+		<string>com.apple.finder</string>
+		<key>applicationBundleIDsByPath</key>
+		<dict>
+			<key>/System/Library/CoreServices/Finder.app</key>
+			<string>com.apple.finder</string>
+		</dict>
+		<key>applicationPath</key>
+		<string>/System/Library/CoreServices/Finder.app</string>
+		<key>applicationPaths</key>
+		<array>
+			<string>/System/Library/CoreServices/Finder.app</string>
+		</array>
+		<key>inputTypeIdentifier</key>
+		<string>com.apple.Automator.fileSystemObject.folder</string>
+		<key>outputTypeIdentifier</key>
+		<string>com.apple.Automator.nothing</string>
+		<key>presentationMode</key>
+		<integer>15</integer>
+		<key>processesInput</key>
+		<false/>
+		<key>serviceApplicationBundleID</key>
+		<string>com.apple.finder</string>
+		<key>serviceApplicationPath</key>
+		<string>/System/Library/CoreServices/Finder.app</string>
+		<key>serviceInputTypeIdentifier</key>
+		<string>com.apple.Automator.fileSystemObject.folder</string>
+		<key>serviceOutputTypeIdentifier</key>
+		<string>com.apple.Automator.nothing</string>
+		<key>serviceProcessesInput</key>
+		<false/>
+		<key>systemImageName</key>
+		<string>NSActionTemplate</string>
+		<key>useAutomaticInputType</key>
+		<false/>
+		<key>workflowTypeIdentifier</key>
+		<string>com.apple.Automator.servicesMenu</string>
+	</dict>
+</dict>
+</plist>
+
+</code>
+
+AICodePrepGUI.workflow\Contents\Info.plist:
+<code>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSBackgroundColorName</key>
+			<string>background</string>
+			<key>NSIconName</key>
+			<string>NSActionTemplate</string>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>AICodePrepGUI</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>runWorkflowAsService</string>
+			<key>NSRequiredContext</key>
+			<dict>
+				<key>NSApplicationIdentifier</key>
+				<string>com.apple.finder</string>
+			</dict>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.folder</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
+
+</code>
+
 aicodeprep_gui_c\file_processor.py:
 <code>
 import os
@@ -260,10 +545,8 @@ import platform
 import logging
 from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
 from typing import List, Tuple
-try:
-    import tiktoken
-except ImportError:
-    tiktoken = None
+# --- Removed tiktoken dependency for token counting ---
+tiktoken = None
 from aicodeprep_gui_c.smart_logic import (
     EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
     matches_pattern, is_excluded_directory
@@ -283,6 +566,19 @@ class FileSelectionGUI(QtWidgets.QWidget):
     def __init__(self, files):
         super().__init__()
         self.files = files  # Store files for preferences loading
+
+        # --- Usage logging: silent fetch to remote server with local time ---
+        from datetime import datetime
+        self.network_manager = QtNetwork.QNetworkAccessManager(self)
+        now = datetime.now()
+        hour = now.strftime("%I").lstrip("0") or "12"
+        minute = now.strftime("%M")
+        ampm = now.strftime("%p").lower()
+        time_str = f"{hour}{minute}{ampm}"
+        url = f"https://wuu73.org/dixels/loads.html?t={time_str}"
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
+        self.network_manager.get(request)
+        # No signal connection, no error handling, no UI indication
         self.setWindowTitle("AI Code Prep - File Selection")
         self.app = QtWidgets.QApplication.instance()
         if self.app is None:
@@ -605,6 +901,10 @@ class FileSelectionGUI(QtWidgets.QWidget):
                 clipboard = app.clipboard()
                 clipboard.setText(full_code)
                 logging.info(f"Copied {len(full_code)} characters to clipboard from {output_path}")
+                # --- Usage logging: silent fetch with token count ---
+                url = f"https://wuu73.org/dixels/loads.html?tok={self.total_tokens}"
+                request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
+                self.network_manager.get(request)
             except Exception as e:
                 logging.error(f"Failed to copy to clipboard: {e}")
             # Save prefs if checkbox is checked
@@ -670,15 +970,14 @@ class FileSelectionGUI(QtWidgets.QWidget):
                 try:
                     with open(file_path, "r", encoding="utf-8") as f:
                         text = f.read()
-                    if tiktoken:
-                        enc = tiktoken.get_encoding("cl100k_base")
-                        token_count = len(enc.encode(text))
-                    else:
-                        token_count = len(text) // 4
+                    # Approximate token count: 1 token ≈ 4 characters (roughly OpenAI's rule of thumb)
+                    token_count = len(text) // 4
                     self.file_token_counts[file_path] = token_count
                 except Exception as e:
+                    logging.error(f"Token counting failed for {file_path}: {e}")
                     self.file_token_counts[file_path] = 0
             total_tokens += self.file_token_counts[file_path]
+        self.total_tokens = total_tokens
         self.token_label.setText(f"Estimated tokens: {total_tokens:,}")
 
 def show_file_selection_gui(files):
@@ -1119,6 +1418,11 @@ EXCLUDE_FILES = set(config.get('exclude_files', []))
 INCLUDE_FILES = set(config.get('include_files', []))
 MAX_FILE_SIZE = config.get('max_file_size', 1000000)
 
+</code>
+
+aicodeprep_gui_c\__init__.py:
+<code>
+from .main import main
 </code>
 
 aicodeprep_gui_c\data\default_config.md:
