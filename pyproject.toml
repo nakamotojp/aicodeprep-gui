@@ -16,7 +16,6 @@ classifiers = [
 ]
 keywords = ["ai", "code", "preparation", "chatbot"]
 dependencies = [
-    "pyyaml",
     "pyqt5"
 ]
 requires-python = ">=3.6"
@@ -31,4 +30,4 @@ Homepage = "https://github.com/detroittommy879/aicodeprep"
 where = ["."]
 
 [tool.setuptools.package-data]
-aicodeprep_gui_c = ["data/default_config.yaml"]
+aicodeprep_gui_c = ["data/default_config.md"]

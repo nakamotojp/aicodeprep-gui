@@ -84,12 +84,31 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.text_label = QtWidgets.QLabel("")
         self.text_label.setWordWrap(True)
         main_layout.addWidget(self.text_label)
+
+        # --- Splitter for file tree and prompt ---
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+        # File tree
         self.tree_widget = QtWidgets.QTreeWidget()
         self.tree_widget.setHeaderLabels(["File/Folder"])
         self.tree_widget.setColumnCount(1)
         self.tree_widget.setColumnWidth(0, int(400 * scale_factor))  # Wider for file paths
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        main_layout.addWidget(self.tree_widget)
+        self.splitter.addWidget(self.tree_widget)
+        # Prompt area (label + textbox in a widget)
+        prompt_widget = QtWidgets.QWidget()
+        prompt_layout = QtWidgets.QVBoxLayout(prompt_widget)
+        prompt_layout.setContentsMargins(0, 0, 0, 0)
+        prompt_label = QtWidgets.QLabel("Optional prompt/question for LLM (will be appended to the end):")
+        prompt_layout.addWidget(prompt_label)
+        self.prompt_textbox = QtWidgets.QTextEdit()
+        self.prompt_textbox.setPlaceholderText("Type your question or prompt here (optional)...")
+        self.prompt_textbox.setMinimumHeight(50)
+        self.prompt_textbox.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
+        prompt_layout.addWidget(self.prompt_textbox)
+        self.splitter.addWidget(prompt_widget)
+        self.splitter.setStretchFactor(0, 4)
+        self.splitter.setStretchFactor(1, 1)
+        main_layout.addWidget(self.splitter)
 
         # --- Build folder/file tree ---
         self.path_to_item = {}  # Maps folder path to QTreeWidgetItem
@@ -245,6 +264,9 @@ class FileSelectionGUI(QtWidgets.QWidget):
                     if file_path and file_path in self.selected_files:
                         self.selected_files.remove(file_path)
             self.update_token_counter()
+            # Save preferences on checkbox change if "Remember" is checked
+            if self.remember_checkbox and self.remember_checkbox.isChecked():
+                self.save_prefs()
 
     def select_all(self):
         # Recursively select all file items
@@ -298,6 +320,12 @@ class FileSelectionGUI(QtWidgets.QWidget):
             try:
                 with open(output_path, "r", encoding="utf-8") as f:
                     full_code = f.read()
+                # Append prompt if present
+                prompt = self.prompt_textbox.toPlainText().strip()
+                if prompt:
+                    full_code += "\n\n" + prompt
+                    with open(output_path, "w", encoding="utf-8") as f:
+                        f.write(full_code)
                 app = QtWidgets.QApplication.instance()
                 if app is None:
                     app = QtWidgets.QApplication([])
@@ -397,13 +425,18 @@ def _prefs_path():
     # Always save/load in current working directory
     return os.path.join(os.getcwd(), ".aicodeprep")
 
-def _write_prefs_file(checked_relpaths, window_size=None):
+def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None):
     try:
         with open(_prefs_path(), "w", encoding="utf-8") as f:
-            if window_size:
+            if window_size or splitter_state:
                 f.write("[window]\n")
-                f.write(f"width={window_size[0]}\n")
-                f.write(f"height={window_size[1]}\n\n")
+                if window_size:
+                    f.write(f"width={window_size[0]}\n")
+                    f.write(f"height={window_size[1]}\n")
+                if splitter_state:
+                    # Convert splitter_state (QByteArray) to bytes, then hex string
+                    f.write(f"splitter={bytes(splitter_state).hex()}\n")
+                f.write("\n")
             for relpath in checked_relpaths:
                 f.write(relpath + "\n")
     except Exception as e:
@@ -413,6 +446,7 @@ def _write_prefs_file(checked_relpaths, window_size=None):
 def _read_prefs_file():
     checked = set()
     window_size = None
+    splitter_state = None
     try:
         with open(_prefs_path(), "r", encoding="utf-8") as f:
             lines = f.readlines()
@@ -425,6 +459,8 @@ def _read_prefs_file():
                     width = int(line.split('=', 1)[1])
                 elif line.startswith('height='):
                     height = int(line.split('=', 1)[1])
+                elif line.startswith('splitter='):
+                    splitter_state = bytes.fromhex(line.split('=', 1)[1])
                 elif line == '':
                     i = j + 1
                     break
@@ -436,7 +472,7 @@ def _read_prefs_file():
                 checked.add(line)
     except Exception:
         pass
-    return checked, window_size
+    return checked, window_size, splitter_state
 
 # Add closeEvent to set action to 'quit' ONLY if window is closed via 'X'
 def closeEvent(self, event):
@@ -452,10 +488,13 @@ def closeEvent(self, event):
 def load_prefs_if_exists(self):
     prefs_path = _prefs_path()
     if os.path.exists(prefs_path):
-        checked, window_size = _read_prefs_file()
+        checked, window_size, splitter_state = _read_prefs_file()
         self.checked_files_from_prefs = checked
         self.window_size_from_prefs = window_size
         self.prefs_loaded = True
+        # Restore splitter state if available
+        if splitter_state and hasattr(self, "splitter"):
+            self.splitter.restoreState(splitter_state)
     else:
         self.checked_files_from_prefs = set()
         self.window_size_from_prefs = None
@@ -463,20 +502,30 @@ def load_prefs_if_exists(self):
 
 def save_prefs(self):
     checked_relpaths = []
-    # Recursively collect all checked relative paths
-    def collect_checked(item, relpath_prefix=""):
-        text = item.text(0)
-        curr_path = os.path.join(relpath_prefix, text) if relpath_prefix else text
+    # Collect checked files using relative_path from self.files
+    checked_files_set = set()
+
+    def collect_checked_files(item):
         if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.checkState(0) == QtCore.Qt.Checked:
-            checked_relpaths.append(curr_path)
+            file_path = item.data(0, QtCore.Qt.UserRole)
+            if file_path:
+                checked_files_set.add(os.path.abspath(file_path))
         for i in range(item.childCount()):
-            collect_checked(item.child(i), curr_path)
+            collect_checked_files(item.child(i))
+
     for i in range(self.tree_widget.topLevelItemCount()):
-        collect_checked(self.tree_widget.topLevelItem(i))
-    # Save window size
+        collect_checked_files(self.tree_widget.topLevelItem(i))
+
+    # Map absolute file paths back to relative_path as in self.files
+    for file_path, relative_path, _ in self.files:
+        if os.path.abspath(file_path) in checked_files_set:
+            checked_relpaths.append(relative_path)
+
+    # Save window size and splitter state
     size = self.size()
     window_size = (size.width(), size.height())
-    _write_prefs_file(checked_relpaths, window_size=window_size)
+    splitter_state = self.splitter.saveState() if hasattr(self, "splitter") else None
+    _write_prefs_file(checked_relpaths, window_size=window_size, splitter_state=splitter_state)
 
 FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
 FileSelectionGUI.save_prefs = save_prefs

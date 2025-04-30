@@ -1,14 +1,13 @@
 [window]
-width=793
-height=976
+width=638
+height=1147
+splitter=000000ff000000010000000200000300000000e001ffffffff010000000200
 
 CHANGELOG.md
 README2.md
-aicodeprep_gui_c
+TODO.md
 aicodeprep_gui_c\file_processor.py
 aicodeprep_gui_c\gui.py
 aicodeprep_gui_c\main.py
 aicodeprep_gui_c\smart_logic.py
-aicodeprep_gui_c\__init__.py
-aicodeprep_gui_c\data
 aicodeprep_gui_c\data\default_config.md
