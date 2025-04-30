@@ -93,7 +93,7 @@ class FileSelectionGUI(QtWidgets.QWidget):
         main_layout.addWidget(self.token_label)
 
         # Fancy "Vibe Code Faster" label
-        self.vibe_label = QtWidgets.QLabel("Vibe Code Faster")
+        self.vibe_label = QtWidgets.QLabel("AI Code Prep GUI")
         vibe_font = QtGui.QFont(self.default_font)
         vibe_font.setBold(True)
         vibe_font.setPointSize(self.default_font.pointSize() + 8)
@@ -107,6 +107,11 @@ class FileSelectionGUI(QtWidgets.QWidget):
             "border-radius: 8px;"
         )
         main_layout.addWidget(self.vibe_label)
+
+        # Info line under banner
+        self.info_label = QtWidgets.QLabel("I tried to guess which code files you will likely want included, adjust as needed")
+        self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
+        main_layout.addWidget(self.info_label)
 
         # Status label for messages
         self.text_label = QtWidgets.QLabel("")
