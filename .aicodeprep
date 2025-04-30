@@ -5,7 +5,6 @@ splitter=000000ff000000010000000200000300000000e001ffffffff010000000200
 
 CHANGELOG.md
 README2.md
-TODO.md
 aicodeprep_gui_c\file_processor.py
 aicodeprep_gui_c\gui.py
 aicodeprep_gui_c\main.py

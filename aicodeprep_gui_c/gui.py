@@ -80,6 +80,23 @@ class FileSelectionGUI(QtWidgets.QWidget):
         # Token count label
         self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
         main_layout.addWidget(self.token_label)
+
+        # Fancy "Vibe Code Faster" label
+        self.vibe_label = QtWidgets.QLabel("Vibe Code Faster")
+        vibe_font = QtGui.QFont(self.default_font)
+        vibe_font.setBold(True)
+        vibe_font.setPointSize(self.default_font.pointSize() + 8)
+        self.vibe_label.setFont(vibe_font)
+        self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter)
+        # Use a visually strong blue-purple gradient background with white bold text for contrast
+        self.vibe_label.setStyleSheet(
+            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00c3ff, stop:1 #7f00ff);"
+            "color: white;"
+            "padding: 8px 0;"
+            "border-radius: 8px;"
+        )
+        main_layout.addWidget(self.vibe_label)
+
         # Status label for messages
         self.text_label = QtWidgets.QLabel("")
         self.text_label.setWordWrap(True)
