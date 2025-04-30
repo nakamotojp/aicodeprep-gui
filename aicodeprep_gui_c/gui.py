@@ -24,6 +24,7 @@ def get_resource_path(relative_path):
 class FileSelectionGUI(QtWidgets.QWidget):
     def __init__(self, files):
         super().__init__()
+        self.setAcceptDrops(True)  # Enable drag-and-drop for the widget
         self.files = files  # Store files for preferences loading
 
         # --- Usage logging: silent fetch to remote server with local time ---
@@ -247,6 +248,34 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.selected_files = []
         self.file_token_counts = {}
         self.update_token_counter()
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()
+            if urls and urls[0].isLocalFile():
+                path = urls[0].toLocalFile()
+                if os.path.isdir(path):
+                    event.acceptProposedAction()
+                    return
+        event.ignore()
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()
+            if urls and urls[0].isLocalFile():
+                folder_path = urls[0].toLocalFile()
+                if os.path.isdir(folder_path):
+                    try:
+                        os.chdir(folder_path)
+                        from aicodeprep_gui_c.smart_logic import collect_all_files
+                        new_files = collect_all_files()
+                        # Launch new GUI and close current
+                        self.new_gui = FileSelectionGUI(new_files)
+                        self.new_gui.show()
+                        self.close()
+                    except Exception as e:
+                        QtWidgets.QMessageBox.warning(self, "Error", f"Failed to load folder:\n{e}")
+        event.accept()
 
     def handle_item_changed(self, item, column):
         if column == 0:
