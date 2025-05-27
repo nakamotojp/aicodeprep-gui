@@ -1,97 +1,43 @@
-CHANGELOG.md:
+pyproject.toml:
 <code>
-# 📦 Changelog
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
----
+[project]
+name = "aicodeprep_gui_c"
+version = "0.9.7"
+description = "Prepare code for AI chatbot assistance"
+readme = "README.md"
+authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: Proprietary",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["ai", "code", "preparation", "chatbot"]
+dependencies = [
+    "pyqt5",
+    "tiktoken="
+]
+requires-python = ">=3.6"
 
-## [0.9.7] - 2025-28-4
+[project.scripts]
+aicodeprep_gui_c = "aicodeprep_gui_c.main:main" # Use an underscore here
 
-### 🎉 Added
+[project.urls]
+Homepage = "https://github.com/detroittommy879/aicodeprep"
 
-- New `.aicodeprep` file that saves the size of the window, and also which files you had checked last time you processed in that folder. So the next time you use AI Code Prep GUI in that folder, it will be set up with those same files checked (often when bug fixing I need custom files sent to the AI chat over and over, so this helps save time).
-- New buttons for **Load from .aicodeprep** (check the files you last had checked when last processed), **Quit** button.
-- Expandable and collapsable folders, will auto expand if any files recursively inside are checked.
-- Checkbox to disable creation of the `.aicodeprep` file if you for some reason don't want that feature.
-- 🧮 Added a token counter: as you check or uncheck files, the token count is now displayed.
-- Added a prompt box, where you can optionally add text that will be added to the end of the context/fullcode.txt/clipboard. So you can type a question or describe what you want the LLM to do with the code (instead of having to use some other editor)
-- Linux version! Looks and works the same as Windows/Mac versions.
+[tool.setuptools.packages.find]
+where = ["."]
 
----
-
-## [0.9.5] - 2025-24-1 _(Mac GUI version seems to work)_
-
-### 🎉 Added
-
-- 🍏 Mac OS app and workflow file that installs a right click menu to Finder.
-- Switched to PyQt5.
-
----
-
-## [0.5.0] - 2024-14-11 _(GUI Release)_
-
-### 🎉 Added
-
-- 🪟 Windows GUI Version
-- 🖱️ Right-click context menu integration for Windows
-- 📂 Enhanced file selection GUI with granular file inclusion/exclusion
-- 🖥️ DPI awareness for better display on high-resolution screens
-
-### ✨ New Features
-
-- 🗂️ Interactive file selection before code preparation
-- ☑️ Checkbox-based file inclusion/exclusion
-- 🎨 Scalable UI with multiple theme options
-- 🗃️ Windows Explorer context menu integration
-
-### 🔄 Changed
-
-- 💸 Moved from free to premium model
-- 🏷️ Lifetime license available for $7
-- ⚙️ Enhanced configuration options
-- 🪲 Improved logging and error handling
-
----
-
-## [0.2.2] - 2024-02-11
-
-- 🛠️ Minor tweaks and improvements
-
----
-
-## [0.2.2] - 2024-07-11 _(Nov 2nd 2024)_
-
-- 🛠️ Minor tweaks
-
----
-
-## [0.2.0] - 2024-02-11 _(Nov 2nd 2024)_
-
-### 🔧 Moved all hard coded options to the `default_config.yaml` file
-
-### 🎉 Added
-
-- New `exclude_extensions` configuration option to exclude file types globally
-- New `exclude_extensions` configuration option to exclude patterns like `.min.js`
-- New `include_dirs` configuration option to explicitly include specific directories
-- Enhanced priority system for file inclusion/exclusion rules
-- Better support for user configuration overrides
-- Updated and added some more exclusions that came up later when it would add unnecessary files
-
-### 🔄 Changed
-
-- Improved file processing logic with clearer priority rules:
-  1. Explicitly included files (highest priority)
-  2. Explicitly excluded files
-  3. Excluded extensions
-  4. Code extensions (lowest priority)
-- Enhanced directory processing logic:
-  1. Explicitly included directories (highest priority)
-  2. Explicitly excluded directories
-  3. Normal directory processing
+[tool.setuptools.package-data]
+aicodeprep_gui_c = ["data/default_config.md"]
 
 </code>
 
-README2.md:
+README.md:
 <code>
 # AI Code Prep GUI
 
@@ -132,6 +78,8 @@ It supports **Windows** and **macOS (M1+)** with context menu/right-click integr
 See screenshots and a quick usage guide here:  
 [https://wuu73.org/aicp](https://wuu73.org/aicp)
 
+### New version 0.9.7 Windows and Linux haven't gotten around to updating the Mac version but the old one works decently
+
 ---
 
 ## Future idea's
@@ -154,12 +102,14 @@ _Tested on macOS Ventura 13.4 (M1+)._
 
 ### Windows
 
-1. Run `windows-easy-installer-dist.exe`.
+1. Run `windows-easy-installer-dist.exe` or the newer v0.9.7 installer file.
 2. Follow the installation wizard (default directory: `Program Files\AICodePrep-GUI`).
 3. To use: Right-click in any folder's blank space in Windows File Explorer → `AI Code Prep GUI`.
 4. Restart Windows if the context menu does not appear immediately.
 5. Select/deselect files and folders, then click **Process Selected**.
 6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
+
+### Linux - check the readme file
 
 ---
 
@@ -215,6 +165,28 @@ If you find this tool useful, consider supporting future development:
 | Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
 
 ---
+
+</code>
+
+requirements.txt:
+<code>
+altgraph==0.17.4
+certifi==2025.4.26
+charset-normalizer==3.4.1
+idna==3.10
+packaging==25.0
+pefile==2023.2.7
+pyinstaller==6.13.0
+pyinstaller-hooks-contrib==2025.3
+pyperclip==1.8.2
+PyQt5==5.15.10
+PyQt5-Qt5==5.15.2
+PyQt5_sip==12.17.0
+pywin32-ctypes==0.2.3
+regex==2024.11.6
+requests==2.32.3
+tiktoken==0.9.0
+urllib3==2.4.0
 
 </code>
 
@@ -565,6 +537,7 @@ def get_resource_path(relative_path):
 class FileSelectionGUI(QtWidgets.QWidget):
     def __init__(self, files):
         super().__init__()
+        self.setAcceptDrops(True)  # Enable drag-and-drop for the widget
         self.files = files  # Store files for preferences loading
 
         # --- Usage logging: silent fetch to remote server with local time ---
@@ -634,7 +607,7 @@ class FileSelectionGUI(QtWidgets.QWidget):
         main_layout.addWidget(self.token_label)
 
         # Fancy "Vibe Code Faster" label
-        self.vibe_label = QtWidgets.QLabel("Vibe Code Faster")
+        self.vibe_label = QtWidgets.QLabel("AI Code Prep GUI")
         vibe_font = QtGui.QFont(self.default_font)
         vibe_font.setBold(True)
         vibe_font.setPointSize(self.default_font.pointSize() + 8)
@@ -648,6 +621,11 @@ class FileSelectionGUI(QtWidgets.QWidget):
             "border-radius: 8px;"
         )
         main_layout.addWidget(self.vibe_label)
+
+        # Info line under banner
+        self.info_label = QtWidgets.QLabel("I tried to guess which code files you will likely want included, adjust as needed")
+        self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
+        main_layout.addWidget(self.info_label)
 
         # Status label for messages
         self.text_label = QtWidgets.QLabel("")
@@ -783,6 +761,34 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.selected_files = []
         self.file_token_counts = {}
         self.update_token_counter()
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()
+            if urls and urls[0].isLocalFile():
+                path = urls[0].toLocalFile()
+                if os.path.isdir(path):
+                    event.acceptProposedAction()
+                    return
+        event.ignore()
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()
+            if urls and urls[0].isLocalFile():
+                folder_path = urls[0].toLocalFile()
+                if os.path.isdir(folder_path):
+                    try:
+                        os.chdir(folder_path)
+                        from aicodeprep_gui_c.smart_logic import collect_all_files
+                        new_files = collect_all_files()
+                        # Launch new GUI and close current
+                        self.new_gui = FileSelectionGUI(new_files)
+                        self.new_gui.show()
+                        self.close()
+                    except Exception as e:
+                        QtWidgets.QMessageBox.warning(self, "Error", f"Failed to load folder:\n{e}")
+        event.accept()
 
     def handle_item_changed(self, item, column):
         if column == 0:
@@ -1631,3 +1637,6 @@ aicodeprep_gui_c\data\default_config.md:
 
 
 <notes>Some files may have been skipped, to save tokens or because they didn't seem relevant. Ask about them if needed.</notes>
+
+
+We have to change this app's code so it uses pyside6 latest version. You can fetch the latest docs using the context7 MCP server. Also, it should detect if the system is in dark mode or light mode and match it - also have a checkbox somewhere near the top right for dark mode. Create a plan and tasklist for how to do this, and write a prompt for Cline, my AI coding agent, to make all the changes.

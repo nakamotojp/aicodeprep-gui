@@ -2,6 +2,20 @@
 
 ---
 
+## [0.9.8] - 2025-27-5
+
+### ✨ New Features
+
+- 🎨 Added automatic dark/light theme detection based on system preferences
+- 🌓 New dark mode toggle in the top-right corner for manual theme switching
+
+### 🔄 Changed
+
+- 🚀 Migrated from PyQt5 to PySide6 for improved performance and better Qt6 features
+- 📦 Simplified dependencies - now only requires PySide6 for GUI functionality
+
+---
+
 ## [0.9.7] - 2025-28-4
 
 ### 🎉 Added
@@ -13,6 +27,7 @@
 - 🧮 Added a token counter: as you check or uncheck files, the token count is now displayed.
 - Added a prompt box, where you can optionally add text that will be added to the end of the context/fullcode.txt/clipboard. So you can type a question or describe what you want the LLM to do with the code (instead of having to use some other editor)
 - Linux version! Looks and works the same as Windows/Mac versions.
+- Added drag n drop folder onto UI to load a different folder. Work around for issues adding context menu to various Linux distros
 
 ---
 
@@ -21,7 +36,6 @@
 ### 🎉 Added
 
 - 🍏 Mac OS app and workflow file that installs a right click menu to Finder.
-- Switched to PyQt5.
 
 ---
 

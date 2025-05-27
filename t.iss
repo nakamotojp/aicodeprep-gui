@@ -46,7 +46,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-c-lazyloadingworks - Copy\dist\main\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ;Source: "C:\2nd\Main\Git-Projects\aicodeprep-gui-test2\dist\main\_internal\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-c-lazyloadingworks - Copy\dist\main\add\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+;Source: "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-c-lazyloadingworks - Copy\dist\main\add\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]

@@ -16,8 +16,8 @@ classifiers = [
 ]
 keywords = ["ai", "code", "preparation", "chatbot"]
 dependencies = [
-    "pyqt5",
-    "tiktoken="
+    "PySide6>=6.7",
+    "tiktoken"
 ]
 requires-python = ">=3.6"
 

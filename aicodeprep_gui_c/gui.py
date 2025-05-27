@@ -2,7 +2,8 @@ import os
 import sys
 import platform
 import logging
-from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
+from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
+from aicodeprep_gui_c.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette
 from typing import List, Tuple
 # --- Removed tiktoken dependency for token counting ---
 tiktoken = None
@@ -86,9 +87,23 @@ class FileSelectionGUI(QtWidgets.QWidget):
             self.setGeometry(100, 100, w, h)
         else:
             self.setGeometry(100, 100, int(600 * scale_factor), int(400 * scale_factor))
+
+        # Initialize dark mode based on system preference
+        self.is_dark_mode = system_pref_is_dark()
+        if self.is_dark_mode:
+            apply_dark_palette(self.app)
         
         # Layout
         main_layout = QtWidgets.QVBoxLayout(self)
+
+        # Dark mode toggle
+        title_bar_layout = QtWidgets.QHBoxLayout()
+        title_bar_layout.addStretch()
+        self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
+        self.dark_mode_box.setChecked(self.is_dark_mode)
+        self.dark_mode_box.stateChanged.connect(self.toggle_dark_mode)
+        title_bar_layout.addWidget(self.dark_mode_box)
+        main_layout.addLayout(title_bar_layout)
         # Token count label
         self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
         main_layout.addWidget(self.token_label)
@@ -480,7 +495,7 @@ def show_file_selection_gui(files):
 
     gui = FileSelectionGUI(files)
     gui.show()
-    app.exec_()
+    app.exec()
     logging.info(f"GUI event loop finished - final action value: {gui.action}")
     return gui.action, gui.selected_files
 
@@ -595,3 +610,13 @@ def save_prefs(self):
 FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
 FileSelectionGUI.save_prefs = save_prefs
 FileSelectionGUI.closeEvent = closeEvent
+
+def toggle_dark_mode(self, state):
+    """Toggle between light and dark mode."""
+    self.is_dark_mode = bool(state)
+    if self.is_dark_mode:
+        apply_dark_palette(self.app)
+    else:
+        apply_light_palette(self.app)
+
+FileSelectionGUI.toggle_dark_mode = toggle_dark_mode
