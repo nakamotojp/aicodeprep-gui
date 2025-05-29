@@ -37,6 +37,13 @@ def main():
 
     args = parser.parse_args()
 
+    # Ensure Fusion style for QSS consistency
+    from PySide6 import QtWidgets
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        app = QtWidgets.QApplication(sys.argv)
+    app.setStyle("Fusion")
+
     if args.debug:
         logger.setLevel(logging.DEBUG)
         console_handler.setLevel(logging.DEBUG)

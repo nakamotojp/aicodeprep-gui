@@ -7,6 +7,7 @@ from aicodeprep_gui_c.apptheme import system_pref_is_dark, apply_dark_palette, a
 from typing import List, Tuple
 # --- Removed tiktoken dependency for token counting ---
 tiktoken = None
+from aicodeprep_gui_c import smart_logic
 from aicodeprep_gui_c.smart_logic import (
     EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
     matches_pattern, is_excluded_directory
@@ -21,6 +22,44 @@ def get_resource_path(relative_path):
     except Exception:
         base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
+
+def get_checkbox_style():
+    return """
+    QCheckBox {
+        spacing: 8px;
+        color: #E0E0E0;
+        font-size: 11px;
+    }
+    
+    QCheckBox::indicator {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #555555;
+        border-radius: 3px;
+        background-color: #2B2B2B;
+    }
+    
+    QCheckBox::indicator:hover {
+        border-color: #777777;
+        background-color: #353535;
+    }
+    
+    QCheckBox::indicator:checked {
+        border-color: #0078D4;
+        background-color: #2B2B2B;
+    
+    }
+    
+    QCheckBox::indicator:checked {
+        border-color: #0078D4;
+        background-color: #2B2B2B;
+        font-family: "Segoe UI Symbol";
+        font-size: 14px;
+        color: #0078D4;
+        text-align: center;
+        qproperty-text: "✓";
+    }
+    """
 
 class FileSelectionGUI(QtWidgets.QWidget):
     def __init__(self, files):
@@ -98,6 +137,16 @@ class FileSelectionGUI(QtWidgets.QWidget):
 
         # Dark mode toggle
         title_bar_layout = QtWidgets.QHBoxLayout()
+
+        # ----------  NEW  Format-selector combobox  ----------
+        self.format_combo = QtWidgets.QComboBox()
+        self.format_combo.addItems(["XML <code>", "Markdown ###"])
+        self.format_combo.setFixedWidth(130)
+        # store the internal key in userData
+        self.format_combo.setItemData(0, 'xml')
+        self.format_combo.setItemData(1, 'markdown')
+        title_bar_layout.addWidget(QtWidgets.QLabel("Output format:"))
+        title_bar_layout.addWidget(self.format_combo)
         title_bar_layout.addStretch()
         self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
         self.dark_mode_box.setChecked(self.is_dark_mode)
@@ -142,6 +191,15 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.tree_widget.setColumnCount(1)
         self.tree_widget.setColumnWidth(0, int(400 * scale_factor))  # Wider for file paths
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        
+        # Set stylesheet for better checkbox visibility
+        from aicodeprep_gui_c.apptheme import get_checkbox_style_dark, get_checkbox_style_light
+        if self.is_dark_mode:
+            self.tree_widget.setStyleSheet(get_checkbox_style_dark())
+            print(f"DEBUG: Initial tree_widget stylesheet (dark): {self.tree_widget.styleSheet()}")
+        else:
+            self.tree_widget.setStyleSheet(get_checkbox_style_light())
+            print(f"DEBUG: Initial tree_widget stylesheet (light): {self.tree_widget.styleSheet()}")
         self.splitter.addWidget(self.tree_widget)
         # Prompt area (label + textbox in a widget)
         prompt_widget = QtWidgets.QWidget()
@@ -178,8 +236,18 @@ class FileSelectionGUI(QtWidgets.QWidget):
                     if is_file:
                         item = QtWidgets.QTreeWidgetItem()
                         item.setText(0, part)  # Show filename in column 0
-                        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                        item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
+                        
+                        # Check if it's a binary file
+                        if smart_logic.is_binary_file(file_path):
+                            # Remove BOTH flags so it cannot receive clicks nor programmatic changes
+                            item.setFlags(item.flags() & ~(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable))
+                            item.setCheckState(0, QtCore.Qt.Unchecked)
+                            # Set a gray text color
+                            item.setForeground(0, QtGui.QBrush(QtGui.QColor('#808080')))
+                        else:
+                            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                            item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
+                        
                         item.setData(0, QtCore.Qt.UserRole, file_path)
                         parent.addTopLevelItem(item) if parent is self.tree_widget else parent.addChild(item)
                         self.path_to_item[curr_path] = item
@@ -321,6 +389,9 @@ class FileSelectionGUI(QtWidgets.QWidget):
                             # It's a file
                             filename = os.path.basename(child_file_path)
                             ext = os.path.splitext(filename)[1].lower()
+                            if smart_logic.is_binary_file(child_file_path):
+                                child.setCheckState(0, QtCore.Qt.Unchecked)
+                                continue
                             if (filename in EXCLUDE_FILES or
                                 ext in EXCLUDE_EXTENSIONS or
                                 any(matches_pattern(filename, pat) for pat in EXCLUDE_PATTERNS)):
@@ -348,8 +419,11 @@ class FileSelectionGUI(QtWidgets.QWidget):
     def select_all(self):
         # Recursively select all file items
         def check_all_items(item):
-            if item.flags() & QtCore.Qt.ItemIsUserCheckable:
-                item.setCheckState(0, QtCore.Qt.Checked)
+            if not (item.flags() & QtCore.Qt.ItemIsUserCheckable):
+                return           # skip non-checkable (e.g. binaries)
+            if not (item.flags() & QtCore.Qt.ItemIsEnabled):
+                return           # skip disabled items
+            item.setCheckState(0, QtCore.Qt.Checked)
             for i in range(item.childCount()):
                 check_all_items(item.child(i))
 
@@ -391,7 +465,8 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.action = 'process'  # Set action first
         logging.info(f"Process Selected clicked - action set to: {self.action}")
         selected_files = self.get_selected_files()
-        files_processed_count = process_files(selected_files, "fullcode.txt")
+        chosen_fmt = self.format_combo.currentData()  # 'xml' or 'markdown'
+        files_processed_count = process_files(selected_files, "fullcode.txt", fmt=chosen_fmt)
         if files_processed_count > 0:
             output_path = os.path.join(os.getcwd(), "fullcode.txt")
             try:
@@ -474,6 +549,8 @@ class FileSelectionGUI(QtWidgets.QWidget):
         selected_files = self.get_selected_files()
         total_tokens = 0
         for file_path in selected_files:
+            if smart_logic.is_binary_file(file_path):
+                continue
             if file_path not in self.file_token_counts:
                 try:
                     with open(file_path, "r", encoding="utf-8") as f:
@@ -596,7 +673,6 @@ def save_prefs(self):
     for i in range(self.tree_widget.topLevelItemCount()):
         collect_checked_files(self.tree_widget.topLevelItem(i))
 
-    # Map absolute file paths back to relative_path as in self.files
     for file_path, relative_path, _ in self.files:
         if os.path.abspath(file_path) in checked_files_set:
             checked_relpaths.append(relative_path)
@@ -613,10 +689,16 @@ FileSelectionGUI.closeEvent = closeEvent
 
 def toggle_dark_mode(self, state):
     """Toggle between light and dark mode."""
+    from aicodeprep_gui_c.apptheme import get_checkbox_style_dark, get_checkbox_style_light
     self.is_dark_mode = bool(state)
     if self.is_dark_mode:
         apply_dark_palette(self.app)
+        self.tree_widget.setStyleSheet(get_checkbox_style_dark())
+        print(f"DEBUG: Toggled tree_widget stylesheet (dark): {self.tree_widget.styleSheet()}")
     else:
         apply_light_palette(self.app)
+        self.tree_widget.setStyleSheet(get_checkbox_style_light())
+        print(f"DEBUG: Toggled tree_widget stylesheet (light): {self.tree_widget.styleSheet()}")
 
+FileSelectionGUI.toggle_dark_mode = toggle_dark_mode
 FileSelectionGUI.toggle_dark_mode = toggle_dark_mode

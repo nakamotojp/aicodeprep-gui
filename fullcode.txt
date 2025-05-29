@@ -1,5 +1,4 @@
-pyproject.toml:
-<code>
+### pyproject.toml
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -18,8 +17,8 @@ classifiers = [
 ]
 keywords = ["ai", "code", "preparation", "chatbot"]
 dependencies = [
-    "pyqt5",
-    "tiktoken="
+    "PySide6>=6.7",
+    "tiktoken"
 ]
 requires-python = ">=3.6"
 
@@ -35,17 +34,16 @@ where = ["."]
 [tool.setuptools.package-data]
 aicodeprep_gui_c = ["data/default_config.md"]
 
-</code>
+### END pyproject.toml
 
-README.md:
-<code>
+### README.md
 # AI Code Prep GUI
 
 _Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
 
 [![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep/stargazers)
 
-**Latest Version: 0.9.7 (April 28, 2025)**
+**Latest Version: 0.9.8 (May 27, 2025)**
 
 ---
 
@@ -53,11 +51,22 @@ _Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
 
 AI Code Prep GUI is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files, this tool automatically collects relevant code files into a single text file, copies it to your clipboard, and formats it with AI-friendly `<code>` tags.
 
-It supports **Windows** and **macOS (M1+)** with context menu/right-click integration, and a Linux version is coming soon.
+It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-click integration.
 
 ---
 
-## New Features in v0.9.7
+## New Features in v0.9.8
+
+- **Dark Mode Support:**
+  - Automatic theme detection based on system preferences
+  - Manual dark/light mode toggle in the top-right corner
+  - Carefully designed dark theme palette for optimal readability
+- **PySide6 Migration:**
+  - Upgraded to Qt6 via PySide6 for improved performance
+  - Simplified dependencies - only requires PySide6 and tiktoken
+  - Better modern Qt features and future-proofing
+
+## Features from v0.9.7
 
 - **Persistent Preferences:** Automatically saves window size and the last selected files in a `.aicodeprep` file per project folder. When you re-open the tool in the same folder, your previous selections and window layout are restored.
   - New checkbox lets you disable creation of the `.aicodeprep` file if you don't want this feature.
@@ -78,7 +87,7 @@ It supports **Windows** and **macOS (M1+)** with context menu/right-click integr
 See screenshots and a quick usage guide here:  
 [https://wuu73.org/aicp](https://wuu73.org/aicp)
 
-### New version 0.9.7 Windows and Linux haven't gotten around to updating the Mac version but the old one works decently
+### New version 0.9.8 available for Windows, macOS, and Linux
 
 ---
 
@@ -98,18 +107,22 @@ MCP Server to automatically attach to a browser, and automatically paste the out
 6. Select/deselect files and folders as needed, then click **Process Selected**.
 7. The tool will create a `fullcode.txt` and copy all selected code to your clipboard, ready to paste into your AI chatbot.
 
-_Tested on macOS Ventura 13.4 (M1+)._
+_Tested on macOS Ventura 13.4 and newer (M1+)._
 
 ### Windows
 
-1. Run `windows-easy-installer-dist.exe` or the newer v0.9.7 installer file.
+1. Run `windows-easy-installer-dist.exe` or the newer v0.9.8 installer file.
 2. Follow the installation wizard (default directory: `Program Files\AICodePrep-GUI`).
 3. To use: Right-click in any folder's blank space in Windows File Explorer → `AI Code Prep GUI`.
 4. Restart Windows if the context menu does not appear immediately.
 5. Select/deselect files and folders, then click **Process Selected**.
 6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
 
-### Linux - check the readme file
+### Linux
+
+1. Download the Linux package from the releases page.
+2. Follow the installation instructions in the included README.
+3. Use via command line or file manager context menu integration.
 
 ---
 
@@ -117,6 +130,7 @@ _Tested on macOS Ventura 13.4 (M1+)._
 
 - **Cross-platform GUI** for easy visual file selection
 - **Smart Preselection** of relevant code files based on configured extensions and exclusions
+- **Dark/Light Theme Support** with system preference detection and manual toggle
 - **Folder Tree View** with collapsible/expandable folders and auto-expansion for selected files
 - **Preferences Saving** via `.aicodeprep` per folder to remember your last selected files and window size (with option to disable)
 - **Token Counter** displays token count as you check/uncheck files
@@ -130,13 +144,14 @@ _Tested on macOS Ventura 13.4 (M1+)._
 
 ## Usage
 
-1. Open the tool from your project folder’s context menu (right-click).
+1. Open the tool from your project folder's context menu (right-click).
 2. Review the preselected files and folders. Expand or collapse folders as needed.
 3. Use the **Smart Auto** button to auto-select files based on smart logic.
-4. Use **Load from .aicodeprep** to restore your previous session’s selection.
+4. Use **Load from .aicodeprep** to restore your previous session's selection.
 5. Check or uncheck files/folders manually.
-6. If you want to save your preferences for the folder, ensure the **Remember checked files for this folder (.aicodeprep)** checkbox is ticked.
-7. Click **Process Selected** to generate the output file and copy it to your clipboard.
+6. Toggle dark/light mode using the checkbox in the top-right corner if desired.
+7. If you want to save your preferences for the folder, ensure the **Remember checked files for this folder (.aicodeprep)** checkbox is ticked.
+8. Click **Process Selected** to generate the output file and copy it to your clipboard.
 
 ---
 
@@ -166,10 +181,9 @@ If you find this tool useful, consider supporting future development:
 
 ---
 
-</code>
+### END README.md
 
-requirements.txt:
-<code>
+### requirements.txt
 altgraph==0.17.4
 certifi==2025.4.26
 charset-normalizer==3.4.1
@@ -179,346 +193,320 @@ pefile==2023.2.7
 pyinstaller==6.13.0
 pyinstaller-hooks-contrib==2025.3
 pyperclip==1.8.2
-PyQt5==5.15.10
-PyQt5-Qt5==5.15.2
-PyQt5_sip==12.17.0
+PySide6==6.8.1
+PySide6_Addons==6.8.1
+PySide6_Essentials==6.8.1
 pywin32-ctypes==0.2.3
 regex==2024.11.6
 requests==2.32.3
+shiboken6==6.8.1
 tiktoken==0.9.0
 urllib3==2.4.0
 
-</code>
+### END requirements.txt
 
-AICodePrepGUI.workflow\Contents\document.wflow:
-<code>
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>AMApplicationBuild</key>
-	<string>526</string>
-	<key>AMApplicationVersion</key>
-	<string>2.10</string>
-	<key>AMDocumentVersion</key>
-	<string>2</string>
-	<key>actions</key>
-	<array>
-		<dict>
-			<key>action</key>
-			<dict>
-				<key>AMAccepts</key>
-				<dict>
-					<key>Container</key>
-					<string>List</string>
-					<key>Optional</key>
-					<true/>
-					<key>Types</key>
-					<array>
-						<string>com.apple.cocoa.string</string>
-					</array>
-				</dict>
-				<key>AMActionVersion</key>
-				<string>2.0.3</string>
-				<key>AMApplication</key>
-				<array>
-					<string>Automator</string>
-				</array>
-				<key>AMParameterProperties</key>
-				<dict>
-					<key>COMMAND_STRING</key>
-					<dict/>
-					<key>CheckedForUserDefaultShell</key>
-					<dict/>
-					<key>inputMethod</key>
-					<dict/>
-					<key>shell</key>
-					<dict/>
-					<key>source</key>
-					<dict/>
-				</dict>
-				<key>AMProvides</key>
-				<dict>
-					<key>Container</key>
-					<string>List</string>
-					<key>Types</key>
-					<array>
-						<string>com.apple.cocoa.string</string>
-					</array>
-				</dict>
-				<key>ActionBundlePath</key>
-				<string>/System/Library/Automator/Run Shell Script.action</string>
-				<key>ActionName</key>
-				<string>Run Shell Script</string>
-				<key>ActionParameters</key>
-				<dict>
-					<key>COMMAND_STRING</key>
-					<string>#!/bin/bash
-# Ensure exactly one folder is selected
-if [ "$#" -ne 1 ]; then
-  osascript -e 'display dialog "Select exactly ONE folder." buttons {"OK"} default button 1'
-  exit 1
-fi
+### aicodeprep_gui_c\apptheme.py
+from PySide6 import QtCore, QtGui, QtWidgets
+import platform
+import os
+import sys
+import ctypes
+import json
 
-# Get the folder path
-FOLDER_PATH="$1"
+def system_pref_is_dark() -> bool:
+    """Detect if system is using dark mode."""
+    system = platform.system()
+    
+    if system == "Darwin":  # macOS
+        try:
+            import subprocess
+            cmd = "defaults read -g AppleInterfaceStyle"
+            result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+            return result.stdout.strip() == "Dark"
+        except:
+            pass
+    
+    elif system == "Windows":  # Windows 10+
+        try:
+            import winreg
+            registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+            reg_keypath = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+            key = winreg.OpenKey(registry, reg_keypath)
+            value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+            return value == 0
+        except:
+            pass
+    
+    # Fallback: use palette heuristic
+    return QtWidgets.QApplication.palette().color(QtGui.QPalette.Window).lightness() < 128
 
-# Open Terminal and run the command visibly
-osascript &lt;&lt;EOD
-tell application "Terminal"
-  activate
-  do script "'/Applications/AICodePrepGUI.app/Contents/MacOS/main' '$FOLDER_PATH'"
-end tell
-EOD</string>
-					<key>CheckedForUserDefaultShell</key>
-					<true/>
-					<key>inputMethod</key>
-					<integer>1</integer>
-					<key>shell</key>
-					<string>/bin/bash</string>
-					<key>source</key>
-					<string></string>
-				</dict>
-				<key>BundleIdentifier</key>
-				<string>com.apple.RunShellScript</string>
-				<key>CFBundleVersion</key>
-				<string>2.0.3</string>
-				<key>CanShowSelectedItemsWhenRun</key>
-				<false/>
-				<key>CanShowWhenRun</key>
-				<true/>
-				<key>Category</key>
-				<array>
-					<string>AMCategoryUtilities</string>
-				</array>
-				<key>Class Name</key>
-				<string>RunShellScriptAction</string>
-				<key>InputUUID</key>
-				<string>BD3EC33B-803C-414A-853D-C6C14C401602</string>
-				<key>Keywords</key>
-				<array>
-					<string>Shell</string>
-					<string>Script</string>
-					<string>Command</string>
-					<string>Run</string>
-					<string>Unix</string>
-				</array>
-				<key>OutputUUID</key>
-				<string>E67DCBB2-F6AF-4A82-8B48-5656193C9F2D</string>
-				<key>UUID</key>
-				<string>725FD07E-C1D8-4B66-8B0D-751256D26C99</string>
-				<key>UnlocalizedApplications</key>
-				<array>
-					<string>Automator</string>
-				</array>
-				<key>arguments</key>
-				<dict>
-					<key>0</key>
-					<dict>
-						<key>default value</key>
-						<integer>0</integer>
-						<key>name</key>
-						<string>inputMethod</string>
-						<key>required</key>
-						<string>0</string>
-						<key>type</key>
-						<string>0</string>
-						<key>uuid</key>
-						<string>0</string>
-					</dict>
-					<key>1</key>
-					<dict>
-						<key>default value</key>
-						<false/>
-						<key>name</key>
-						<string>CheckedForUserDefaultShell</string>
-						<key>required</key>
-						<string>0</string>
-						<key>type</key>
-						<string>0</string>
-						<key>uuid</key>
-						<string>1</string>
-					</dict>
-					<key>2</key>
-					<dict>
-						<key>default value</key>
-						<string></string>
-						<key>name</key>
-						<string>source</string>
-						<key>required</key>
-						<string>0</string>
-						<key>type</key>
-						<string>0</string>
-						<key>uuid</key>
-						<string>2</string>
-					</dict>
-					<key>3</key>
-					<dict>
-						<key>default value</key>
-						<string></string>
-						<key>name</key>
-						<string>COMMAND_STRING</string>
-						<key>required</key>
-						<string>0</string>
-						<key>type</key>
-						<string>0</string>
-						<key>uuid</key>
-						<string>3</string>
-					</dict>
-					<key>4</key>
-					<dict>
-						<key>default value</key>
-						<string>/bin/sh</string>
-						<key>name</key>
-						<string>shell</string>
-						<key>required</key>
-						<string>0</string>
-						<key>type</key>
-						<string>0</string>
-						<key>uuid</key>
-						<string>4</string>
-					</dict>
-				</dict>
-				<key>isViewVisible</key>
-				<integer>1</integer>
-				<key>location</key>
-				<string>332.000000:305.000000</string>
-				<key>nibPath</key>
-				<string>/System/Library/Automator/Run Shell Script.action/Contents/Resources/Base.lproj/main.nib</string>
-			</dict>
-			<key>isViewVisible</key>
-			<integer>1</integer>
-		</dict>
-	</array>
-	<key>connectors</key>
-	<dict/>
-	<key>workflowMetaData</key>
-	<dict>
-		<key>applicationBundleID</key>
-		<string>com.apple.finder</string>
-		<key>applicationBundleIDsByPath</key>
-		<dict>
-			<key>/System/Library/CoreServices/Finder.app</key>
-			<string>com.apple.finder</string>
-		</dict>
-		<key>applicationPath</key>
-		<string>/System/Library/CoreServices/Finder.app</string>
-		<key>applicationPaths</key>
-		<array>
-			<string>/System/Library/CoreServices/Finder.app</string>
-		</array>
-		<key>inputTypeIdentifier</key>
-		<string>com.apple.Automator.fileSystemObject.folder</string>
-		<key>outputTypeIdentifier</key>
-		<string>com.apple.Automator.nothing</string>
-		<key>presentationMode</key>
-		<integer>15</integer>
-		<key>processesInput</key>
-		<false/>
-		<key>serviceApplicationBundleID</key>
-		<string>com.apple.finder</string>
-		<key>serviceApplicationPath</key>
-		<string>/System/Library/CoreServices/Finder.app</string>
-		<key>serviceInputTypeIdentifier</key>
-		<string>com.apple.Automator.fileSystemObject.folder</string>
-		<key>serviceOutputTypeIdentifier</key>
-		<string>com.apple.Automator.nothing</string>
-		<key>serviceProcessesInput</key>
-		<false/>
-		<key>systemImageName</key>
-		<string>NSActionTemplate</string>
-		<key>useAutomaticInputType</key>
-		<false/>
-		<key>workflowTypeIdentifier</key>
-		<string>com.apple.Automator.servicesMenu</string>
-	</dict>
-</dict>
-</plist>
+def apply_dark_palette(app: QtWidgets.QApplication):
+    """Apply dark color palette to application."""
+    dark = QtGui.QPalette()
+    dark.setColor(QtGui.QPalette.Window, QtGui.QColor(53, 53, 53))
+    dark.setColor(QtGui.QPalette.WindowText, QtGui.QColor(255, 255, 255))
+    dark.setColor(QtGui.QPalette.Base, QtGui.QColor(42, 42, 42))
+    dark.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(66, 66, 66))
+    dark.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(53, 53, 53))
+    dark.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(255, 255, 255))
+    dark.setColor(QtGui.QPalette.Text, QtGui.QColor(255, 255, 255))
+    dark.setColor(QtGui.QPalette.Button, QtGui.QColor(53, 53, 53))
+    dark.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(255, 255, 255))
+    dark.setColor(QtGui.QPalette.Link, QtGui.QColor(42, 130, 218))
+    dark.setColor(QtGui.QPalette.Highlight, QtGui.QColor(42, 130, 218))
+    dark.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))
+    
+    # Disabled colors
+    dark.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(128, 128, 128))
+    dark.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtGui.QColor(128, 128, 128))
+    dark.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, QtGui.QColor(128, 128, 128))
+    
+    app.setPalette(dark)
 
-</code>
+def apply_light_palette(app: QtWidgets.QApplication):
+    """Apply light color palette to application."""
+    light = QtGui.QPalette()
+    light.setColor(QtGui.QPalette.Window, QtGui.QColor(240, 240, 240))
+    light.setColor(QtGui.QPalette.WindowText, QtGui.QColor(0, 0, 0))
+    light.setColor(QtGui.QPalette.Base, QtGui.QColor(255, 255, 255))
+    light.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(233, 233, 233))
+    light.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(255, 255, 255))
+    light.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(0, 0, 0))
+    light.setColor(QtGui.QPalette.Text, QtGui.QColor(0, 0, 0))
+    light.setColor(QtGui.QPalette.Button, QtGui.QColor(240, 240, 240))
+    light.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(0, 0, 0))
+    light.setColor(QtGui.QPalette.Link, QtGui.QColor(0, 0, 255))
+    light.setColor(QtGui.QPalette.Highlight, QtGui.QColor(42, 130, 218))
+    light.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))
+    
+    # Disabled colors
+    light.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(120, 120, 120))
+    light.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtGui.QColor(120, 120, 120))
+    light.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, QtGui.QColor(120, 120, 120))
+    
+    app.setPalette(light)
 
-AICodePrepGUI.workflow\Contents\Info.plist:
-<code>
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>NSServices</key>
-	<array>
-		<dict>
-			<key>NSBackgroundColorName</key>
-			<string>background</string>
-			<key>NSIconName</key>
-			<string>NSActionTemplate</string>
-			<key>NSMenuItem</key>
-			<dict>
-				<key>default</key>
-				<string>AICodePrepGUI</string>
-			</dict>
-			<key>NSMessage</key>
-			<string>runWorkflowAsService</string>
-			<key>NSRequiredContext</key>
-			<dict>
-				<key>NSApplicationIdentifier</key>
-				<string>com.apple.finder</string>
-			</dict>
-			<key>NSSendFileTypes</key>
-			<array>
-				<string>public.folder</string>
-			</array>
-		</dict>
-	</array>
-</dict>
-</plist>
+def create_checkmark_pixmap(size=16, color="#0078D4"):
+    """Create a checkmark pixmap programmatically."""
+    pixmap = QtGui.QPixmap(size, size)
+    pixmap.fill(QtCore.Qt.transparent)
+    
+    painter = QtGui.QPainter(pixmap)
+    painter.setRenderHint(QtGui.QPainter.Antialiasing)
+    
+    pen = QtGui.QPen(QtGui.QColor(color))
+    pen.setWidth(2)
+    pen.setCapStyle(QtCore.Qt.RoundCap)
+    pen.setJoinStyle(QtCore.Qt.RoundJoin)
+    painter.setPen(pen)
+    
+    # Draw checkmark
+    painter.drawLine(4, 8, 7, 11)
+    painter.drawLine(7, 11, 12, 4)
+    
+    painter.end()
+    return pixmap
 
-</code>
+def _checkbox_style_with_images(dark: bool) -> str:
+    """Alternative approach using programmatically created images."""
+    
+    if dark:
+        bg_unchecked = '#2B2B2B'
+        bg_checked = '#2B2B2B'
+        border_unchecked = '#555555'
+        border_checked = '#0078D4'
+        checkmark_color = '#0078D4'
+    else:
+        bg_unchecked = '#FFFFFF'
+        bg_checked = '#FFFFFF'
+        border_unchecked = '#AAAAAA'
+        border_checked = '#0078D4'
+        checkmark_color = '#0078D4'
 
-aicodeprep_gui_c\file_processor.py:
-<code>
+    # Create checkmark image and save it temporarily
+    import tempfile
+    checkmark_pixmap = create_checkmark_pixmap(16, checkmark_color)
+    temp_dir = tempfile.gettempdir()
+    checkmark_path = os.path.join(temp_dir, f"checkmark_{'dark' if dark else 'light'}.png")
+    checkmark_pixmap.save(checkmark_path)
+
+    return f"""
+    QTreeView::indicator, QTreeWidget::indicator {{
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+    }}
+
+    QTreeView::indicator:unchecked,
+    QTreeWidget::indicator:unchecked {{
+        background-color: {bg_unchecked};
+        border: 2px solid {border_unchecked};
+    }}
+
+    QTreeView::indicator:checked,
+    QTreeWidget::indicator:checked {{
+        background-color: {bg_checked};
+        border: 2px solid {border_checked};
+        image: url({checkmark_path.replace(os.sep, '/')});
+    }}
+
+    QTreeView::indicator:unchecked:hover,
+    QTreeWidget::indicator:unchecked:hover {{
+        border-color: {border_checked};
+    }}
+    """
+
+
+
+def _checkbox_style(dark: bool) -> str:
+    """Return a style-sheet that shows a visible tick using Unicode checkmarks."""
+    
+    if dark:
+        bg_unchecked = '#2B2B2B'
+        bg_checked = '#2B2B2B'
+        border_unchecked = '#555555'
+        border_checked = '#0078D4'
+        checkmark_color = '#0078D4'
+        disabled_bg = '#1F1F1F'
+        disabled_border = '#3A3A3A'
+    else:
+        bg_unchecked = '#FFFFFF'
+        bg_checked = '#FFFFFF'
+        border_unchecked = '#AAAAAA'
+        border_checked = '#0078D4'
+        checkmark_color = '#0078D4'
+        disabled_bg = '#F5F5F5'
+        disabled_border = '#CCCCCC'
+
+    return f"""
+    QTreeView::indicator, QTreeWidget::indicator {{
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+    }}
+
+    /* Unchecked state */
+    QTreeView::indicator:unchecked,
+    QTreeWidget::indicator:unchecked {{
+        background-color: {bg_unchecked};
+        border: 2px solid {border_unchecked};
+    }}
+
+    /* Checked state with Unicode checkmark */
+    QTreeView::indicator:checked,
+    QTreeWidget::indicator:checked {{
+        background-color: {bg_checked};
+        border: 2px solid {border_checked};
+        color: {checkmark_color};
+        font-weight: bold;
+        font-size: 12px;
+        text-align: center;
+    }}
+
+    QTreeView::indicator:checked::after,
+    QTreeWidget::indicator:checked::after {{
+        content: "✓";
+        color: {checkmark_color};
+        font-weight: bold;
+        font-size: 12px;
+        position: absolute;
+        top: -1px;
+        left: 1px;
+    }}
+
+    /* Disabled states */
+    QTreeView::indicator:disabled,
+    QTreeWidget::indicator:disabled {{
+        background-color: {disabled_bg};
+        border: 2px solid {disabled_border};
+    }}
+
+    /* Hover effects */
+    QTreeView::indicator:unchecked:hover,
+    QTreeWidget::indicator:unchecked:hover {{
+        border-color: {border_checked};
+        background-color: {bg_unchecked};
+    }}
+
+    QTreeView::indicator:checked:hover,
+    QTreeWidget::indicator:checked:hover {{
+        background-color: {bg_checked};
+        border-color: {border_checked};
+    }}
+    """
+
+def get_checkbox_style_dark()  -> str: 
+    return _checkbox_style_with_images(True)
+
+def get_checkbox_style_light() -> str: 
+    return _checkbox_style_with_images(False)
+### END aicodeprep_gui_c\apptheme.py
+
+### aicodeprep_gui_c\file_processor.py
 import os
 import sys
 import logging
-from typing import List
+from typing import List, Literal
 
-def process_files(selected_files: List[str], output_file: str) -> int:
-    """Process selected files and write their contents to output_file"""
+OutputFmt = Literal['xml', 'markdown']
+
+def _write_one_file_xml(outfile, rel_path, abs_path):
+    outfile.write(f"{rel_path}:\n<code>\n")
+    with open(abs_path, 'r', encoding='utf-8', errors='ignore') as infile:
+        outfile.write(infile.read())
+    outfile.write("\n</code>\n\n")
+
+def _write_one_file_md(outfile, rel_path, abs_path):
+    outfile.write(f"### {rel_path}\n")
+    with open(abs_path, 'r', encoding='utf-8', errors='ignore') as infile:
+        outfile.write(infile.read())
+    outfile.write(f"\n### END {rel_path}\n\n")
+
+def process_files(selected_files: List[str], output_file: str, fmt: OutputFmt = 'xml') -> int:
+    """
+    Write the concatenation of `selected_files` into `output_file`.
+    `fmt` is either 'xml' (default, uses <code> … </code>) or
+    'markdown' (### path … ### END path).
+    """
     try:
         output_path = os.path.join(os.getcwd(), output_file)
         logging.info(f"Writing output to: {output_path}")
+
+        writer = _write_one_file_xml if fmt == 'xml' else _write_one_file_md
 
         with open(output_path, 'w', encoding='utf-8') as outfile:
             for file_path in selected_files:
                 try:
                     try:
-                        relative_path = os.path.relpath(file_path, os.getcwd())
+                        rel_path = os.path.relpath(file_path, os.getcwd())
                     except ValueError:
-                        relative_path = file_path  # fallback to absolute path if unrelated
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as infile:
-                        outfile.write(f"{relative_path}:\n<code>\n")
-                        outfile.write(infile.read())
-                        outfile.write("\n</code>\n\n")
-                        logging.info(f"Processed: {relative_path}")
-                except Exception as e:
-                    logging.error(f"Error processing {file_path}: {str(e)}")
-            # Add the note about skipped files
-            outfile.write("\n<notes>Some files may have been skipped, to save tokens or because they didn't seem relevant. Ask about them if needed.</notes>\n")
+                        rel_path = file_path
+                    writer(outfile, rel_path, file_path)
+                    logging.info(f"Processed: {rel_path}")
+                except Exception as exc:
+                    logging.error(f"Error processing {file_path}: {exc}")
+
+            # generic tail line – no XML tags any more
+            outfile.write(".. some other files were skipped ..\n")
+
         return len(selected_files)
-    except Exception as e:
-        logging.error(f"Error writing to output file: {str(e)}")
+    except Exception as exc:
+        logging.error(f"Error writing output file: {exc}")
         return 0
 
-</code>
+### END aicodeprep_gui_c\file_processor.py
 
-aicodeprep_gui_c\gui.py:
-<code>
+### aicodeprep_gui_c\gui.py
 import os
 import sys
 import platform
 import logging
-from PyQt5 import QtWidgets, QtCore, QtGui, QtNetwork
+from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
+from aicodeprep_gui_c.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette
 from typing import List, Tuple
 # --- Removed tiktoken dependency for token counting ---
 tiktoken = None
+from aicodeprep_gui_c import smart_logic
 from aicodeprep_gui_c.smart_logic import (
     EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
     matches_pattern, is_excluded_directory
@@ -533,6 +521,44 @@ def get_resource_path(relative_path):
     except Exception:
         base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
+
+def get_checkbox_style():
+    return """
+    QCheckBox {
+        spacing: 8px;
+        color: #E0E0E0;
+        font-size: 11px;
+    }
+    
+    QCheckBox::indicator {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #555555;
+        border-radius: 3px;
+        background-color: #2B2B2B;
+    }
+    
+    QCheckBox::indicator:hover {
+        border-color: #777777;
+        background-color: #353535;
+    }
+    
+    QCheckBox::indicator:checked {
+        border-color: #0078D4;
+        background-color: #2B2B2B;
+    
+    }
+    
+    QCheckBox::indicator:checked {
+        border-color: #0078D4;
+        background-color: #2B2B2B;
+        font-family: "Segoe UI Symbol";
+        font-size: 14px;
+        color: #0078D4;
+        text-align: center;
+        qproperty-text: "✓";
+    }
+    """
 
 class FileSelectionGUI(QtWidgets.QWidget):
     def __init__(self, files):
@@ -599,9 +625,33 @@ class FileSelectionGUI(QtWidgets.QWidget):
             self.setGeometry(100, 100, w, h)
         else:
             self.setGeometry(100, 100, int(600 * scale_factor), int(400 * scale_factor))
+
+        # Initialize dark mode based on system preference
+        self.is_dark_mode = system_pref_is_dark()
+        if self.is_dark_mode:
+            apply_dark_palette(self.app)
         
         # Layout
         main_layout = QtWidgets.QVBoxLayout(self)
+
+        # Dark mode toggle
+        title_bar_layout = QtWidgets.QHBoxLayout()
+
+        # ----------  NEW  Format-selector combobox  ----------
+        self.format_combo = QtWidgets.QComboBox()
+        self.format_combo.addItems(["XML <code>", "Markdown ###"])
+        self.format_combo.setFixedWidth(130)
+        # store the internal key in userData
+        self.format_combo.setItemData(0, 'xml')
+        self.format_combo.setItemData(1, 'markdown')
+        title_bar_layout.addWidget(QtWidgets.QLabel("Output format:"))
+        title_bar_layout.addWidget(self.format_combo)
+        title_bar_layout.addStretch()
+        self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
+        self.dark_mode_box.setChecked(self.is_dark_mode)
+        self.dark_mode_box.stateChanged.connect(self.toggle_dark_mode)
+        title_bar_layout.addWidget(self.dark_mode_box)
+        main_layout.addLayout(title_bar_layout)
         # Token count label
         self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
         main_layout.addWidget(self.token_label)
@@ -640,6 +690,15 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.tree_widget.setColumnCount(1)
         self.tree_widget.setColumnWidth(0, int(400 * scale_factor))  # Wider for file paths
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        
+        # Set stylesheet for better checkbox visibility
+        from aicodeprep_gui_c.apptheme import get_checkbox_style_dark, get_checkbox_style_light
+        if self.is_dark_mode:
+            self.tree_widget.setStyleSheet(get_checkbox_style_dark())
+            print(f"DEBUG: Initial tree_widget stylesheet (dark): {self.tree_widget.styleSheet()}")
+        else:
+            self.tree_widget.setStyleSheet(get_checkbox_style_light())
+            print(f"DEBUG: Initial tree_widget stylesheet (light): {self.tree_widget.styleSheet()}")
         self.splitter.addWidget(self.tree_widget)
         # Prompt area (label + textbox in a widget)
         prompt_widget = QtWidgets.QWidget()
@@ -676,8 +735,18 @@ class FileSelectionGUI(QtWidgets.QWidget):
                     if is_file:
                         item = QtWidgets.QTreeWidgetItem()
                         item.setText(0, part)  # Show filename in column 0
-                        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                        item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
+                        
+                        # Check if it's a binary file
+                        if smart_logic.is_binary_file(file_path):
+                            # Remove BOTH flags so it cannot receive clicks nor programmatic changes
+                            item.setFlags(item.flags() & ~(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable))
+                            item.setCheckState(0, QtCore.Qt.Unchecked)
+                            # Set a gray text color
+                            item.setForeground(0, QtGui.QBrush(QtGui.QColor('#808080')))
+                        else:
+                            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                            item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
+                        
                         item.setData(0, QtCore.Qt.UserRole, file_path)
                         parent.addTopLevelItem(item) if parent is self.tree_widget else parent.addChild(item)
                         self.path_to_item[curr_path] = item
@@ -819,6 +888,9 @@ class FileSelectionGUI(QtWidgets.QWidget):
                             # It's a file
                             filename = os.path.basename(child_file_path)
                             ext = os.path.splitext(filename)[1].lower()
+                            if smart_logic.is_binary_file(child_file_path):
+                                child.setCheckState(0, QtCore.Qt.Unchecked)
+                                continue
                             if (filename in EXCLUDE_FILES or
                                 ext in EXCLUDE_EXTENSIONS or
                                 any(matches_pattern(filename, pat) for pat in EXCLUDE_PATTERNS)):
@@ -846,8 +918,11 @@ class FileSelectionGUI(QtWidgets.QWidget):
     def select_all(self):
         # Recursively select all file items
         def check_all_items(item):
-            if item.flags() & QtCore.Qt.ItemIsUserCheckable:
-                item.setCheckState(0, QtCore.Qt.Checked)
+            if not (item.flags() & QtCore.Qt.ItemIsUserCheckable):
+                return           # skip non-checkable (e.g. binaries)
+            if not (item.flags() & QtCore.Qt.ItemIsEnabled):
+                return           # skip disabled items
+            item.setCheckState(0, QtCore.Qt.Checked)
             for i in range(item.childCount()):
                 check_all_items(item.child(i))
 
@@ -889,7 +964,8 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.action = 'process'  # Set action first
         logging.info(f"Process Selected clicked - action set to: {self.action}")
         selected_files = self.get_selected_files()
-        files_processed_count = process_files(selected_files, "fullcode.txt")
+        chosen_fmt = self.format_combo.currentData()  # 'xml' or 'markdown'
+        files_processed_count = process_files(selected_files, "fullcode.txt", fmt=chosen_fmt)
         if files_processed_count > 0:
             output_path = os.path.join(os.getcwd(), "fullcode.txt")
             try:
@@ -972,6 +1048,8 @@ class FileSelectionGUI(QtWidgets.QWidget):
         selected_files = self.get_selected_files()
         total_tokens = 0
         for file_path in selected_files:
+            if smart_logic.is_binary_file(file_path):
+                continue
             if file_path not in self.file_token_counts:
                 try:
                     with open(file_path, "r", encoding="utf-8") as f:
@@ -993,7 +1071,7 @@ def show_file_selection_gui(files):
 
     gui = FileSelectionGUI(files)
     gui.show()
-    app.exec_()
+    app.exec()
     logging.info(f"GUI event loop finished - final action value: {gui.action}")
     return gui.action, gui.selected_files
 
@@ -1094,7 +1172,6 @@ def save_prefs(self):
     for i in range(self.tree_widget.topLevelItemCount()):
         collect_checked_files(self.tree_widget.topLevelItem(i))
 
-    # Map absolute file paths back to relative_path as in self.files
     for file_path, relative_path, _ in self.files:
         if os.path.abspath(file_path) in checked_files_set:
             checked_relpaths.append(relative_path)
@@ -1109,10 +1186,25 @@ FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
 FileSelectionGUI.save_prefs = save_prefs
 FileSelectionGUI.closeEvent = closeEvent
 
-</code>
+def toggle_dark_mode(self, state):
+    """Toggle between light and dark mode."""
+    from aicodeprep_gui_c.apptheme import get_checkbox_style_dark, get_checkbox_style_light
+    self.is_dark_mode = bool(state)
+    if self.is_dark_mode:
+        apply_dark_palette(self.app)
+        self.tree_widget.setStyleSheet(get_checkbox_style_dark())
+        print(f"DEBUG: Toggled tree_widget stylesheet (dark): {self.tree_widget.styleSheet()}")
+    else:
+        apply_light_palette(self.app)
+        self.tree_widget.setStyleSheet(get_checkbox_style_light())
+        print(f"DEBUG: Toggled tree_widget stylesheet (light): {self.tree_widget.styleSheet()}")
 
-aicodeprep_gui_c\main.py:
-<code>
+FileSelectionGUI.toggle_dark_mode = toggle_dark_mode
+FileSelectionGUI.toggle_dark_mode = toggle_dark_mode
+
+### END aicodeprep_gui_c\gui.py
+
+### aicodeprep_gui_c\main.py
 import os
 import sys
 import argparse
@@ -1152,6 +1244,13 @@ def main():
 
     args = parser.parse_args()
 
+    # Ensure Fusion style for QSS consistency
+    from PySide6 import QtWidgets
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        app = QtWidgets.QApplication(sys.argv)
+    app.setStyle("Fusion")
+
     if args.debug:
         logger.setLevel(logging.DEBUG)
         console_handler.setLevel(logging.DEBUG)
@@ -1187,10 +1286,9 @@ def main():
 if __name__ == "__main__":
     main()
 
-</code>
+### END aicodeprep_gui_c\main.py
 
-aicodeprep_gui_c\smart_logic.py:
-<code>
+### aicodeprep_gui_c\smart_logic.py
 from importlib import resources
 import os
 import sys
@@ -1306,6 +1404,25 @@ def load_user_config() -> dict:
         logging.error(f"Error loading user configuration: {str(e)}")
     return {}
 
+def is_binary_file(filepath: str) -> bool:
+    """Check if a file is binary based on extension and content."""
+    binary_extensions = {
+        '.png', '.gif', '.jpg', '.jpeg', '.ico', '.bmp',
+        '.exe', '.dll', '.so', '.dylib', '.zip', '.pdf',
+        '.mp3', '.mp4', '.avi', '.class', '.pyc', '.pyd',
+        '.bin', '.dat', '.db', '.sqlite', '.o', '.obj'
+    }
+    ext = os.path.splitext(filepath)[1].lower()
+    if ext in binary_extensions:
+        return True
+    try:
+        with open(filepath, 'rb') as file:
+            chunk = file.read(1024)
+            chunk.decode('utf-8')
+        return False
+    except (UnicodeDecodeError, IOError):
+        return True
+
 def matches_pattern(filename: str, pattern: str) -> bool:
     """Check if filename matches the given glob-style pattern (supports *, ?, [])"""
     return fnmatch.fnmatch(filename.lower(), pattern.lower())
@@ -1378,8 +1495,14 @@ def collect_all_files() -> List[Tuple[str, str, bool]]:
             except (OSError, IOError):
                 continue
 
-            included = False
+            # First check if it's a binary file
+            if is_binary_file(file_path):
+                included = False
+                all_files.append((file_path, relative_path, included))
+                logging.info(f"Skipping binary file: {relative_path}")
+                continue
 
+            included = False
             if file in INCLUDE_FILES:
                 included = True
             elif os.path.basename(root) in INCLUDE_DIRS:
@@ -1424,15 +1547,13 @@ EXCLUDE_FILES = set(config.get('exclude_files', []))
 INCLUDE_FILES = set(config.get('include_files', []))
 MAX_FILE_SIZE = config.get('max_file_size', 1000000)
 
-</code>
+### END aicodeprep_gui_c\smart_logic.py
 
-aicodeprep_gui_c\__init__.py:
-<code>
+### aicodeprep_gui_c\__init__.py
 from .main import main
-</code>
+### END aicodeprep_gui_c\__init__.py
 
-aicodeprep_gui_c\data\default_config.md:
-<code>
+### aicodeprep_gui_c\data\default_config.md
 # Default Configuration
 
 ```json
@@ -1633,10 +1754,11 @@ aicodeprep_gui_c\data\default_config.md:
 }
 ```
 
-</code>
+### END aicodeprep_gui_c\data\default_config.md
+
+.. some other files were skipped ..
 
 
-<notes>Some files may have been skipped, to save tokens or because they didn't seem relevant. Ask about them if needed.</notes>
-
-
-We have to change this app's code so it uses pyside6 latest version. You can fetch the latest docs using the context7 MCP server. Also, it should detect if the system is in dark mode or light mode and match it - also have a checkbox somewhere near the top right for dark mode. Create a plan and tasklist for how to do this, and write a prompt for Cline, my AI coding agent, to make all the changes.
+- also, there should be a regular type of menu, File - quit, then Edit - Presets - The presets thing should let them add custom prompt buttons. They can add a button, and type some text for the button - it should add it to the section near the bottom of the window to the left of the other buttons like process selected, select all, etc. they can add text to a new button, and then later when they click on the button, it will add the button saved prompt text to the end of what is in the question llm box (if anything is there, if not, it will put it there).
+  It should save these prompts in the .aicodeprep file
+Also can you make the question llm box so it has word wrap? also, so that it only accepts text / markdown (which is text technically) / emoji's etc. but not have it be richtext (it seems to sometimes make text bigger if pasted in)

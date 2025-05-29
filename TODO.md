@@ -1,4 +1,6 @@
-x add token counting, look for libraries to help
+- also, there should be a regular type of menu, File - quit, then Edit - Presets - The presets thing should let them add custom prompt buttons. They can add a button, and type some text for the button - it should add it to the section near the bottom of the window to the left of the other buttons like process selected, select all, etc. they can add text to a new button, and then later when they click on the button, it will add the button saved prompt text to the end of what is in the question llm box (if anything is there, if not, it will put it there).
+  It should save these prompts in the .aicodeprep file
+  Also can you make the question llm box so it has word wrap? also, so that it only accepts text / markdown (which is text technically) / emoji's etc. but not have it be richtext (it seems to sometimes make text bigger if pasted in)
 
 track user behavior like how much they use in a day etc,
 maybe for errors also

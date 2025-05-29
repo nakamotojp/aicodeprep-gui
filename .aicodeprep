@@ -1,7 +1,15 @@
 [window]
-width=793
-height=1094
+width=639
+height=986
 splitter=000000ff000000010000000200000300000000d601ffffffff010000000200
 
+pyproject.toml
+README.md
+requirements.txt
+aicodeprep_gui_c\apptheme.py
+aicodeprep_gui_c\file_processor.py
+aicodeprep_gui_c\gui.py
+aicodeprep_gui_c\main.py
+aicodeprep_gui_c\smart_logic.py
 aicodeprep_gui_c\__init__.py
 aicodeprep_gui_c\data\default_config.md

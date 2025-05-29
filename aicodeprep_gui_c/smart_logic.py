@@ -113,6 +113,25 @@ def load_user_config() -> dict:
         logging.error(f"Error loading user configuration: {str(e)}")
     return {}
 
+def is_binary_file(filepath: str) -> bool:
+    """Check if a file is binary based on extension and content."""
+    binary_extensions = {
+        '.png', '.gif', '.jpg', '.jpeg', '.ico', '.bmp',
+        '.exe', '.dll', '.so', '.dylib', '.zip', '.pdf',
+        '.mp3', '.mp4', '.avi', '.class', '.pyc', '.pyd',
+        '.bin', '.dat', '.db', '.sqlite', '.o', '.obj'
+    }
+    ext = os.path.splitext(filepath)[1].lower()
+    if ext in binary_extensions:
+        return True
+    try:
+        with open(filepath, 'rb') as file:
+            chunk = file.read(1024)
+            chunk.decode('utf-8')
+        return False
+    except (UnicodeDecodeError, IOError):
+        return True
+
 def matches_pattern(filename: str, pattern: str) -> bool:
     """Check if filename matches the given glob-style pattern (supports *, ?, [])"""
     return fnmatch.fnmatch(filename.lower(), pattern.lower())
@@ -185,8 +204,14 @@ def collect_all_files() -> List[Tuple[str, str, bool]]:
             except (OSError, IOError):
                 continue
 
-            included = False
+            # First check if it's a binary file
+            if is_binary_file(file_path):
+                included = False
+                all_files.append((file_path, relative_path, included))
+                logging.info(f"Skipping binary file: {relative_path}")
+                continue
 
+            included = False
             if file in INCLUDE_FILES:
                 included = True
             elif os.path.basename(root) in INCLUDE_DIRS:
