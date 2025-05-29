@@ -1,7 +1,7 @@
 [window]
 width=639
 height=986
-splitter=000000ff000000010000000200000300000000d601ffffffff010000000200
+splitter=000000ff000000010000000200000300000000de01ffffffff010000000200
 
 pyproject.toml
 README.md
@@ -13,3 +13,8 @@ aicodeprep_gui_c\main.py
 aicodeprep_gui_c\smart_logic.py
 aicodeprep_gui_c\__init__.py
 aicodeprep_gui_c\data\default_config.md
+
+[presets]
+kkkk|ampqag==
+45454|ag==
+h|aA==

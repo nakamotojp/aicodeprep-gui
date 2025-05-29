@@ -1,4 +1,5 @@
-### pyproject.toml
+pyproject.toml:
+<code>
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -34,9 +35,10 @@ where = ["."]
 [tool.setuptools.package-data]
 aicodeprep_gui_c = ["data/default_config.md"]
 
-### END pyproject.toml
+</code>
 
-### README.md
+README.md:
+<code>
 # AI Code Prep GUI
 
 _Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
@@ -181,9 +183,10 @@ If you find this tool useful, consider supporting future development:
 
 ---
 
-### END README.md
+</code>
 
-### requirements.txt
+requirements.txt:
+<code>
 altgraph==0.17.4
 certifi==2025.4.26
 charset-normalizer==3.4.1
@@ -203,9 +206,10 @@ shiboken6==6.8.1
 tiktoken==0.9.0
 urllib3==2.4.0
 
-### END requirements.txt
+</code>
 
-### aicodeprep_gui_c\apptheme.py
+aicodeprep_gui_c\apptheme.py:
+<code>
 from PySide6 import QtCore, QtGui, QtWidgets
 import platform
 import os
@@ -440,9 +444,10 @@ def get_checkbox_style_dark()  -> str:
 
 def get_checkbox_style_light() -> str: 
     return _checkbox_style_with_images(False)
-### END aicodeprep_gui_c\apptheme.py
+</code>
 
-### aicodeprep_gui_c\file_processor.py
+aicodeprep_gui_c\file_processor.py:
+<code>
 import os
 import sys
 import logging
@@ -494,9 +499,10 @@ def process_files(selected_files: List[str], output_file: str, fmt: OutputFmt = 
         logging.error(f"Error writing output file: {exc}")
         return 0
 
-### END aicodeprep_gui_c\file_processor.py
+</code>
 
-### aicodeprep_gui_c\gui.py
+aicodeprep_gui_c\gui.py:
+<code>
 import os
 import sys
 import platform
@@ -560,9 +566,11 @@ def get_checkbox_style():
     }
     """
 
-class FileSelectionGUI(QtWidgets.QWidget):
+# ❷ QWidget ⇒ QMainWindow to get a native menu-bar for free
+class FileSelectionGUI(QtWidgets.QMainWindow):
     def __init__(self, files):
         super().__init__()
+        self.presets = []
         self.setAcceptDrops(True)  # Enable drag-and-drop for the widget
         self.files = files  # Store files for preferences loading
 
@@ -631,8 +639,23 @@ class FileSelectionGUI(QtWidgets.QWidget):
         if self.is_dark_mode:
             apply_dark_palette(self.app)
         
-        # Layout
-        main_layout = QtWidgets.QVBoxLayout(self)
+        # QMainWindow needs a central widget first
+        central = QtWidgets.QWidget()
+        self.setCentralWidget(central)
+        main_layout = QtWidgets.QVBoxLayout(central)
+
+        # ❸ MENU BAR ---------------------------------------------------
+        mb = self.menuBar()
+        file_menu = mb.addMenu("&File")
+        quit_act = QtGui.QAction("&Quit", self)
+        quit_act.triggered.connect(self.quit_without_processing)
+        file_menu.addAction(quit_act)
+
+        edit_menu = mb.addMenu("&Edit")
+        new_preset_act = QtGui.QAction("&New Preset…", self)
+        new_preset_act.triggered.connect(self.add_new_preset_dialog)
+        edit_menu.addAction(new_preset_act)
+        # --------------------------------------------------------------
 
         # Dark mode toggle
         title_bar_layout = QtWidgets.QHBoxLayout()
@@ -682,6 +705,12 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.text_label.setWordWrap(True)
         main_layout.addWidget(self.text_label)
 
+        # ❹ strip that will hold dynamic preset buttons
+        self.preset_strip = QtWidgets.QHBoxLayout()
+        self.preset_strip.addWidget(QtWidgets.QLabel("Presets:"))
+        self.preset_strip.addStretch()
+        main_layout.addLayout(self.preset_strip)
+
         # --- Splitter for file tree and prompt ---
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         # File tree
@@ -706,8 +735,10 @@ class FileSelectionGUI(QtWidgets.QWidget):
         prompt_layout.setContentsMargins(0, 0, 0, 0)
         prompt_label = QtWidgets.QLabel("Optional prompt/question for LLM (will be appended to the end):")
         prompt_layout.addWidget(prompt_label)
-        self.prompt_textbox = QtWidgets.QTextEdit()
-        self.prompt_textbox.setPlaceholderText("Type your question or prompt here (optional)...")
+        self.prompt_textbox = QtWidgets.QPlainTextEdit()
+        self.prompt_textbox.setPlaceholderText(
+            "Type your question or prompt here (optional)…")
+        self.prompt_textbox.setLineWrapMode(QtWidgets.QPlainTextEdit.WidgetWidth)
         self.prompt_textbox.setMinimumHeight(50)
         self.prompt_textbox.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
         prompt_layout.addWidget(self.prompt_textbox)
@@ -830,6 +861,55 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.selected_files = []
         self.file_token_counts = {}
         self.update_token_counter()
+
+        # ❺  load any saved presets that were found in .aicodeprep
+        if self.prefs_loaded and self.loaded_presets:
+            for label, text in self.loaded_presets:
+                self._add_preset_button(label, text)
+
+    # PRESET UTILS
+    # ---------------------------------------------------------------------
+    def _add_preset_button(self, label: str, text: str):
+        """Create the small button in the preset strip."""
+        btn = QtWidgets.QPushButton(label)
+        btn.setFixedHeight(22)
+        btn.clicked.connect(lambda _=None, t=text: self._apply_preset(t))
+        # insert just before the Stretch (index -1)
+        self.preset_strip.insertWidget(self.preset_strip.count()-1, btn)
+
+    def _apply_preset(self, preset_text: str):
+        """Append (or insert) preset into the LLM box."""
+        current = self.prompt_textbox.toPlainText()
+        if current:
+            self.prompt_textbox.setPlainText(current.rstrip() + "\n\n" + preset_text)
+        else:
+            self.prompt_textbox.setPlainText(preset_text)
+
+    def add_new_preset_dialog(self):
+        """Ask user for label + text, then create button & persist."""
+        lbl, ok = QtWidgets.QInputDialog.getText(self, "New preset", "Button label:")
+        if not ok or not lbl.strip():
+            return
+        dlg = QtWidgets.QDialog(self)
+        dlg.setWindowTitle("Preset text")
+        v = QtWidgets.QVBoxLayout(dlg)
+        text_edit = QtWidgets.QPlainTextEdit()
+        v.addWidget(text_edit)
+        bb = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
+                                        QtWidgets.QDialogButtonBox.Cancel)
+        v.addWidget(bb)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        if dlg.exec() != QtWidgets.QDialog.Accepted:
+            return
+        txt = text_edit.toPlainText().strip()
+        if not txt:
+            return
+        self.presets.append((lbl, txt))
+        self._add_preset_button(lbl, txt)
+        # Immediately save so it survives crashes
+        self.save_prefs()
+    # ---------------------------------------------------------------------
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -1081,7 +1161,7 @@ def _prefs_path():
     # Always save/load in current working directory
     return os.path.join(os.getcwd(), ".aicodeprep")
 
-def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None):
+def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, presets: list[tuple[str, str]] | None = None):
     try:
         with open(_prefs_path(), "w", encoding="utf-8") as f:
             if window_size or splitter_state:
@@ -1095,6 +1175,13 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None):
                 f.write("\n")
             for relpath in checked_relpaths:
                 f.write(relpath + "\n")
+            # --- PRESETS ----
+            if presets:
+                f.write("\n[presets]\n")
+                import json, base64
+                for label, text in presets:
+                    safe = base64.b64encode(text.encode()).decode()
+                    f.write(f"{label}|{safe}\n")
     except Exception as e:
         logging.warning(f"Could not write .aicodeprep: {e}")
 
@@ -1103,10 +1190,12 @@ def _read_prefs_file():
     checked = set()
     window_size = None
     splitter_state = None
+    presets: list[tuple[str, str]] = []
     try:
         with open(_prefs_path(), "r", encoding="utf-8") as f:
             lines = f.readlines()
         i = 0
+        section = None
         if lines and lines[0].strip() == '[window]':
             width = height = None
             for j in range(1, len(lines)):
@@ -1124,11 +1213,23 @@ def _read_prefs_file():
                 window_size = (width, height)
         for line in lines[i:]:
             line = line.strip()
-            if line and not line.startswith('#'):
+            if not line or line.startswith('#'):
+                continue
+            if line == "[presets]":
+                section = "presets"
+                continue
+            if section == "presets":
+                try:
+                    label, b64 = line.split("|", 1)
+                    import base64
+                    presets.append((label, base64.b64decode(b64).decode()))
+                except Exception:
+                    pass
+            else:
                 checked.add(line)
     except Exception:
         pass
-    return checked, window_size, splitter_state
+    return checked, window_size, splitter_state, presets
 
 # Add closeEvent to set action to 'quit' ONLY if window is closed via 'X'
 def closeEvent(self, event):
@@ -1144,10 +1245,11 @@ def closeEvent(self, event):
 def load_prefs_if_exists(self):
     prefs_path = _prefs_path()
     if os.path.exists(prefs_path):
-        checked, window_size, splitter_state = _read_prefs_file()
+        checked, window_size, splitter_state, presets = _read_prefs_file()
         self.checked_files_from_prefs = checked
         self.window_size_from_prefs = window_size
         self.prefs_loaded = True
+        self.loaded_presets = presets
         # Restore splitter state if available
         if splitter_state and hasattr(self, "splitter"):
             self.splitter.restoreState(splitter_state)
@@ -1155,6 +1257,7 @@ def load_prefs_if_exists(self):
         self.checked_files_from_prefs = set()
         self.window_size_from_prefs = None
         self.prefs_loaded = False
+        self.loaded_presets = []
 
 def save_prefs(self):
     checked_relpaths = []
@@ -1180,7 +1283,7 @@ def save_prefs(self):
     size = self.size()
     window_size = (size.width(), size.height())
     splitter_state = self.splitter.saveState() if hasattr(self, "splitter") else None
-    _write_prefs_file(checked_relpaths, window_size=window_size, splitter_state=splitter_state)
+    _write_prefs_file(checked_relpaths, window_size=window_size, splitter_state=splitter_state, presets=self.presets)
 
 FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
 FileSelectionGUI.save_prefs = save_prefs
@@ -1202,9 +1305,10 @@ def toggle_dark_mode(self, state):
 FileSelectionGUI.toggle_dark_mode = toggle_dark_mode
 FileSelectionGUI.toggle_dark_mode = toggle_dark_mode
 
-### END aicodeprep_gui_c\gui.py
+</code>
 
-### aicodeprep_gui_c\main.py
+aicodeprep_gui_c\main.py:
+<code>
 import os
 import sys
 import argparse
@@ -1286,9 +1390,10 @@ def main():
 if __name__ == "__main__":
     main()
 
-### END aicodeprep_gui_c\main.py
+</code>
 
-### aicodeprep_gui_c\smart_logic.py
+aicodeprep_gui_c\smart_logic.py:
+<code>
 from importlib import resources
 import os
 import sys
@@ -1547,13 +1652,15 @@ EXCLUDE_FILES = set(config.get('exclude_files', []))
 INCLUDE_FILES = set(config.get('include_files', []))
 MAX_FILE_SIZE = config.get('max_file_size', 1000000)
 
-### END aicodeprep_gui_c\smart_logic.py
+</code>
 
-### aicodeprep_gui_c\__init__.py
+aicodeprep_gui_c\__init__.py:
+<code>
 from .main import main
-### END aicodeprep_gui_c\__init__.py
+</code>
 
-### aicodeprep_gui_c\data\default_config.md
+aicodeprep_gui_c\data\default_config.md:
+<code>
 # Default Configuration
 
 ```json
@@ -1754,11 +1861,9 @@ from .main import main
 }
 ```
 
-### END aicodeprep_gui_c\data\default_config.md
+</code>
 
 .. some other files were skipped ..
 
 
-- also, there should be a regular type of menu, File - quit, then Edit - Presets - The presets thing should let them add custom prompt buttons. They can add a button, and type some text for the button - it should add it to the section near the bottom of the window to the left of the other buttons like process selected, select all, etc. they can add text to a new button, and then later when they click on the button, it will add the button saved prompt text to the end of what is in the question llm box (if anything is there, if not, it will put it there).
-  It should save these prompts in the .aicodeprep file
-Also can you make the question llm box so it has word wrap? also, so that it only accepts text / markdown (which is text technically) / emoji's etc. but not have it be richtext (it seems to sometimes make text bigger if pasted in)
+can you look at the attached image which is a screenshot of the GUI for this app and give me suggestions to improve it?

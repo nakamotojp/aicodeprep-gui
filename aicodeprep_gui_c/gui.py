@@ -61,9 +61,11 @@ def get_checkbox_style():
     }
     """
 
-class FileSelectionGUI(QtWidgets.QWidget):
+# ❷ QWidget ⇒ QMainWindow to get a native menu-bar for free
+class FileSelectionGUI(QtWidgets.QMainWindow):
     def __init__(self, files):
         super().__init__()
+        self.presets = []
         self.setAcceptDrops(True)  # Enable drag-and-drop for the widget
         self.files = files  # Store files for preferences loading
 
@@ -132,8 +134,23 @@ class FileSelectionGUI(QtWidgets.QWidget):
         if self.is_dark_mode:
             apply_dark_palette(self.app)
         
-        # Layout
-        main_layout = QtWidgets.QVBoxLayout(self)
+        # QMainWindow needs a central widget first
+        central = QtWidgets.QWidget()
+        self.setCentralWidget(central)
+        main_layout = QtWidgets.QVBoxLayout(central)
+
+        # ❸ MENU BAR ---------------------------------------------------
+        mb = self.menuBar()
+        file_menu = mb.addMenu("&File")
+        quit_act = QtGui.QAction("&Quit", self)
+        quit_act.triggered.connect(self.quit_without_processing)
+        file_menu.addAction(quit_act)
+
+        edit_menu = mb.addMenu("&Edit")
+        new_preset_act = QtGui.QAction("&New Preset…", self)
+        new_preset_act.triggered.connect(self.add_new_preset_dialog)
+        edit_menu.addAction(new_preset_act)
+        # --------------------------------------------------------------
 
         # Dark mode toggle
         title_bar_layout = QtWidgets.QHBoxLayout()
@@ -145,7 +162,9 @@ class FileSelectionGUI(QtWidgets.QWidget):
         # store the internal key in userData
         self.format_combo.setItemData(0, 'xml')
         self.format_combo.setItemData(1, 'markdown')
-        title_bar_layout.addWidget(QtWidgets.QLabel("Output format:"))
+        output_label = QtWidgets.QLabel("&Output format:")
+        output_label.setBuddy(self.format_combo)
+        title_bar_layout.addWidget(output_label)
         title_bar_layout.addWidget(self.format_combo)
         title_bar_layout.addStretch()
         self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
@@ -156,6 +175,8 @@ class FileSelectionGUI(QtWidgets.QWidget):
         # Token count label
         self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
         main_layout.addWidget(self.token_label)
+        # Add spacing after output format/token row
+        main_layout.addSpacing(8)
 
         # Fancy "Vibe Code Faster" label
         self.vibe_label = QtWidgets.QLabel("AI Code Prep GUI")
@@ -168,10 +189,18 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.vibe_label.setStyleSheet(
             "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00c3ff, stop:1 #7f00ff);"
             "color: white;"
-            "padding: 8px 0;"
+            "padding: 0;"
             "border-radius: 8px;"
         )
-        main_layout.addWidget(self.vibe_label)
+        self.vibe_label.setFixedHeight(44)
+        # Wrap in QWidget for horizontal margins
+        banner_wrap = QtWidgets.QWidget()
+        banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
+        banner_layout.setContentsMargins(14, 0, 14, 0)
+        banner_layout.addWidget(self.vibe_label)
+        main_layout.addWidget(banner_wrap)
+        # Add vertical spacing below banner
+        main_layout.addSpacing(8)
 
         # Info line under banner
         self.info_label = QtWidgets.QLabel("I tried to guess which code files you will likely want included, adjust as needed")
@@ -182,6 +211,20 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.text_label = QtWidgets.QLabel("")
         self.text_label.setWordWrap(True)
         main_layout.addWidget(self.text_label)
+
+        # ❹ strip that will hold dynamic preset buttons
+        self.preset_strip = QtWidgets.QHBoxLayout()
+        self.preset_strip.addWidget(QtWidgets.QLabel("Presets:"))
+        self.preset_strip.addStretch()
+        # Add "✚" button for quick new preset
+        add_preset_btn = QtWidgets.QPushButton("✚")
+        add_preset_btn.setFixedSize(24, 24)
+        add_preset_btn.setToolTip("New Preset…")
+        add_preset_btn.clicked.connect(self.add_new_preset_dialog)
+        self.preset_strip.addWidget(add_preset_btn)
+        main_layout.addLayout(self.preset_strip)
+        # Add spacing after presets strip
+        main_layout.addSpacing(8)
 
         # --- Splitter for file tree and prompt ---
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
@@ -201,14 +244,20 @@ class FileSelectionGUI(QtWidgets.QWidget):
             self.tree_widget.setStyleSheet(get_checkbox_style_light())
             print(f"DEBUG: Initial tree_widget stylesheet (light): {self.tree_widget.styleSheet()}")
         self.splitter.addWidget(self.tree_widget)
+        # Add spacing after file/folder header (tree)
+        main_layout.addSpacing(8)
         # Prompt area (label + textbox in a widget)
         prompt_widget = QtWidgets.QWidget()
         prompt_layout = QtWidgets.QVBoxLayout(prompt_widget)
         prompt_layout.setContentsMargins(0, 0, 0, 0)
         prompt_label = QtWidgets.QLabel("Optional prompt/question for LLM (will be appended to the end):")
         prompt_layout.addWidget(prompt_label)
-        self.prompt_textbox = QtWidgets.QTextEdit()
-        self.prompt_textbox.setPlaceholderText("Type your question or prompt here (optional)...")
+        # Add spacing after prompt label
+        prompt_layout.addSpacing(8)
+        self.prompt_textbox = QtWidgets.QPlainTextEdit()
+        self.prompt_textbox.setPlaceholderText(
+            "Type your question or prompt here (optional)…")
+        self.prompt_textbox.setLineWrapMode(QtWidgets.QPlainTextEdit.WidgetWidth)
         self.prompt_textbox.setMinimumHeight(50)
         self.prompt_textbox.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
         prompt_layout.addWidget(self.prompt_textbox)
@@ -297,6 +346,8 @@ class FileSelectionGUI(QtWidgets.QWidget):
         button_layout2 = QtWidgets.QHBoxLayout()
         main_layout.addLayout(button_layout1)
         main_layout.addLayout(button_layout2)
+        # Add bottom margin to main layout
+        main_layout.setContentsMargins(0, 0, 0, 10)
 
         # Website link (left side, above buttons)
         website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">wuu73.org/aicp</a>")
@@ -331,6 +382,55 @@ class FileSelectionGUI(QtWidgets.QWidget):
         self.selected_files = []
         self.file_token_counts = {}
         self.update_token_counter()
+
+        # ❺  load any saved presets that were found in .aicodeprep
+        if self.prefs_loaded and self.loaded_presets:
+            for label, text in self.loaded_presets:
+                self._add_preset_button(label, text)
+
+    # PRESET UTILS
+    # ---------------------------------------------------------------------
+    def _add_preset_button(self, label: str, text: str):
+        """Create the small button in the preset strip."""
+        btn = QtWidgets.QPushButton(label)
+        btn.setFixedHeight(22)
+        btn.clicked.connect(lambda _=None, t=text: self._apply_preset(t))
+        # insert just before the Stretch (index -1)
+        self.preset_strip.insertWidget(self.preset_strip.count()-1, btn)
+
+    def _apply_preset(self, preset_text: str):
+        """Append (or insert) preset into the LLM box."""
+        current = self.prompt_textbox.toPlainText()
+        if current:
+            self.prompt_textbox.setPlainText(current.rstrip() + "\n\n" + preset_text)
+        else:
+            self.prompt_textbox.setPlainText(preset_text)
+
+    def add_new_preset_dialog(self):
+        """Ask user for label + text, then create button & persist."""
+        lbl, ok = QtWidgets.QInputDialog.getText(self, "New preset", "Button label:")
+        if not ok or not lbl.strip():
+            return
+        dlg = QtWidgets.QDialog(self)
+        dlg.setWindowTitle("Preset text")
+        v = QtWidgets.QVBoxLayout(dlg)
+        text_edit = QtWidgets.QPlainTextEdit()
+        v.addWidget(text_edit)
+        bb = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
+                                        QtWidgets.QDialogButtonBox.Cancel)
+        v.addWidget(bb)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        if dlg.exec() != QtWidgets.QDialog.Accepted:
+            return
+        txt = text_edit.toPlainText().strip()
+        if not txt:
+            return
+        self.presets.append((lbl, txt))
+        self._add_preset_button(lbl, txt)
+        # Immediately save so it survives crashes
+        self.save_prefs()
+    # ---------------------------------------------------------------------
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -488,6 +588,10 @@ class FileSelectionGUI(QtWidgets.QWidget):
                 url = f"https://wuu73.org/dixels/loads.html?tok={self.total_tokens}"
                 request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
                 self.network_manager.get(request)
+                # Flash "Copied to clipboard and fullcode.txt" message
+                self.text_label.setStyleSheet("font-size: 20px; color: #00c3ff; font-weight: bold;")
+                self.text_label.setText("Copied to clipboard and fullcode.txt")
+                QtCore.QTimer.singleShot(1500, self.close)
             except Exception as e:
                 logging.error(f"Failed to copy to clipboard: {e}")
             # Save prefs if checkbox is checked
@@ -496,7 +600,8 @@ class FileSelectionGUI(QtWidgets.QWidget):
         else:
             logging.warning("No files selected or processed; skipping clipboard operation.")
         logging.info(f"Process Selected closing - action is: {self.action}")
-        self.close()
+        if files_processed_count <= 0:
+            self.close()
 
     def fetch_text_content(self):
         url = "https://wuu73.org/aicp/display.txt"  # URL to fetch text from
@@ -582,7 +687,7 @@ def _prefs_path():
     # Always save/load in current working directory
     return os.path.join(os.getcwd(), ".aicodeprep")
 
-def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None):
+def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, presets: list[tuple[str, str]] | None = None):
     try:
         with open(_prefs_path(), "w", encoding="utf-8") as f:
             if window_size or splitter_state:
@@ -596,6 +701,13 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None):
                 f.write("\n")
             for relpath in checked_relpaths:
                 f.write(relpath + "\n")
+            # --- PRESETS ----
+            if presets:
+                f.write("\n[presets]\n")
+                import json, base64
+                for label, text in presets:
+                    safe = base64.b64encode(text.encode()).decode()
+                    f.write(f"{label}|{safe}\n")
     except Exception as e:
         logging.warning(f"Could not write .aicodeprep: {e}")
 
@@ -604,10 +716,12 @@ def _read_prefs_file():
     checked = set()
     window_size = None
     splitter_state = None
+    presets: list[tuple[str, str]] = []
     try:
         with open(_prefs_path(), "r", encoding="utf-8") as f:
             lines = f.readlines()
         i = 0
+        section = None
         if lines and lines[0].strip() == '[window]':
             width = height = None
             for j in range(1, len(lines)):
@@ -625,11 +739,23 @@ def _read_prefs_file():
                 window_size = (width, height)
         for line in lines[i:]:
             line = line.strip()
-            if line and not line.startswith('#'):
+            if not line or line.startswith('#'):
+                continue
+            if line == "[presets]":
+                section = "presets"
+                continue
+            if section == "presets":
+                try:
+                    label, b64 = line.split("|", 1)
+                    import base64
+                    presets.append((label, base64.b64decode(b64).decode()))
+                except Exception:
+                    pass
+            else:
                 checked.add(line)
     except Exception:
         pass
-    return checked, window_size, splitter_state
+    return checked, window_size, splitter_state, presets
 
 # Add closeEvent to set action to 'quit' ONLY if window is closed via 'X'
 def closeEvent(self, event):
@@ -645,10 +771,11 @@ def closeEvent(self, event):
 def load_prefs_if_exists(self):
     prefs_path = _prefs_path()
     if os.path.exists(prefs_path):
-        checked, window_size, splitter_state = _read_prefs_file()
+        checked, window_size, splitter_state, presets = _read_prefs_file()
         self.checked_files_from_prefs = checked
         self.window_size_from_prefs = window_size
         self.prefs_loaded = True
+        self.loaded_presets = presets
         # Restore splitter state if available
         if splitter_state and hasattr(self, "splitter"):
             self.splitter.restoreState(splitter_state)
@@ -656,6 +783,7 @@ def load_prefs_if_exists(self):
         self.checked_files_from_prefs = set()
         self.window_size_from_prefs = None
         self.prefs_loaded = False
+        self.loaded_presets = []
 
 def save_prefs(self):
     checked_relpaths = []
@@ -681,7 +809,7 @@ def save_prefs(self):
     size = self.size()
     window_size = (size.width(), size.height())
     splitter_state = self.splitter.saveState() if hasattr(self, "splitter") else None
-    _write_prefs_file(checked_relpaths, window_size=window_size, splitter_state=splitter_state)
+    _write_prefs_file(checked_relpaths, window_size=window_size, splitter_state=splitter_state, presets=self.presets)
 
 FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
 FileSelectionGUI.save_prefs = save_prefs
