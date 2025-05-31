@@ -10,18 +10,14 @@ import fnmatch
 def get_config_path():
     """Get the path to the default configuration file."""
     if getattr(sys, 'frozen', False):
-        # If the application is frozen (e.g., PyInstaller), use the _MEIPASS directory.
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.md')
+        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'config.md')
     else:
-        # If running as a script, use importlib.resources.
         try:
-            with resources.path('aicodeprep_gui_c.data', 'default_config.md') as config_file:
+            with resources.path('aicodeprep_gui_c.data', 'config.md') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
-            # Fallback to a default path if the package structure is different.
-            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.md')
-
+            config_path = os.path.join(os.path.dirname(__file__), 'data', 'config.md')
     return config_path
 
 def get_exe_directory():
@@ -30,8 +26,48 @@ def get_exe_directory():
         return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
 
+def parse_simple_markdown_config(content: str) -> dict:
+    """
+    Parse a simple markdown config file with sections like:
+    ### code_extensions
+    .py
+    .js
+    Returns a dict with section names as keys and lists of values.
+    """
+    import re
+    config = {}
+    current_section = None
+    for line in content.splitlines():
+        line = line.strip()
+        if line.startswith("### "):
+            current_section = line[4:].strip()
+            config[current_section] = []
+        elif current_section and line and not line.startswith("#"):
+            config[current_section].append(line)
+    # Map to expected keys
+    mapped = {}
+    # List sections
+    for key in [
+        "code_extensions",
+        "exclude_extensions",
+        "exclude_dirs",
+        "exclude_files",
+        "exclude_patterns",
+        "include_dirs",
+        "include_files"
+    ]:
+        if key in config:
+            mapped[key] = config[key]
+    # Scalar values
+    if "max_file_size" in config and config["max_file_size"]:
+        try:
+            mapped["max_file_size"] = int(config["max_file_size"][0])
+        except Exception:
+            pass
+    return mapped
+
 def load_default_config() -> dict:
-    """Load the default configuration from Markdown file with JSON code block"""
+    """Load the default configuration from Markdown file in simple section format"""
     try:
         config_path = get_config_path()
         logging.info(f"Looking for config at {config_path}")
@@ -39,20 +75,12 @@ def load_default_config() -> dict:
         try:
             with open(config_path, 'r') as f:
                 content = f.read()
-            # Extract JSON code block from Markdown
-            import re
-            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
-            if match:
-                json_str = match.group(1)
-                config = json.loads(json_str)
-            else:
-                logging.warning("No JSON code block found in config markdown, using defaults")
-                config = None
+            config = parse_simple_markdown_config(content)
         except FileNotFoundError:
             logging.warning("Default config file not found, using built-in defaults")
             config = None
 
-        if config is None:
+        if config is None or not config:
             config = {
                 'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
                                    '.rs', '.swift', '.kt'],

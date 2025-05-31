@@ -12,9 +12,4 @@ aicodeprep_gui_c\gui.py
 aicodeprep_gui_c\main.py
 aicodeprep_gui_c\smart_logic.py
 aicodeprep_gui_c\__init__.py
-aicodeprep_gui_c\data\default_config.md
-
-[presets]
-kkkk|ampqag==
-45454|ag==
-h|aA==
+aicodeprep_gui_c\data\config.md

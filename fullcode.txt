@@ -667,7 +667,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # store the internal key in userData
         self.format_combo.setItemData(0, 'xml')
         self.format_combo.setItemData(1, 'markdown')
-        title_bar_layout.addWidget(QtWidgets.QLabel("Output format:"))
+        output_label = QtWidgets.QLabel("&Output format:")
+        output_label.setBuddy(self.format_combo)
+        title_bar_layout.addWidget(output_label)
         title_bar_layout.addWidget(self.format_combo)
         title_bar_layout.addStretch()
         self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
@@ -678,6 +680,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Token count label
         self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
         main_layout.addWidget(self.token_label)
+        # Add spacing after output format/token row
+        main_layout.addSpacing(8)
 
         # Fancy "Vibe Code Faster" label
         self.vibe_label = QtWidgets.QLabel("AI Code Prep GUI")
@@ -690,10 +694,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.vibe_label.setStyleSheet(
             "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00c3ff, stop:1 #7f00ff);"
             "color: white;"
-            "padding: 8px 0;"
+            "padding: 0;"
             "border-radius: 8px;"
         )
-        main_layout.addWidget(self.vibe_label)
+        self.vibe_label.setFixedHeight(44)
+        # Wrap in QWidget for horizontal margins
+        banner_wrap = QtWidgets.QWidget()
+        banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
+        banner_layout.setContentsMargins(14, 0, 14, 0)
+        banner_layout.addWidget(self.vibe_label)
+        main_layout.addWidget(banner_wrap)
+        # Add vertical spacing below banner
+        main_layout.addSpacing(8)
 
         # Info line under banner
         self.info_label = QtWidgets.QLabel("I tried to guess which code files you will likely want included, adjust as needed")
@@ -709,7 +721,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.preset_strip = QtWidgets.QHBoxLayout()
         self.preset_strip.addWidget(QtWidgets.QLabel("Presets:"))
         self.preset_strip.addStretch()
+        # Add "✚" button for quick new preset
+        add_preset_btn = QtWidgets.QPushButton("✚")
+        add_preset_btn.setFixedSize(24, 24)
+        add_preset_btn.setToolTip("New Preset…")
+        add_preset_btn.clicked.connect(self.add_new_preset_dialog)
+        self.preset_strip.addWidget(add_preset_btn)
         main_layout.addLayout(self.preset_strip)
+        # Add spacing after presets strip
+        main_layout.addSpacing(8)
 
         # --- Splitter for file tree and prompt ---
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
@@ -729,12 +749,16 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.tree_widget.setStyleSheet(get_checkbox_style_light())
             print(f"DEBUG: Initial tree_widget stylesheet (light): {self.tree_widget.styleSheet()}")
         self.splitter.addWidget(self.tree_widget)
+        # Add spacing after file/folder header (tree)
+        main_layout.addSpacing(8)
         # Prompt area (label + textbox in a widget)
         prompt_widget = QtWidgets.QWidget()
         prompt_layout = QtWidgets.QVBoxLayout(prompt_widget)
         prompt_layout.setContentsMargins(0, 0, 0, 0)
         prompt_label = QtWidgets.QLabel("Optional prompt/question for LLM (will be appended to the end):")
         prompt_layout.addWidget(prompt_label)
+        # Add spacing after prompt label
+        prompt_layout.addSpacing(8)
         self.prompt_textbox = QtWidgets.QPlainTextEdit()
         self.prompt_textbox.setPlaceholderText(
             "Type your question or prompt here (optional)…")
@@ -827,6 +851,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         button_layout2 = QtWidgets.QHBoxLayout()
         main_layout.addLayout(button_layout1)
         main_layout.addLayout(button_layout2)
+        # Add bottom margin to main layout
+        main_layout.setContentsMargins(0, 0, 0, 10)
 
         # Website link (left side, above buttons)
         website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">wuu73.org/aicp</a>")
@@ -1067,6 +1093,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 url = f"https://wuu73.org/dixels/loads.html?tok={self.total_tokens}"
                 request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
                 self.network_manager.get(request)
+                # Flash "Copied to clipboard and fullcode.txt" message
+                self.text_label.setStyleSheet("font-size: 20px; color: #00c3ff; font-weight: bold;")
+                self.text_label.setText("Copied to clipboard and fullcode.txt")
+                QtCore.QTimer.singleShot(1500, self.close)
             except Exception as e:
                 logging.error(f"Failed to copy to clipboard: {e}")
             # Save prefs if checkbox is checked
@@ -1075,7 +1105,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         else:
             logging.warning("No files selected or processed; skipping clipboard operation.")
         logging.info(f"Process Selected closing - action is: {self.action}")
-        self.close()
+        if files_processed_count <= 0:
+            self.close()
 
     def fetch_text_content(self):
         url = "https://wuu73.org/aicp/display.txt"  # URL to fetch text from
@@ -1406,18 +1437,14 @@ import fnmatch
 def get_config_path():
     """Get the path to the default configuration file."""
     if getattr(sys, 'frozen', False):
-        # If the application is frozen (e.g., PyInstaller), use the _MEIPASS directory.
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.md')
+        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'config.md')
     else:
-        # If running as a script, use importlib.resources.
         try:
-            with resources.path('aicodeprep_gui_c.data', 'default_config.md') as config_file:
+            with resources.path('aicodeprep_gui_c.data', 'config.md') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
-            # Fallback to a default path if the package structure is different.
-            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.md')
-
+            config_path = os.path.join(os.path.dirname(__file__), 'data', 'config.md')
     return config_path
 
 def get_exe_directory():
@@ -1426,8 +1453,48 @@ def get_exe_directory():
         return os.path.dirname(sys.executable)
     return os.path.dirname(os.path.abspath(__file__))
 
+def parse_simple_markdown_config(content: str) -> dict:
+    """
+    Parse a simple markdown config file with sections like:
+    ### code_extensions
+    .py
+    .js
+    Returns a dict with section names as keys and lists of values.
+    """
+    import re
+    config = {}
+    current_section = None
+    for line in content.splitlines():
+        line = line.strip()
+        if line.startswith("### "):
+            current_section = line[4:].strip()
+            config[current_section] = []
+        elif current_section and line and not line.startswith("#"):
+            config[current_section].append(line)
+    # Map to expected keys
+    mapped = {}
+    # List sections
+    for key in [
+        "code_extensions",
+        "exclude_extensions",
+        "exclude_dirs",
+        "exclude_files",
+        "exclude_patterns",
+        "include_dirs",
+        "include_files"
+    ]:
+        if key in config:
+            mapped[key] = config[key]
+    # Scalar values
+    if "max_file_size" in config and config["max_file_size"]:
+        try:
+            mapped["max_file_size"] = int(config["max_file_size"][0])
+        except Exception:
+            pass
+    return mapped
+
 def load_default_config() -> dict:
-    """Load the default configuration from Markdown file with JSON code block"""
+    """Load the default configuration from Markdown file in simple section format"""
     try:
         config_path = get_config_path()
         logging.info(f"Looking for config at {config_path}")
@@ -1435,20 +1502,12 @@ def load_default_config() -> dict:
         try:
             with open(config_path, 'r') as f:
                 content = f.read()
-            # Extract JSON code block from Markdown
-            import re
-            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
-            if match:
-                json_str = match.group(1)
-                config = json.loads(json_str)
-            else:
-                logging.warning("No JSON code block found in config markdown, using defaults")
-                config = None
+            config = parse_simple_markdown_config(content)
         except FileNotFoundError:
             logging.warning("Default config file not found, using built-in defaults")
             config = None
 
-        if config is None:
+        if config is None or not config:
             config = {
                 'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
                                    '.rs', '.swift', '.kt'],
@@ -1659,6 +1718,221 @@ aicodeprep_gui_c\__init__.py:
 from .main import main
 </code>
 
+aicodeprep_gui_c\data\config.md:
+<code>
+# AI Code Prep GUI Config File
+
+### code_extensions
+
+.py
+.js
+.jsx
+.ts
+.tsx
+.java
+.cpp
+.c
+.h
+.cs
+.php
+.rb
+.go
+.rs
+.swift
+.kt
+.scala
+.html
+.css
+.scss
+.sass
+.less
+.sql
+.sh
+.yaml
+.yml
+.json
+.xml
+.vue
+.r
+.m
+.f90
+.f95
+.f03
+.f08
+.gradle
+.groovy
+.ps1
+.psm1
+.ipynb
+.md
+.txt
+.lock
+.toml
+.ini
+.conf
+.cfg
+.properties
+
+### exclude_extensions
+
+.txt
+.log
+.temp
+.exe
+.dll
+.so
+.dylib
+.jar
+.war
+.ear
+.o
+.class
+
+### include_files
+
+README.md
+CONTRIBUTING.md
+important.txt
+
+### include_dirs
+
+important_docs
+
+### exclude_dirs
+
+.git
+node_modules
+venv
+**pycache**
+build
+dist
+.idea
+Lib
+site-packages
+.venv
+.venv
+.vscode
+.github
+docs
+tests
+spec
+fixtures
+migrations
+logs
+tmp
+cache
+assets
+public
+static
+uploads
+vendor
+bin
+obj
+out
+target
+coverage
+reports
+.pytest_cache
+.mypy_cache
+.ipynb_checkpoints
+.nyc_output
+test-results
+**tests**
+**snapshots**
+**mocks**
+debug
+.jest
+.next
+.nuxt
+.svelte-kit
+.expo
+dist-ssr
+.parcel-cache
+.serverless
+.vercel
+.angular
+.quasar
+.redwood
+.fusebox
+.docusaurus
+.terraform
+snapshots
+
+### exclude_files
+
+package-lock.json
+yarn.lock
+requirements.txt
+Gemfile.lock
+composer.lock
+.DS_Store
+Thumbs.db
+pnpm-lock.yaml
+bun.lock
+bun.lockb
+cargo.lock
+poetry.lock
+Pipfile.lock
+.npmrc
+.env
+.env._
+.env.local
+.env.prod
+.env.staging
+.env.dev
+.flaskenv
+.dockerenv
+env.json
+credentials.yaml
+secret_.json
+_.key
+_.pem
+_.crt
+_.pub
+id_rsa
+id_dsa
+Dockerfile._.cache
+coverage.xml
+_.lcov
+
+### exclude_patterns
+
+min.js
+min.css
+bundle.js
+chunk.js
+test.js
+spec.js
+generated.ts
+_.swp
+_.swo
+_.un~
+~$_
+_.min._
+_-lock._
+_.snap
+.test.
+.spec.
+.bench.
+.cache
+.temp
+_.lock
+_.class
+_.exe
+_.dll
+_.so
+_.dylib
+_.jar
+_.war
+_.ear
+\*.o
+
+### max_file_size
+
+1000000
+
+</code>
+
 aicodeprep_gui_c\data\default_config.md:
 <code>
 # Default Configuration
@@ -1866,4 +2140,4 @@ aicodeprep_gui_c\data\default_config.md:
 .. some other files were skipped ..
 
 
-can you look at the attached image which is a screenshot of the GUI for this app and give me suggestions to improve it?
+I recently changed the format of the config file, to an easy to read markdown format, can you make sure that the code properly parses it? i kept two other old config files for reference, config.md is the new one that should work the same.
