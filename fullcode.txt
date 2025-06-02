@@ -37,154 +37,6 @@ aicodeprep_gui_c = ["data/default_config.md"]
 
 </code>
 
-README.md:
-<code>
-# AI Code Prep GUI
-
-_Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
-
-[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep/stargazers)
-
-**Latest Version: 0.9.8 (May 27, 2025)**
-
----
-
-## What is AI Code Prep GUI?
-
-AI Code Prep GUI is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files, this tool automatically collects relevant code files into a single text file, copies it to your clipboard, and formats it with AI-friendly `<code>` tags.
-
-It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-click integration.
-
----
-
-## New Features in v0.9.8
-
-- **Dark Mode Support:**
-  - Automatic theme detection based on system preferences
-  - Manual dark/light mode toggle in the top-right corner
-  - Carefully designed dark theme palette for optimal readability
-- **PySide6 Migration:**
-  - Upgraded to Qt6 via PySide6 for improved performance
-  - Simplified dependencies - only requires PySide6 and tiktoken
-  - Better modern Qt features and future-proofing
-
-## Features from v0.9.7
-
-- **Persistent Preferences:** Automatically saves window size and the last selected files in a `.aicodeprep` file per project folder. When you re-open the tool in the same folder, your previous selections and window layout are restored.
-  - New checkbox lets you disable creation of the `.aicodeprep` file if you don't want this feature.
-- **Folder Tree UI Improvements:**
-  - Expandable and collapsable folders for easier navigation
-  - Auto-expands folders containing checked files
-- **Token Counter:** As you check or uncheck files, the token count is now displayed.
-- **Enhanced Smart Auto-Selection:** Smarter file checking logic that respects exclusions and better filters irrelevant files
-- **Additional UI Buttons:**
-  - **Load from .aicodeprep** button to restore your last saved selection
-  - **Quit** button for quick exit without processing
-- **Better Visual Styling:** Improved fonts and DPI scaling for crisp display on high-resolution screens
-
----
-
-## Screenshots & Usage
-
-See screenshots and a quick usage guide here:  
-[https://wuu73.org/aicp](https://wuu73.org/aicp)
-
-### New version 0.9.8 available for Windows, macOS, and Linux
-
----
-
-## Future idea's
-
-MCP Server to automatically attach to a browser, and automatically paste the output context into various AI/LLM chats like Gemini on AI Studio, ChatGPT, Openrouter, Poe, Deepseek, X, etc so even less copying and pasting.
-
-## Installation
-
-### macOS
-
-1. Download and unzip the macOS package.
-2. Drag `AICodePrepGUI.app` to your Applications folder.
-3. Double-click `AICodePrepGUI.workflow` and follow instructions to add the right-click Quick Actions menu to Finder.
-4. Restart Finder if needed to activate the menu.
-5. To use: Right-click on a project folder → Quick Actions → AICodePrepGUI.
-6. Select/deselect files and folders as needed, then click **Process Selected**.
-7. The tool will create a `fullcode.txt` and copy all selected code to your clipboard, ready to paste into your AI chatbot.
-
-_Tested on macOS Ventura 13.4 and newer (M1+)._
-
-### Windows
-
-1. Run `windows-easy-installer-dist.exe` or the newer v0.9.8 installer file.
-2. Follow the installation wizard (default directory: `Program Files\AICodePrep-GUI`).
-3. To use: Right-click in any folder's blank space in Windows File Explorer → `AI Code Prep GUI`.
-4. Restart Windows if the context menu does not appear immediately.
-5. Select/deselect files and folders, then click **Process Selected**.
-6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
-
-### Linux
-
-1. Download the Linux package from the releases page.
-2. Follow the installation instructions in the included README.
-3. Use via command line or file manager context menu integration.
-
----
-
-## Features Summary
-
-- **Cross-platform GUI** for easy visual file selection
-- **Smart Preselection** of relevant code files based on configured extensions and exclusions
-- **Dark/Light Theme Support** with system preference detection and manual toggle
-- **Folder Tree View** with collapsible/expandable folders and auto-expansion for selected files
-- **Preferences Saving** via `.aicodeprep` per folder to remember your last selected files and window size (with option to disable)
-- **Token Counter** displays token count as you check/uncheck files
-- **Context Menu Integration** for quick access
-- **Clipboard & File Output** for seamless pasting into AI chatbots
-- **LLM-Optimized Formatting** with `<code>` tags around file contents
-- **Configurable via YAML** to suit various project needs
-- **Improved DPI & Font Scaling** for crisp UI on all displays
-
----
-
-## Usage
-
-1. Open the tool from your project folder's context menu (right-click).
-2. Review the preselected files and folders. Expand or collapse folders as needed.
-3. Use the **Smart Auto** button to auto-select files based on smart logic.
-4. Use **Load from .aicodeprep** to restore your previous session's selection.
-5. Check or uncheck files/folders manually.
-6. Toggle dark/light mode using the checkbox in the top-right corner if desired.
-7. If you want to save your preferences for the folder, ensure the **Remember checked files for this folder (.aicodeprep)** checkbox is ticked.
-8. Click **Process Selected** to generate the output file and copy it to your clipboard.
-
----
-
-## Configuration
-
-You can customize file extensions, directories, and exclusion patterns via a `aicodeprep_config.yaml` file in your project folder. Refer to the [default_config.yaml](aicodeprep_gui_c/data/default_config.yaml) for examples.
-
----
-
-## Contributing
-
-Contributions and pull requests are welcome! Please submit bug reports and feature requests via GitHub Issues.
-
----
-
-## Support & Donations
-
-If you find this tool useful, consider supporting future development:
-
-| Method   | Address / Link                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------- |
-| Bitcoin  | `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`                                                      |
-| Litecoin | `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`                                                     |
-| Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
-| CashApp  | `$lightweb73`                                                                                     |
-| Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
-
----
-
-</code>
-
 requirements.txt:
 <code>
 altgraph==0.17.4
@@ -1814,7 +1666,6 @@ site-packages
 .vscode
 .github
 docs
-tests
 spec
 fixtures
 migrations
@@ -1865,7 +1716,7 @@ yarn.lock
 requirements.txt
 Gemfile.lock
 composer.lock
-.DS_Store
+.DS*Store
 Thumbs.db
 pnpm-lock.yaml
 bun.lock
@@ -1875,7 +1726,7 @@ poetry.lock
 Pipfile.lock
 .npmrc
 .env
-.env._
+.env.*
 .env.local
 .env.prod
 .env.staging
@@ -1884,8 +1735,8 @@ Pipfile.lock
 .dockerenv
 env.json
 credentials.yaml
-secret_.json
-_.key
+secret*.json
+*.key
 _.pem
 _.crt
 _.pub
@@ -1893,7 +1744,7 @@ id_rsa
 id_dsa
 Dockerfile._.cache
 coverage.xml
-_.lcov
+\_.lcov
 
 ### exclude_patterns
 
@@ -1933,211 +1784,7 @@ _.ear
 
 </code>
 
-aicodeprep_gui_c\data\default_config.md:
-<code>
-# Default Configuration
-
-```json
-{
-  "code_extensions": [
-    ".py",
-    ".js",
-    ".jsx",
-    ".ts",
-    ".tsx",
-    ".java",
-    ".cpp",
-    ".c",
-    ".h",
-    ".cs",
-    ".php",
-    ".rb",
-    ".go",
-    ".rs",
-    ".swift",
-    ".kt",
-    ".scala",
-    ".html",
-    ".css",
-    ".scss",
-    ".sass",
-    ".less",
-    ".sql",
-    ".sh",
-    ".yaml",
-    ".yml",
-    ".json",
-    ".xml",
-    ".vue",
-    ".r",
-    ".m",
-    ".f90",
-    ".f95",
-    ".f03",
-    ".f08",
-    ".gradle",
-    ".groovy",
-    ".ps1",
-    ".psm1",
-    ".ipynb",
-    ".md",
-    ".txt",
-    ".lock",
-    ".toml",
-    ".ini",
-    ".conf",
-    ".cfg",
-    ".properties"
-  ],
-  "exclude_extensions": [
-    ".txt",
-    ".log",
-    ".temp",
-    ".exe",
-    ".dll",
-    ".so",
-    ".dylib",
-    ".jar",
-    ".war",
-    ".ear",
-    ".o",
-    ".class"
-  ],
-  "include_files": ["README.md", "CONTRIBUTING.md", "important.txt"],
-  "include_dirs": ["important_docs"],
-  "exclude_dirs": [
-    ".git",
-    "node_modules",
-    "venv",
-    "__pycache__",
-    "build",
-    "dist",
-    ".idea",
-    "Lib",
-    "site-packages",
-    ".venv",
-    "venv",
-    ".vscode",
-    ".github",
-    "docs",
-    "tests",
-    "spec",
-    "fixtures",
-    "migrations",
-    "logs",
-    "tmp",
-    "cache",
-    "assets",
-    "public",
-    "static",
-    "uploads",
-    "vendor",
-    "bin",
-    "obj",
-    "out",
-    "target",
-    "coverage",
-    "reports",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ipynb_checkpoints",
-    ".nyc_output",
-    "test-results",
-    "__tests__",
-    "__snapshots__",
-    "__mocks__",
-    "debug",
-    ".jest",
-    ".next",
-    ".nuxt",
-    ".svelte-kit",
-    ".expo",
-    "dist-ssr",
-    ".parcel-cache",
-    ".serverless",
-    ".vercel",
-    ".angular",
-    ".quasar",
-    ".redwood",
-    ".fusebox",
-    ".docusaurus",
-    ".terraform",
-    "snapshots"
-  ],
-  "exclude_files": [
-    "package-lock.json",
-    "yarn.lock",
-    "requirements.txt",
-    "Gemfile.lock",
-    "composer.lock",
-    ".DS_Store",
-    "Thumbs.db",
-    "pnpm-lock.yaml",
-    "bun.lock",
-    "bun.lockb",
-    "cargo.lock",
-    "poetry.lock",
-    "Pipfile.lock",
-    ".npmrc",
-    ".env",
-    ".env.*",
-    ".env.local",
-    ".env.prod",
-    ".env.staging",
-    ".env.dev",
-    ".flaskenv",
-    ".dockerenv",
-    "env.json",
-    "credentials.yaml",
-    "secret*.json",
-    "*.key",
-    "*.pem",
-    "*.crt",
-    "*.pub",
-    "id_rsa",
-    "id_dsa",
-    "Dockerfile.*.cache",
-    "coverage.xml",
-    "*.lcov"
-  ],
-  "exclude_patterns": [
-    "min.js",
-    "min.css",
-    "bundle.js",
-    "chunk.js",
-    "test.js",
-    "spec.js",
-    "generated.ts",
-    "*.swp",
-    "*.swo",
-    "*.un~",
-    "~$*",
-    "*.min.*",
-    "*-lock.*",
-    "*.snap",
-    ".test.",
-    ".spec.",
-    ".bench.",
-    ".cache",
-    ".temp",
-    "*.lock",
-    "*.class",
-    "*.exe",
-    "*.dll",
-    "*.so",
-    "*.dylib",
-    "*.jar",
-    "*.war",
-    "*.ear",
-    "*.o"
-  ],
-  "max_file_size": 1000000
-}
-```
-
-</code>
-
 .. some other files were skipped ..
 
 
-I recently changed the format of the config file, to an easy to read markdown format, can you make sure that the code properly parses it? i kept two other old config files for reference, config.md is the new one that should work the same.
+Sometimes, this project/app will just skip folders, that contain important things, txt files, md, json, it doesn't appear anywhere in the tree - this has to be fixed!  the user should always have the option to select it even if nothing inside a folder is smart selected. One of the folders is called reports, and i see it is on the config.md list, but it should still show up unchecked in the file tree. The other one is 'diag' i don't see it on the config.md list yet it also doesn't get displayed. Try to figure out a solution, and if you figure out how to fix it, write a prompt for Cline my AI coding agent who can surgically find/replace any code for you.

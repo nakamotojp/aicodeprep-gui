@@ -212,9 +212,11 @@ def collect_all_files() -> List[Tuple[str, str, bool]]:
     for root, dirs, files in os.walk(root_dir):
         # Filter out directories to skip them entirely based on EXCLUDE_DIRS
         # This is more effective than just checking the name
-        dirs[:] = [d for d in dirs if not d.startswith('.') and 
-                  d not in EXCLUDE_DIRS and 
-                  not any(excluded_dir in d.lower() for excluded_dir in ['venv', '.venv'])]
+        # Walk every non-hidden dir; only skip virtual-envs explicitly.
+        dirs[:] = [d for d in dirs if
+                   not d.startswith('.') and
+                   not any(excluded_dir in d.lower()
+                           for excluded_dir in ('venv', '.venv'))]
 
         for file in files:
             if file == "aicp_FULLCODE.txt":

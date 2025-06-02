@@ -270,6 +270,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.path_to_item = {}  # Maps folder path to QTreeWidgetItem
         self.checked_paths = set()
         for file_path, relative_path, is_included in files:
+            is_directory = os.path.isdir(file_path)
             # If prefs loaded, override: only check files in prefs, uncheck all others
             if self.prefs_loaded:
                 is_included = relative_path in self.checked_files_from_prefs
@@ -280,7 +281,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             parent_path = ""
             for i, part in enumerate(parts):
                 curr_path = os.sep.join(parts[:i+1])
-                is_file = (i == len(parts) - 1)
+                is_file = (i == len(parts) - 1) and not is_directory
                 if curr_path not in self.path_to_item:
                     if is_file:
                         item = QtWidgets.QTreeWidgetItem()

@@ -4,7 +4,6 @@ height=986
 splitter=000000ff000000010000000200000300000000de01ffffffff010000000200
 
 pyproject.toml
-README.md
 requirements.txt
 aicodeprep_gui_c\apptheme.py
 aicodeprep_gui_c\file_processor.py
