@@ -199,6 +199,7 @@ def should_process_directory(dir_path: str) -> bool:
 
 def collect_all_files() -> List[Tuple[str, str, bool]]:
     """Collect all files in the target directory with inclusion flags"""
+    seen_dirs: set[str] = set()
     all_files = []
     logging.info("Starting file collection...")
 
@@ -210,6 +211,13 @@ def collect_all_files() -> List[Tuple[str, str, bool]]:
     logging.info(f"Code extensions configured: {CODE_EXTENSIONS}")
     
     for root, dirs, files in os.walk(root_dir):
+        # ── record every sub-directory so it shows up in the GUI, even if empty
+        for d in dirs:
+            dir_path = os.path.join(root, d)
+            if dir_path not in seen_dirs:
+                rel_dir = os.path.relpath(dir_path, root_dir)
+                all_files.append((dir_path, rel_dir, False))   # unchecked folder
+                seen_dirs.add(dir_path)
         # Filter out directories to skip them entirely based on EXCLUDE_DIRS
         # This is more effective than just checking the name
         # Walk every non-hidden dir; only skip virtual-envs explicitly.

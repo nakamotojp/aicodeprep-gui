@@ -116,6 +116,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.checkbox_font = QtGui.QFont(system_font, int(default_font_size * 1.2))
             self.setFont(self.default_font)
             logging.info(f"Using system font: {system_font}, Size: {default_font_size}")
+
+            # --- standard icons (folder / file) for the tree entries -------------
+            style = self.style()
+            self.folder_icon = style.standardIcon(QtWidgets.QStyle.SP_DirIcon)
+            self.file_icon   = style.standardIcon(QtWidgets.QStyle.SP_FileIcon)
         except Exception as e:
             logging.warning(f"Font/scaling error: {e}")
             self.default_font = QtGui.QFont('Arial', default_font_size)
@@ -281,11 +286,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             parent_path = ""
             for i, part in enumerate(parts):
                 curr_path = os.sep.join(parts[:i+1])
-                is_file = (i == len(parts) - 1) and not is_directory
+                # treat the last segment as a file **only** if the underlying path is a real file
+                is_file = (i == len(parts) - 1) and os.path.isfile(file_path)
                 if curr_path not in self.path_to_item:
                     if is_file:
                         item = QtWidgets.QTreeWidgetItem()
                         item.setText(0, part)  # Show filename in column 0
+                        item.setIcon(0, self.file_icon)
                         
                         # Check if it's a binary file
                         if smart_logic.is_binary_file(file_path):
@@ -304,6 +311,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     else:
                         folder_item = QtWidgets.QTreeWidgetItem()
                         folder_item.setText(0, part)
+                        folder_item.setIcon(0, self.folder_icon)
                         # Make folders checkable
                         folder_item.setFlags(folder_item.flags() | QtCore.Qt.ItemIsUserCheckable)
                         folder_item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
@@ -478,9 +486,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     folder_path = os.path.join(*path_parts)
                     return (folder_item.text(0) in EXCLUDE_DIRS or
                             is_excluded_directory(folder_path))
-                def smart_check(item, check_state):
-                    # Skip blocked folders
-                    if should_skip_folder(item):
+                def smart_check(item, check_state, is_root=False):
+                    # If this is NOT the folder the user clicked and the
+                    # folder is on the skip list, ignore it.
+                    if not is_root and should_skip_folder(item):
                         item.setCheckState(0, QtCore.Qt.Unchecked)
                         return
                     for i in range(item.childCount()):
@@ -503,7 +512,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                             # It's a folder
                             smart_check(child, check_state)
                     item.setCheckState(0, check_state)
-                smart_check(item, item.checkState(0))
+                # first call: is_root=True
+                smart_check(item, item.checkState(0), is_root=True)
             else:
                 # File item: update selected_files as before
                 if item.checkState(0) == QtCore.Qt.Checked:
