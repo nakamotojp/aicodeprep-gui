@@ -142,23 +142,30 @@ def load_user_config() -> dict:
     return {}
 
 def is_binary_file(filepath: str) -> bool:
-    """Check if a file is binary based on extension and content."""
-    binary_extensions = {
-        '.png', '.gif', '.jpg', '.jpeg', '.ico', '.bmp',
-        '.exe', '.dll', '.so', '.dylib', '.zip', '.pdf',
-        '.mp3', '.mp4', '.avi', '.class', '.pyc', '.pyd',
-        '.bin', '.dat', '.db', '.sqlite', '.o', '.obj'
-    }
-    ext = os.path.splitext(filepath)[1].lower()
-    if ext in binary_extensions:
-        return True
+    """
+    Return True if this file is likely binary.  We treat any
+    NUL byte in the first 1KB as binary, but special-case common
+    Unicode BOMs (UTF-8 / UTF-16 / UTF-32) as text.
+    """
     try:
-        with open(filepath, 'rb') as file:
-            chunk = file.read(1024)
-            chunk.decode('utf-8')
+        with open(filepath, 'rb') as f:
+            chunk = f.read(1024)
+    except OSError:
+        # unreadable files are treated as text so checkboxes stay enabled
         return False
-    except (UnicodeDecodeError, IOError):
-        return True
+
+    # If it starts with a known BOM, count as text
+    if chunk.startswith((
+        b'\xef\xbb\xbf',      # UTF-8 BOM
+        b'\xff\xfe',          # UTF-16 LE BOM
+        b'\xfe\xff',          # UTF-16 BE BOM
+        b'\xff\xfe\x00\x00',  # UTF-32 LE BOM
+        b'\x00\x00\xfe\xff'   # UTF-32 BE BOM
+    )):
+        return False
+
+    # Any NUL in the first chunk => binary
+    return b'\x00' in chunk
 
 def matches_pattern(filename: str, pattern: str) -> bool:
     """Check if filename matches the given glob-style pattern (supports *, ?, [])"""

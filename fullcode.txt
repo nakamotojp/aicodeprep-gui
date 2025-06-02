@@ -1,62 +1,214 @@
-pyproject.toml:
+aicodeprep_gui_c\data\config.md:
 <code>
-[build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+# AI Code Prep GUI Config File
 
-[project]
-name = "aicodeprep_gui_c"
-version = "0.9.7"
-description = "Prepare code for AI chatbot assistance"
-readme = "README.md"
-authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
-license = { file = "LICENSE" }
-classifiers = [
-    "License :: Proprietary",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-]
-keywords = ["ai", "code", "preparation", "chatbot"]
-dependencies = [
-    "PySide6>=6.7",
-    "tiktoken"
-]
-requires-python = ">=3.6"
+### code_extensions
 
-[project.scripts]
-aicodeprep_gui_c = "aicodeprep_gui_c.main:main" # Use an underscore here
+.py
+.js
+.jsx
+.ts
+.tsx
+.java
+.cpp
+.c
+.h
+.cs
+.php
+.rb
+.go
+.rs
+.swift
+.kt
+.scala
+.html
+.css
+.scss
+.sass
+.less
+.sql
+.sh
+.yaml
+.yml
+.json
+.xml
+.vue
+.r
+.m
+.f90
+.f95
+.f03
+.f08
+.gradle
+.groovy
+.ps1
+.psm1
+.ipynb
+.md
+.txt
+.lock
+.toml
+.ini
+.conf
+.cfg
+.properties
 
-[project.urls]
-Homepage = "https://github.com/detroittommy879/aicodeprep"
+### exclude_extensions
 
-[tool.setuptools.packages.find]
-where = ["."]
+.txt
+.log
+.temp
+.exe
+.dll
+.so
+.dylib
+.jar
+.war
+.ear
+.o
+.class
 
-[tool.setuptools.package-data]
-aicodeprep_gui_c = ["data/default_config.md"]
+### include_files
 
-</code>
+README.md
+CONTRIBUTING.md
+important.txt
 
-requirements.txt:
-<code>
-altgraph==0.17.4
-certifi==2025.4.26
-charset-normalizer==3.4.1
-idna==3.10
-packaging==25.0
-pefile==2023.2.7
-pyinstaller==6.13.0
-pyinstaller-hooks-contrib==2025.3
-pyperclip==1.8.2
-PySide6==6.8.1
-PySide6_Addons==6.8.1
-PySide6_Essentials==6.8.1
-pywin32-ctypes==0.2.3
-regex==2024.11.6
-requests==2.32.3
-shiboken6==6.8.1
-tiktoken==0.9.0
-urllib3==2.4.0
+### include_dirs
+
+important_docs
+
+### exclude_dirs
+
+.git
+node_modules
+venv
+**pycache**
+build
+dist
+.idea
+Lib
+site-packages
+.venv
+.venv
+.vscode
+.github
+docs
+spec
+fixtures
+migrations
+logs
+tmp
+cache
+assets
+public
+static
+uploads
+vendor
+bin
+obj
+out
+target
+coverage
+reports
+.pytest_cache
+.mypy_cache
+.ipynb_checkpoints
+.nyc_output
+test-results
+**tests**
+**snapshots**
+**mocks**
+debug
+.jest
+.next
+.nuxt
+.svelte-kit
+.expo
+dist-ssr
+.parcel-cache
+.serverless
+.vercel
+.angular
+.quasar
+.redwood
+.fusebox
+.docusaurus
+.terraform
+snapshots
+
+### exclude_files
+
+package-lock.json
+yarn.lock
+requirements.txt
+Gemfile.lock
+composer.lock
+.DS*Store
+Thumbs.db
+pnpm-lock.yaml
+bun.lock
+bun.lockb
+cargo.lock
+poetry.lock
+Pipfile.lock
+.npmrc
+.env
+.env.*
+.env.local
+.env.prod
+.env.staging
+.env.dev
+.flaskenv
+.dockerenv
+env.json
+credentials.yaml
+secret*.json
+*.key
+_.pem
+_.crt
+_.pub
+id_rsa
+id_dsa
+Dockerfile._.cache
+coverage.xml
+\_.lcov
+
+### exclude_patterns
+
+min.js
+min.css
+bundle.js
+chunk.js
+test.js
+spec.js
+generated.ts
+_.swp
+_.swo
+_.un~
+~$_
+_.min._
+_-lock._
+_.snap
+.test.
+.spec.
+.bench.
+.cache
+.temp
+_.lock
+_.class
+_.exe
+_.dll
+_.so
+_.dylib
+_.jar
+_.war
+_.ear
+\*.o
+
+### max_file_size
+
+1000000
 
 </code>
 
@@ -473,6 +625,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.checkbox_font = QtGui.QFont(system_font, int(default_font_size * 1.2))
             self.setFont(self.default_font)
             logging.info(f"Using system font: {system_font}, Size: {default_font_size}")
+
+            # --- standard icons (folder / file) for the tree entries -------------
+            style = self.style()
+            self.folder_icon = style.standardIcon(QtWidgets.QStyle.SP_DirIcon)
+            self.file_icon   = style.standardIcon(QtWidgets.QStyle.SP_FileIcon)
         except Exception as e:
             logging.warning(f"Font/scaling error: {e}")
             self.default_font = QtGui.QFont('Arial', default_font_size)
@@ -627,6 +784,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.path_to_item = {}  # Maps folder path to QTreeWidgetItem
         self.checked_paths = set()
         for file_path, relative_path, is_included in files:
+            is_directory = os.path.isdir(file_path)
             # If prefs loaded, override: only check files in prefs, uncheck all others
             if self.prefs_loaded:
                 is_included = relative_path in self.checked_files_from_prefs
@@ -637,11 +795,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             parent_path = ""
             for i, part in enumerate(parts):
                 curr_path = os.sep.join(parts[:i+1])
-                is_file = (i == len(parts) - 1)
+                # treat the last segment as a file **only** if the underlying path is a real file
+                is_file = (i == len(parts) - 1) and os.path.isfile(file_path)
                 if curr_path not in self.path_to_item:
                     if is_file:
                         item = QtWidgets.QTreeWidgetItem()
                         item.setText(0, part)  # Show filename in column 0
+                        item.setIcon(0, self.file_icon)
                         
                         # Check if it's a binary file
                         if smart_logic.is_binary_file(file_path):
@@ -660,6 +820,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     else:
                         folder_item = QtWidgets.QTreeWidgetItem()
                         folder_item.setText(0, part)
+                        folder_item.setIcon(0, self.folder_icon)
                         # Make folders checkable
                         folder_item.setFlags(folder_item.flags() | QtCore.Qt.ItemIsUserCheckable)
                         folder_item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
@@ -834,9 +995,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     folder_path = os.path.join(*path_parts)
                     return (folder_item.text(0) in EXCLUDE_DIRS or
                             is_excluded_directory(folder_path))
-                def smart_check(item, check_state):
-                    # Skip blocked folders
-                    if should_skip_folder(item):
+                def smart_check(item, check_state, is_root=False):
+                    # If this is NOT the folder the user clicked and the
+                    # folder is on the skip list, ignore it.
+                    if not is_root and should_skip_folder(item):
                         item.setCheckState(0, QtCore.Qt.Unchecked)
                         return
                     for i in range(item.childCount()):
@@ -859,7 +1021,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                             # It's a folder
                             smart_check(child, check_state)
                     item.setCheckState(0, check_state)
-                smart_check(item, item.checkState(0))
+                # first call: is_root=True
+                smart_check(item, item.checkState(0), is_root=True)
             else:
                 # File item: update selected_files as before
                 if item.checkState(0) == QtCore.Qt.Checked:
@@ -1478,6 +1641,7 @@ def should_process_directory(dir_path: str) -> bool:
 
 def collect_all_files() -> List[Tuple[str, str, bool]]:
     """Collect all files in the target directory with inclusion flags"""
+    seen_dirs: set[str] = set()
     all_files = []
     logging.info("Starting file collection...")
 
@@ -1489,11 +1653,20 @@ def collect_all_files() -> List[Tuple[str, str, bool]]:
     logging.info(f"Code extensions configured: {CODE_EXTENSIONS}")
     
     for root, dirs, files in os.walk(root_dir):
+        # ── record every sub-directory so it shows up in the GUI, even if empty
+        for d in dirs:
+            dir_path = os.path.join(root, d)
+            if dir_path not in seen_dirs:
+                rel_dir = os.path.relpath(dir_path, root_dir)
+                all_files.append((dir_path, rel_dir, False))   # unchecked folder
+                seen_dirs.add(dir_path)
         # Filter out directories to skip them entirely based on EXCLUDE_DIRS
         # This is more effective than just checking the name
-        dirs[:] = [d for d in dirs if not d.startswith('.') and 
-                  d not in EXCLUDE_DIRS and 
-                  not any(excluded_dir in d.lower() for excluded_dir in ['venv', '.venv'])]
+        # Walk every non-hidden dir; only skip virtual-envs explicitly.
+        dirs[:] = [d for d in dirs if
+                   not d.startswith('.') and
+                   not any(excluded_dir in d.lower()
+                           for excluded_dir in ('venv', '.venv'))]
 
         for file in files:
             if file == "aicp_FULLCODE.txt":
@@ -1570,221 +1743,69 @@ aicodeprep_gui_c\__init__.py:
 from .main import main
 </code>
 
-aicodeprep_gui_c\data\config.md:
+pyproject.toml:
 <code>
-# AI Code Prep GUI Config File
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
-### code_extensions
+[project]
+name = "aicodeprep_gui_c"
+version = "0.9.7"
+description = "Prepare code for AI chatbot assistance"
+readme = "README.md"
+authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: Proprietary",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["ai", "code", "preparation", "chatbot"]
+dependencies = [
+    "PySide6>=6.7",
+    "tiktoken"
+]
+requires-python = ">=3.6"
 
-.py
-.js
-.jsx
-.ts
-.tsx
-.java
-.cpp
-.c
-.h
-.cs
-.php
-.rb
-.go
-.rs
-.swift
-.kt
-.scala
-.html
-.css
-.scss
-.sass
-.less
-.sql
-.sh
-.yaml
-.yml
-.json
-.xml
-.vue
-.r
-.m
-.f90
-.f95
-.f03
-.f08
-.gradle
-.groovy
-.ps1
-.psm1
-.ipynb
-.md
-.txt
-.lock
-.toml
-.ini
-.conf
-.cfg
-.properties
+[project.scripts]
+aicodeprep_gui_c = "aicodeprep_gui_c.main:main" # Use an underscore here
 
-### exclude_extensions
+[project.urls]
+Homepage = "https://github.com/detroittommy879/aicodeprep"
 
-.txt
-.log
-.temp
-.exe
-.dll
-.so
-.dylib
-.jar
-.war
-.ear
-.o
-.class
+[tool.setuptools.packages.find]
+where = ["."]
 
-### include_files
+[tool.setuptools.package-data]
+aicodeprep_gui_c = ["data/default_config.md"]
 
-README.md
-CONTRIBUTING.md
-important.txt
+</code>
 
-### include_dirs
-
-important_docs
-
-### exclude_dirs
-
-.git
-node_modules
-venv
-**pycache**
-build
-dist
-.idea
-Lib
-site-packages
-.venv
-.venv
-.vscode
-.github
-docs
-spec
-fixtures
-migrations
-logs
-tmp
-cache
-assets
-public
-static
-uploads
-vendor
-bin
-obj
-out
-target
-coverage
-reports
-.pytest_cache
-.mypy_cache
-.ipynb_checkpoints
-.nyc_output
-test-results
-**tests**
-**snapshots**
-**mocks**
-debug
-.jest
-.next
-.nuxt
-.svelte-kit
-.expo
-dist-ssr
-.parcel-cache
-.serverless
-.vercel
-.angular
-.quasar
-.redwood
-.fusebox
-.docusaurus
-.terraform
-snapshots
-
-### exclude_files
-
-package-lock.json
-yarn.lock
-requirements.txt
-Gemfile.lock
-composer.lock
-.DS*Store
-Thumbs.db
-pnpm-lock.yaml
-bun.lock
-bun.lockb
-cargo.lock
-poetry.lock
-Pipfile.lock
-.npmrc
-.env
-.env.*
-.env.local
-.env.prod
-.env.staging
-.env.dev
-.flaskenv
-.dockerenv
-env.json
-credentials.yaml
-secret*.json
-*.key
-_.pem
-_.crt
-_.pub
-id_rsa
-id_dsa
-Dockerfile._.cache
-coverage.xml
-\_.lcov
-
-### exclude_patterns
-
-min.js
-min.css
-bundle.js
-chunk.js
-test.js
-spec.js
-generated.ts
-_.swp
-_.swo
-_.un~
-~$_
-_.min._
-_-lock._
-_.snap
-.test.
-.spec.
-.bench.
-.cache
-.temp
-_.lock
-_.class
-_.exe
-_.dll
-_.so
-_.dylib
-_.jar
-_.war
-_.ear
-\*.o
-
-### max_file_size
-
-1000000
+requirements.txt:
+<code>
+altgraph==0.17.4
+certifi==2025.4.26
+charset-normalizer==3.4.1
+idna==3.10
+packaging==25.0
+pefile==2023.2.7
+pyinstaller==6.13.0
+pyinstaller-hooks-contrib==2025.3
+pyperclip==1.8.2
+PySide6==6.8.1
+PySide6_Addons==6.8.1
+PySide6_Essentials==6.8.1
+pywin32-ctypes==0.2.3
+regex==2024.11.6
+requests==2.32.3
+shiboken6==6.8.1
+tiktoken==0.9.0
+urllib3==2.4.0
 
 </code>
 
 .. some other files were skipped ..
 
 
-Sometimes, this project/app will just skip folders, that contain important things, txt files, md, json, it doesn't appear anywhere in the tree - this has to be fixed!  the user should always have the option to select it even if nothing inside a folder is smart selected. One of the folders is called reports, and i see it is on the config.md list, but it should still show up unchecked in the file tree. The other one is 'diag' i don't see it on the config.md list yet it also doesn't get displayed. Try to figure out a solution, and if you figure out how to fix it, write a prompt for Cline my AI coding agent who can surgically find/replace any code for you.
+app mostly works but i noticed, when i tried to use it on a folder that had a couple files freshly made (seconds ago), the filename is weirdly greyed out, and i can't click / can't check it, what is this from? i've never seen anything act that way, the files can be read just fine in vs code and i could check other files, but those two files (containing just markdown text) were listed but can't choose them

@@ -2,6 +2,7 @@
 
 ### code_extensions
 
+.md
 .py
 .js
 .jsx
