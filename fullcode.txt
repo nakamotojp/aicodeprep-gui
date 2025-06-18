@@ -4,6 +4,7 @@ aicodeprep_gui_c\data\config.md:
 
 ### code_extensions
 
+.md
 .py
 .js
 .jsx
@@ -83,6 +84,7 @@ important_docs
 .git
 node_modules
 venv
+build_env
 **pycache**
 build
 dist
@@ -116,9 +118,6 @@ reports
 .ipynb_checkpoints
 .nyc_output
 test-results
-**tests**
-**snapshots**
-**mocks**
 debug
 .jest
 .next
@@ -208,7 +207,7 @@ _.ear
 
 ### max_file_size
 
-1000000
+4000000
 
 </code>
 
@@ -461,14 +460,28 @@ OutputFmt = Literal['xml', 'markdown']
 
 def _write_one_file_xml(outfile, rel_path, abs_path):
     outfile.write(f"{rel_path}:\n<code>\n")
-    with open(abs_path, 'r', encoding='utf-8', errors='ignore') as infile:
-        outfile.write(infile.read())
+    if is_binary_file(abs_path):
+        outfile.write(".. contents skipped (binary file) ..")
+    else:
+        try:
+            with open(abs_path, "r", encoding="utf-8", errors="ignore") as infile:
+                outfile.write(infile.read())
+        except Exception:
+            outfile.write(".. contents skipped (read error) ..")
     outfile.write("\n</code>\n\n")
+
+from aicodeprep_gui_c.smart_logic import is_binary_file
 
 def _write_one_file_md(outfile, rel_path, abs_path):
     outfile.write(f"### {rel_path}\n")
-    with open(abs_path, 'r', encoding='utf-8', errors='ignore') as infile:
-        outfile.write(infile.read())
+    if is_binary_file(abs_path):
+        outfile.write(".. contents skipped (binary file) ..\n")
+    else:
+        try:
+            with open(abs_path, "r", encoding="utf-8", errors="ignore") as infile:
+                outfile.write(infile.read())
+        except Exception:
+            outfile.write(".. contents skipped (read error) ..\n")
     outfile.write(f"\n### END {rel_path}\n\n")
 
 def process_files(selected_files: List[str], output_file: str, fmt: OutputFmt = 'xml') -> int:
@@ -1584,23 +1597,30 @@ def load_user_config() -> dict:
     return {}
 
 def is_binary_file(filepath: str) -> bool:
-    """Check if a file is binary based on extension and content."""
-    binary_extensions = {
-        '.png', '.gif', '.jpg', '.jpeg', '.ico', '.bmp',
-        '.exe', '.dll', '.so', '.dylib', '.zip', '.pdf',
-        '.mp3', '.mp4', '.avi', '.class', '.pyc', '.pyd',
-        '.bin', '.dat', '.db', '.sqlite', '.o', '.obj'
-    }
-    ext = os.path.splitext(filepath)[1].lower()
-    if ext in binary_extensions:
-        return True
+    """
+    Return True if this file is likely binary.  We treat any
+    NUL byte in the first 1KB as binary, but special-case common
+    Unicode BOMs (UTF-8 / UTF-16 / UTF-32) as text.
+    """
     try:
-        with open(filepath, 'rb') as file:
-            chunk = file.read(1024)
-            chunk.decode('utf-8')
+        with open(filepath, 'rb') as f:
+            chunk = f.read(1024)
+    except OSError:
+        # unreadable files are treated as text so checkboxes stay enabled
         return False
-    except (UnicodeDecodeError, IOError):
-        return True
+
+    # If it starts with a known BOM, count as text
+    if chunk.startswith((
+        b'\xef\xbb\xbf',      # UTF-8 BOM
+        b'\xff\xfe',          # UTF-16 LE BOM
+        b'\xfe\xff',          # UTF-16 BE BOM
+        b'\xff\xfe\x00\x00',  # UTF-32 LE BOM
+        b'\x00\x00\xfe\xff'   # UTF-32 BE BOM
+    )):
+        return False
+
+    # Any NUL in the first chunk => binary
+    return b'\x00' in chunk
 
 def matches_pattern(filename: str, pattern: str) -> bool:
     """Check if filename matches the given glob-style pattern (supports *, ?, [])"""
@@ -1743,6 +1763,19 @@ aicodeprep_gui_c\__init__.py:
 from .main import main
 </code>
 
+dist\main\win_linux-old_and_new_04-30-25\linux-works-but-menu-annoying\README.md:
+<code>
+Look you will have to try to get a right click context menu added to Linux, I tried, and I gave up. So many different distros, I'm sure if you try you can figure it out - basically you need to make this file aicodeprep097 file executable (if not already) and then add a script to run that is attached to a new context menu entry for whichever Linux desktop UI you have. Mate, Cinnamon, Gnome, KDE, etc are all different. When you click the new menu entry, it basically needs to cd into that folder, and then ./aicodeprep097 which would load the GUI. If you double click aicodeprep097 or move it to a folder where there is code/project files, it will open up like normal and work. I just can't figure out the menu! If you figure out a universal script or way to do it let me know! Good luck. 
+</code>
+
+dist\main\win_linux-old_and_new_04-30-25\windows_installer_x64_v097-April-30-2025\README.md:
+<code>
+Its a standard windows installer, just double click and follow the wizard. 
+
+It installs the right click menu but one annoying thing is some systems you have to go to 'more options' in the menu to see it-there is a fix for it, google 'how to switch windows 11 context menu to classic' to make it just one bigger menu instead of two.
+
+</code>
+
 pyproject.toml:
 <code>
 [build-system]
@@ -1808,4 +1841,4 @@ urllib3==2.4.0
 .. some other files were skipped ..
 
 
-app mostly works but i noticed, when i tried to use it on a folder that had a couple files freshly made (seconds ago), the filename is weirdly greyed out, and i can't click / can't check it, what is this from? i've never seen anything act that way, the files can be read just fine in vs code and i could check other files, but those two files (containing just markdown text) were listed but can't choose them
+This app is for helping people quickly put all their project's code files into one big text block to paste into chatgpt or another web chat. How can the logic for what is included, what files are pre-checked automatically, what's excluded, etc be better? I want the user to be able to have control if they want, but also save time by skipping unlikely code files. How come i can see build_env folder, and i am able to expand it to see whats in it and check files or uncheck files etc, which is perfectly fine - but then a venv folder i can't expand it? user's are unlikely to want to include either one but i am just wondering why the program has this behavior? i think i tried to balance speed of opening the app with the control a user has, sometimes if there was tons of irrelevant folders and files in a project folder it was taking too long to start up. But is this not using any kind of lazy loading? Is it possible to make it allow ANY files to be checked (full user control, if needed), but still load instantly, and everything works correct? meaning, somehow have it so it does not scan every single file and folder infinitely deep when you start it up. How complex would it be to make it so it only knows about the first or 2nd folders 'deep', and then if the user wants to navigate 8 folders deep they can just by expanding them, and it would do a mini scan when they clicked expand on a folder?

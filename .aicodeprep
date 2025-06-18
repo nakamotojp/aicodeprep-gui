@@ -1,14 +1,10 @@
 [window]
-width=639
-height=986
+width=600
+height=1132
 splitter=000000ff000000010000000200000300000000de01ffffffff010000000200
 
 pyproject.toml
 requirements.txt
-aicodeprep_gui_c\apptheme.py
-aicodeprep_gui_c\file_processor.py
-aicodeprep_gui_c\gui.py
-aicodeprep_gui_c\main.py
-aicodeprep_gui_c\smart_logic.py
-aicodeprep_gui_c\__init__.py
-aicodeprep_gui_c\data\config.md
+
+[presets]
+can you check this code for errors?|YXNkZmFzZGY=

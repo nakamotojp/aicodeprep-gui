@@ -82,6 +82,7 @@ important_docs
 .git
 node_modules
 venv
+build_env
 **pycache**
 build
 dist
@@ -89,10 +90,8 @@ dist
 Lib
 site-packages
 .venv
-.venv
 .vscode
 .github
-docs
 spec
 fixtures
 migrations
@@ -115,9 +114,6 @@ reports
 .ipynb_checkpoints
 .nyc_output
 test-results
-**tests**
-**snapshots**
-**mocks**
 debug
 .jest
 .next
@@ -207,4 +203,4 @@ _.ear
 
 ### max_file_size
 
-1000000
+4000000
