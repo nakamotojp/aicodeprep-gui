@@ -1,3 +1,11 @@
+add margin or padding space on left and right of the entire app window for the file tree, textbox, buttons, everything.
+
+add version number for .aicodeprep file type and make a new file for saving other things like button presets but globally (qsettings?)
+save any preset buttons in this file, and it should try to read the file when app starts up, but not have an error if file doesn't exist yet
+when app starts for first time ever, it should create this file with these preset buttons already programmed (or created): 1. "Debug" which is "Can you help me debug this code?" 2. "Security check" - "Can you analyze this code for any security issues?" 3. "Best Practices" - "Please keep in mind: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic." 4. "Please review for" - "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Any security concerns, Suggest improvements and explain your reasoning for each suggestion"
+
+there should be a way to delete any of the presets that were created (or put there by the app's defaults). Error catching is a must.
+
 - also, there should be a regular type of menu, File - quit, then Edit - Presets - The presets thing should let them add custom prompt buttons. They can add a button, and type some text for the button - it should add it to the section near the bottom of the window to the left of the other buttons like process selected, select all, etc. they can add text to a new button, and then later when they click on the button, it will add the button saved prompt text to the end of what is in the question llm box (if anything is there, if not, it will put it there).
   It should save these prompts in the .aicodeprep file
   Also can you make the question llm box so it has word wrap? also, so that it only accepts text / markdown (which is text technically) / emoji's etc. but not have it be richtext (it seems to sometimes make text bigger if pasted in)

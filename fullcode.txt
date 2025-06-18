@@ -92,10 +92,8 @@ dist
 Lib
 site-packages
 .venv
-.venv
 .vscode
 .github
-docs
 spec
 fixtures
 migrations
@@ -203,7 +201,6 @@ _.dylib
 _.jar
 _.war
 _.ear
-\*.o
 
 ### max_file_size
 
@@ -536,6 +533,96 @@ from aicodeprep_gui_c.smart_logic import (
 )
 from aicodeprep_gui_c.file_processor import process_files
 
+# Version for .aicodeprep file format
+AICODEPREP_VERSION = "1.0"
+
+# Global preset manager using QSettings
+class GlobalPresetManager:
+    def __init__(self):
+        try:
+            self.settings = QtCore.QSettings("AICodePrep", "ButtonPresets")
+            self._ensure_default_presets()
+        except Exception as e:
+            logging.error(f"Failed to initialize global preset manager: {e}")
+            self.settings = None
+    
+    def _ensure_default_presets(self):
+        """Create default presets if they don't exist"""
+        try:
+            if not self.settings:
+                return
+                
+            # Check if we have any presets at all
+            self.settings.beginGroup("presets")
+            existing_keys = self.settings.childKeys()
+            self.settings.endGroup()
+            
+            if not existing_keys:
+                # Add default presets
+                default_presets = [
+                    ("Debug", "Can you help me debug this code?"),
+                    ("Security check", "Can you analyze this code for any security issues?"),
+                    ("Best Practices", "Please keep in mind: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic."),
+                    ("Please review for", "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Any security concerns, Suggest improvements and explain your reasoning for each suggestion")
+                ]
+                
+                self.settings.beginGroup("presets")
+                for label, text in default_presets:
+                    self.settings.setValue(label, text)
+                self.settings.endGroup()
+                logging.info("Created default button presets")
+        except Exception as e:
+            logging.error(f"Failed to create default presets: {e}")
+    
+    def get_all_presets(self):
+        """Get all saved presets as list of (label, text) tuples"""
+        try:
+            if not self.settings:
+                return []
+                
+            presets = []
+            self.settings.beginGroup("presets")
+            for key in self.settings.childKeys():
+                value = self.settings.value(key, "")
+                if value:
+                    presets.append((key, value))
+            self.settings.endGroup()
+            return presets
+        except Exception as e:
+            logging.error(f"Failed to get presets: {e}")
+            return []
+    
+    def add_preset(self, label, text):
+        """Add a new preset"""
+        try:
+            if not self.settings or not label.strip() or not text.strip():
+                return False
+                
+            self.settings.beginGroup("presets")
+            self.settings.setValue(label.strip(), text.strip())
+            self.settings.endGroup()
+            return True
+        except Exception as e:
+            logging.error(f"Failed to add preset '{label}': {e}")
+            return False
+    
+    def delete_preset(self, label):
+        """Delete a preset by label"""
+        try:
+            if not self.settings or not label.strip():
+                return False
+                
+            self.settings.beginGroup("presets")
+            self.settings.remove(label.strip())
+            self.settings.endGroup()
+            return True
+        except Exception as e:
+            logging.error(f"Failed to delete preset '{label}': {e}")
+            return False
+
+# Global instance
+global_preset_manager = GlobalPresetManager()
+
 def get_resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller"""
     try:
@@ -665,6 +752,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         central = QtWidgets.QWidget()
         self.setCentralWidget(central)
         main_layout = QtWidgets.QVBoxLayout(central)
+        # Add left and right margins/padding to the entire app
+        main_layout.setContentsMargins(20, 10, 20, 10)
+        
+        # Add padding to the central widget itself for consistent spacing
+        central.setStyleSheet("QWidget { padding: 0px 10px 0px 10px; }")
 
         # ❸ MENU BAR ---------------------------------------------------
         mb = self.menuBar()
@@ -886,7 +978,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         website_label.setTextFormat(QtCore.Qt.RichText)
         main_layout.insertWidget(main_layout.count() - 2, website_label)  # Place above buttons
 
-        # First row of buttons (right-aligned)
+        # First row of buttons (right-aligned with margin)
         button_layout1.addStretch()
         process_button = QtWidgets.QPushButton("Process Selected")
         process_button.clicked.connect(self.process_selected)
@@ -899,8 +991,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         deselect_all_button = QtWidgets.QPushButton("Deselect All")
         deselect_all_button.clicked.connect(self.deselect_all)
         button_layout1.addWidget(deselect_all_button)
+        
+        # Add right margin to button layout
+        button_layout1.addSpacing(20)
 
-        # Second row of buttons (right-aligned)
+        # Second row of buttons (right-aligned with margin)
         button_layout2.addStretch()
         load_prefs_button = QtWidgets.QPushButton("Load from .aicodeprep")
         load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked)
@@ -909,25 +1004,100 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         quit_button = QtWidgets.QPushButton("Quit")
         quit_button.clicked.connect(self.quit_without_processing)
         button_layout2.addWidget(quit_button)
+        
+        # Add right margin to button layout
+        button_layout2.addSpacing(20)
 
         self.selected_files = []
         self.file_token_counts = {}
         self.update_token_counter()
 
-        # ❺  load any saved presets that were found in .aicodeprep
+        # ❺ Load global presets from QSettings (takes precedence over .aicodeprep)
+        self._load_global_presets()
+        
+        # ❻ Also load any saved presets that were found in .aicodeprep (for backward compatibility)
         if self.prefs_loaded and self.loaded_presets:
             for label, text in self.loaded_presets:
-                self._add_preset_button(label, text)
+                self._add_preset_button(label, text, from_local=True)
 
     # PRESET UTILS
     # ---------------------------------------------------------------------
-    def _add_preset_button(self, label: str, text: str):
-        """Create the small button in the preset strip."""
+    def _load_global_presets(self):
+        """Load presets from global QSettings"""
+        try:
+            global_presets = global_preset_manager.get_all_presets()
+            for label, text in global_presets:
+                self._add_preset_button(label, text, from_global=True)
+        except Exception as e:
+            logging.error(f"Failed to load global presets: {e}")
+    
+    def _add_preset_button(self, label: str, text: str, from_local=False, from_global=False):
+        """Create the small button in the preset strip with right-click context menu for deletion."""
         btn = QtWidgets.QPushButton(label)
         btn.setFixedHeight(22)
         btn.clicked.connect(lambda _=None, t=text: self._apply_preset(t))
+        
+        # Add right-click context menu for deletion
+        btn.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        btn.customContextMenuRequested.connect(
+            lambda pos, l=label, b=btn, fg=from_global: self._show_preset_context_menu(pos, l, b, fg)
+        )
+        
+        # Tooltip to indicate source
+        if from_global:
+            btn.setToolTip(f"Global preset: {label}\nRight-click to delete")
+        elif from_local:
+            btn.setToolTip(f"Local preset: {label}\nRight-click to delete")
+        else:
+            btn.setToolTip(f"Preset: {label}\nRight-click to delete")
+        
         # insert just before the Stretch (index -1)
         self.preset_strip.insertWidget(self.preset_strip.count()-1, btn)
+    
+    def _show_preset_context_menu(self, pos, label, button, from_global):
+        """Show context menu for preset button"""
+        try:
+            menu = QtWidgets.QMenu(self)
+            delete_action = menu.addAction("Delete Preset")
+            
+            action = menu.exec(button.mapToGlobal(pos))
+            if action == delete_action:
+                self._delete_preset(label, button, from_global)
+        except Exception as e:
+            logging.error(f"Error showing preset context menu: {e}")
+    
+    def _delete_preset(self, label, button, from_global):
+        """Delete a preset with confirmation"""
+        try:
+            # Ask for confirmation
+            reply = QtWidgets.QMessageBox.question(
+                self, 
+                "Delete Preset", 
+                f"Are you sure you want to delete the preset '{label}'?",
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.No
+            )
+            
+            if reply == QtWidgets.QMessageBox.Yes:
+                # Remove from appropriate storage
+                if from_global:
+                    success = global_preset_manager.delete_preset(label)
+                    if not success:
+                        QtWidgets.QMessageBox.warning(self, "Error", f"Failed to delete global preset '{label}'")
+                        return
+                else:
+                    # Remove from local presets
+                    self.presets = [(l, t) for l, t in self.presets if l != label]
+                    self.save_prefs()
+                
+                # Remove button from UI
+                self.preset_strip.removeWidget(button)
+                button.deleteLater()
+                
+                logging.info(f"Deleted preset: {label}")
+        except Exception as e:
+            logging.error(f"Error deleting preset '{label}': {e}")
+            QtWidgets.QMessageBox.critical(self, "Error", f"Failed to delete preset: {e}")
 
     def _apply_preset(self, preset_text: str):
         """Append (or insert) preset into the LLM box."""
@@ -938,29 +1108,48 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.prompt_textbox.setPlainText(preset_text)
 
     def add_new_preset_dialog(self):
-        """Ask user for label + text, then create button & persist."""
-        lbl, ok = QtWidgets.QInputDialog.getText(self, "New preset", "Button label:")
-        if not ok or not lbl.strip():
-            return
-        dlg = QtWidgets.QDialog(self)
-        dlg.setWindowTitle("Preset text")
-        v = QtWidgets.QVBoxLayout(dlg)
-        text_edit = QtWidgets.QPlainTextEdit()
-        v.addWidget(text_edit)
-        bb = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
-                                        QtWidgets.QDialogButtonBox.Cancel)
-        v.addWidget(bb)
-        bb.accepted.connect(dlg.accept)
-        bb.rejected.connect(dlg.reject)
-        if dlg.exec() != QtWidgets.QDialog.Accepted:
-            return
-        txt = text_edit.toPlainText().strip()
-        if not txt:
-            return
-        self.presets.append((lbl, txt))
-        self._add_preset_button(lbl, txt)
-        # Immediately save so it survives crashes
-        self.save_prefs()
+        """Ask user for label + text, then create button & persist globally."""
+        try:
+            lbl, ok = QtWidgets.QInputDialog.getText(self, "New preset", "Button label:")
+            if not ok or not lbl.strip():
+                return
+            
+            dlg = QtWidgets.QDialog(self)
+            dlg.setWindowTitle("Preset text")
+            dlg.setMinimumSize(400, 300)
+            v = QtWidgets.QVBoxLayout(dlg)
+            
+            label = QtWidgets.QLabel("Enter the preset text:")
+            v.addWidget(label)
+            
+            text_edit = QtWidgets.QPlainTextEdit()
+            text_edit.setPlaceholderText("Enter your preset text here...")
+            v.addWidget(text_edit)
+            
+            bb = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
+                                            QtWidgets.QDialogButtonBox.Cancel)
+            v.addWidget(bb)
+            bb.accepted.connect(dlg.accept)
+            bb.rejected.connect(dlg.reject)
+            
+            if dlg.exec() != QtWidgets.QDialog.Accepted:
+                return
+                
+            txt = text_edit.toPlainText().strip()
+            if not txt:
+                QtWidgets.QMessageBox.warning(self, "Error", "Preset text cannot be empty.")
+                return
+            
+            # Save to global settings
+            success = global_preset_manager.add_preset(lbl.strip(), txt)
+            if success:
+                self._add_preset_button(lbl.strip(), txt, from_global=True)
+                logging.info(f"Added global preset: {lbl.strip()}")
+            else:
+                QtWidgets.QMessageBox.warning(self, "Error", "Failed to save preset.")
+        except Exception as e:
+            logging.error(f"Error creating new preset: {e}")
+            QtWidgets.QMessageBox.critical(self, "Error", f"Failed to create preset: {e}")
     # ---------------------------------------------------------------------
 
     def dragEnterEvent(self, event):
@@ -1223,6 +1412,10 @@ def _prefs_path():
 def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, presets: list[tuple[str, str]] | None = None):
     try:
         with open(_prefs_path(), "w", encoding="utf-8") as f:
+            # Write version header
+            f.write(f"# AICodePrep preferences file version {AICODEPREP_VERSION}\n")
+            f.write(f"version={AICODEPREP_VERSION}\n\n")
+            
             if window_size or splitter_state:
                 f.write("[window]\n")
                 if window_size:
@@ -1232,11 +1425,17 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, p
                     # Convert splitter_state (QByteArray) to bytes, then hex string
                     f.write(f"splitter={bytes(splitter_state).hex()}\n")
                 f.write("\n")
-            for relpath in checked_relpaths:
-                f.write(relpath + "\n")
+            
+            # Write checked files section
+            if checked_relpaths:
+                f.write("[files]\n")
+                for relpath in checked_relpaths:
+                    f.write(relpath + "\n")
+                f.write("\n")
+            
             # --- PRESETS ----
             if presets:
-                f.write("\n[presets]\n")
+                f.write("[presets]\n")
                 import json, base64
                 for label, text in presets:
                     safe = base64.b64encode(text.encode()).decode()
@@ -1250,44 +1449,91 @@ def _read_prefs_file():
     window_size = None
     splitter_state = None
     presets: list[tuple[str, str]] = []
+    file_version = None
+    
     try:
         with open(_prefs_path(), "r", encoding="utf-8") as f:
             lines = f.readlines()
-        i = 0
+        
         section = None
-        if lines and lines[0].strip() == '[window]':
-            width = height = None
-            for j in range(1, len(lines)):
-                line = lines[j].strip()
-                if line.startswith('width='):
-                    width = int(line.split('=', 1)[1])
-                elif line.startswith('height='):
-                    height = int(line.split('=', 1)[1])
-                elif line.startswith('splitter='):
-                    splitter_state = bytes.fromhex(line.split('=', 1)[1])
-                elif line == '':
-                    i = j + 1
-                    break
-            if width and height:
-                window_size = (width, height)
-        for line in lines[i:]:
+        
+        for line in lines:
             line = line.strip()
+            
+            # Skip empty lines and comments
             if not line or line.startswith('#'):
                 continue
-            if line == "[presets]":
-                section = "presets"
-                continue
-            if section == "presets":
+            
+            # Check for version info
+            if line.startswith('version='):
                 try:
-                    label, b64 = line.split("|", 1)
-                    import base64
-                    presets.append((label, base64.b64decode(b64).decode()))
+                    file_version = line.split('=', 1)[1]
+                    logging.info(f"Loading .aicodeprep file version {file_version}")
                 except Exception:
                     pass
-            else:
+                continue
+            
+            # Handle section headers
+            if line.startswith('[') and line.endswith(']'):
+                section = line[1:-1]
+                continue
+            
+            # Process content based on current section
+            if section == "window":
+                if line.startswith('width='):
+                    try:
+                        width = int(line.split('=', 1)[1])
+                        if window_size:
+                            window_size = (width, window_size[1])
+                        else:
+                            window_size = (width, None)
+                    except Exception:
+                        pass
+                elif line.startswith('height='):
+                    try:
+                        height = int(line.split('=', 1)[1])
+                        if window_size:
+                            window_size = (window_size[0], height)
+                        else:
+                            window_size = (None, height)
+                    except Exception:
+                        pass
+                elif line.startswith('splitter='):
+                    try:
+                        splitter_state = bytes.fromhex(line.split('=', 1)[1])
+                    except Exception:
+                        pass
+            
+            elif section == "files":
+                # File paths for backward compatibility and new format
                 checked.add(line)
-    except Exception:
-        pass
+            
+            elif section == "presets":
+                # Preset data
+                try:
+                    if '|' in line:
+                        label, b64 = line.split("|", 1)
+                        import base64
+                        text = base64.b64decode(b64).decode()
+                        presets.append((label, text))
+                except Exception as e:
+                    logging.warning(f"Failed to parse preset line: {line}, error: {e}")
+            
+            elif section is None:
+                # Handle legacy format (files without section header)
+                # This provides backward compatibility with old .aicodeprep files
+                if not line.startswith('version=') and not line.startswith('['):
+                    checked.add(line)
+        
+        # Ensure window_size is properly formatted
+        if window_size and window_size[0] and window_size[1]:
+            window_size = (window_size[0], window_size[1])
+        else:
+            window_size = None
+            
+    except Exception as e:
+        logging.error(f"Error reading .aicodeprep file: {e}")
+    
     return checked, window_size, splitter_state, presets
 
 # Add closeEvent to set action to 'quit' ONLY if window is closed via 'X'
@@ -1763,19 +2009,6 @@ aicodeprep_gui_c\__init__.py:
 from .main import main
 </code>
 
-dist\main\win_linux-old_and_new_04-30-25\linux-works-but-menu-annoying\README.md:
-<code>
-Look you will have to try to get a right click context menu added to Linux, I tried, and I gave up. So many different distros, I'm sure if you try you can figure it out - basically you need to make this file aicodeprep097 file executable (if not already) and then add a script to run that is attached to a new context menu entry for whichever Linux desktop UI you have. Mate, Cinnamon, Gnome, KDE, etc are all different. When you click the new menu entry, it basically needs to cd into that folder, and then ./aicodeprep097 which would load the GUI. If you double click aicodeprep097 or move it to a folder where there is code/project files, it will open up like normal and work. I just can't figure out the menu! If you figure out a universal script or way to do it let me know! Good luck. 
-</code>
-
-dist\main\win_linux-old_and_new_04-30-25\windows_installer_x64_v097-April-30-2025\README.md:
-<code>
-Its a standard windows installer, just double click and follow the wizard. 
-
-It installs the right click menu but one annoying thing is some systems you have to go to 'more options' in the menu to see it-there is a fix for it, google 'how to switch windows 11 context menu to classic' to make it just one bigger menu instead of two.
-
-</code>
-
 pyproject.toml:
 <code>
 [build-system]
@@ -1841,4 +2074,4 @@ urllib3==2.4.0
 .. some other files were skipped ..
 
 
-This app is for helping people quickly put all their project's code files into one big text block to paste into chatgpt or another web chat. How can the logic for what is included, what files are pre-checked automatically, what's excluded, etc be better? I want the user to be able to have control if they want, but also save time by skipping unlikely code files. How come i can see build_env folder, and i am able to expand it to see whats in it and check files or uncheck files etc, which is perfectly fine - but then a venv folder i can't expand it? user's are unlikely to want to include either one but i am just wondering why the program has this behavior? i think i tried to balance speed of opening the app with the control a user has, sometimes if there was tons of irrelevant folders and files in a project folder it was taking too long to start up. But is this not using any kind of lazy loading? Is it possible to make it allow ANY files to be checked (full user control, if needed), but still load instantly, and everything works correct? meaning, somehow have it so it does not scan every single file and folder infinitely deep when you start it up. How complex would it be to make it so it only knows about the first or 2nd folders 'deep', and then if the user wants to navigate 8 folders deep they can just by expanding them, and it would do a mini scan when they clicked expand on a folder?
+can you check config.md, and then look at all the app's code to see if this config file is correct - it is supposed to be for which file extensions won't be clicked automatically (it is for helping people give their code to LLMs, so it should try to leave certain folders and files un-checked like node_modules etc) but it is taking a long time sometimes, saying "skipping build_env) why is it trying to skip every indivudual file, is there a way to make it skip an entire directory and subdirectories like that but still allowing someone to manually expand and check files if they want to? can you also analyze config.md and see if there are any errors or methods in there that the code isn't designed to deal with? the app mostly works great but i think can be improved. Speed is important, opening fast is important, etc
