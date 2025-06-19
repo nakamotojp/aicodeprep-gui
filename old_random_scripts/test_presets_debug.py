@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '.'))
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 from PySide6 import QtWidgets, QtCore
-from aicodeprep_gui_c.gui import GlobalPresetManager, FileSelectionGUI
+from aigui.gui import GlobalPresetManager, FileSelectionGUI
 
 def test_global_preset_manager():
     print("=== Testing GlobalPresetManager ===")

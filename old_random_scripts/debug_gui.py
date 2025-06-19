@@ -14,7 +14,7 @@ def debug_file_collection():
     print("=== Debugging File Collection ===\n")
     
     try:
-        from aicodeprep_gui_c.smart_logic import collect_all_files, is_binary_file
+        from aigui.smart_logic import collect_all_files, is_binary_file
         files = collect_all_files()
         
         print(f"Total files collected: {len(files)}")
@@ -53,7 +53,7 @@ def test_minimal_gui():
     
     try:
         from PySide6 import QtWidgets, QtCore
-        from aicodeprep_gui_c.gui import FileSelectionGUI
+        from aigui.gui import FileSelectionGUI
         
         # Create a minimal test
         app = QtWidgets.QApplication.instance()

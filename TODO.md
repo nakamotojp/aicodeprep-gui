@@ -1,3 +1,5 @@
+-- secretlint
+
 add margin or padding space on left and right of the entire app window for the file tree, textbox, buttons, everything.
 
 add version number for .aicodeprep file type and make a new file for saving other things like button presets but globally (qsettings?)

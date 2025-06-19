@@ -14,10 +14,10 @@ def get_config_path():
     """Get the path to the default configuration file."""
     if getattr(sys, 'frozen', False):
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.toml')
+        config_path = os.path.join(base_path, 'aigui', 'data', 'default_config.toml')
     else:
         try:
-            with resources.path('aicodeprep_gui_c.data', 'default_config.toml') as config_file:
+            with resources.path('aigui.data', 'default_config.toml') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
             config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.toml')

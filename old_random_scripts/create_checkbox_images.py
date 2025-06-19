@@ -12,7 +12,7 @@ def create_permanent_checkbox_images():
     app = QtWidgets.QApplication(sys.argv)
     
     # Create directory for images
-    images_dir = os.path.join("aicodeprep_gui_c", "images")
+    images_dir = os.path.join("aigui", "images")
     os.makedirs(images_dir, exist_ok=True)
     
     # Create unchecked checkbox (just border)

@@ -3,8 +3,8 @@ import sys
 import argparse
 import logging
 from typing import List
-from aicodeprep_gui_c.smart_logic import collect_all_files
-from aicodeprep_gui_c.gui import show_file_selection_gui
+from aigui.smart_logic import collect_all_files
+from aigui.gui import show_file_selection_gui
 
 # Configure logging with explicit console handler only
 logger = logging.getLogger()

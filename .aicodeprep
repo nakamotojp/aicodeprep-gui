@@ -2,16 +2,6 @@
 version=1.0
 
 [window]
-width=505
-height=1014
+width=600
+height=1022
 
-[files]
-pyproject.toml
-requirements.txt
-aicodeprep_gui_c\apptheme.py
-aicodeprep_gui_c\file_processor.py
-aicodeprep_gui_c\gui.py
-aicodeprep_gui_c\main.py
-aicodeprep_gui_c\smart_logic.py
-aicodeprep_gui_c\__init__.py
-aicodeprep_gui_c\data\default_config.toml

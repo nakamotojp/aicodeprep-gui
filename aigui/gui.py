@@ -3,10 +3,10 @@ import sys
 import platform
 import logging
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
-from aicodeprep_gui_c.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
+from aigui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
 from typing import List, Tuple
-from aicodeprep_gui_c import smart_logic
-from aicodeprep_gui_c.file_processor import process_files
+from aigui import smart_logic
+from aigui.file_processor import process_files
 
 class FlowLayout(QtWidgets.QLayout):
     def __init__(self, parent=None, margin=-1, hspacing=-1, vspacing=-1):
@@ -379,12 +379,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.tree_widget.itemExpanded.connect(self.on_item_expanded)
         self.tree_widget.itemChanged.connect(self.handle_item_changed)
         
-        # Auto-expand folders containing checked files and common project folders
+        # Auto-expand folders containing checked files
         if self.prefs_loaded and self.checked_files_from_prefs:
-            self.auto_expand_checked_folders()
+            self._expand_folders_for_paths(self.checked_files_from_prefs)
         else:
-            # Auto-expand common folders on first load
-            self.auto_expand_common_folders()
+            # On first load (no prefs), expand based on smart-selected files
+            initial_checked_paths = {rel_path for _, rel_path, is_checked in files if is_checked}
+            self._expand_folders_for_paths(initial_checked_paths)
         
         prefs_checkbox_layout = QtWidgets.QHBoxLayout()
         self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep) and window size")
@@ -474,9 +475,23 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             finally:
                 self.tree_widget.blockSignals(False)
 
+            # Auto-expand parent folders if a file is checked (using QTimer to avoid timing issues)
+            if item.checkState(0) == QtCore.Qt.Checked:
+                file_path = item.data(0, QtCore.Qt.UserRole)
+                if file_path and os.path.isfile(file_path):
+                    # Use QTimer to ensure expansion happens after signal processing
+                    QtCore.QTimer.singleShot(0, lambda: self.expand_parents_of_item(item))
+
             self.update_token_counter()
             if self.remember_checkbox and self.remember_checkbox.isChecked():
                 self.save_prefs()
+
+    def expand_parents_of_item(self, item):
+        """Expand all parent folders of the given item."""
+        parent = item.parent()
+        while parent is not None:
+            self.tree_widget.expandItem(parent)
+            parent = parent.parent()
     
     def _load_global_presets(self):
         try:
@@ -522,7 +537,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             event.acceptProposedAction()
     def dropEvent(self, event):
         folder_path = event.mimeData().urls()[0].toLocalFile()
-        os.chdir(folder_path); from aicodeprep_gui_c.smart_logic import collect_all_files
+        os.chdir(folder_path); from aigui.smart_logic import collect_all_files
         self.new_gui = FileSelectionGUI(collect_all_files()); self.new_gui.show(); self.close()
     def select_all(self):
         def check_all(item):
@@ -579,22 +594,21 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 except Exception: self.file_token_counts[file_path] = 0
             total_tokens += self.file_token_counts[file_path]
         self.total_tokens = total_tokens; self.token_label.setText(f"Estimated tokens: {total_tokens:,}")
-    def auto_expand_checked_folders(self):
-        """Auto-expand folders that contain checked files from preferences."""
+    def _expand_folders_for_paths(self, checked_paths: set):
+        """Auto-expand folders that contain files from the given paths."""
         folders_to_expand = set()
         
         # Find all folders that should be expanded (containing checked files)
-        for checked_path in self.checked_files_from_prefs:
+        for checked_path in checked_paths:
             # Get all parent directories of checked files
             path_parts = checked_path.split(os.sep)
             for i in range(1, len(path_parts)):
                 folder_path = os.sep.join(path_parts[:i])
                 if folder_path and folder_path in self.path_to_item:
-                    folders_to_expand.add(folder_path)
+                    folders_to_expand.add(self.path_to_item[folder_path])
         
         # Expand the folders
-        for folder_path in folders_to_expand:
-            item = self.path_to_item[folder_path]
+        for item in folders_to_expand:
             self.tree_widget.expandItem(item)
 
     def auto_expand_common_folders(self):
@@ -613,7 +627,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             for rel_path, item in self.path_to_item.items():
                 if rel_path in self.checked_files_from_prefs: item.setCheckState(0, QtCore.Qt.Checked)
             # Auto-expand folders after loading preferences
-            self.auto_expand_checked_folders()
+            self._expand_folders_for_paths(self.checked_files_from_prefs)
             self.text_label.setText("Loaded selection from .aicodeprep")
             self.update_token_counter()
         else: self.text_label.setText(".aicodeprep not found")

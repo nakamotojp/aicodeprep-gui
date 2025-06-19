@@ -1,107 +1,204 @@
-aicodeprep_gui_c\data\default_config.toml:
+aigui\data\default_config.toml:
 <code>
 # AI Code Prep GUI Default Configuration File
+# This file provides the baseline settings for file filtering.
+# You can override these settings by creating an `aicodeprep.toml` file
+# in your project's root directory.
+#
 # This file uses the TOML format.
-# All exclusion patterns use the same syntax as a .gitignore file.
-# A trailing slash '/' matches a directory.
-# A leading '!' negates a pattern.
+# All exclusion/inclusion patterns use the same syntax as a .gitignore file.
+# - A trailing slash '/' matches a directory (e.g., "build/").
+# - A leading '!' negates a pattern, re-including a file if it was excluded by a previous pattern.
+# - Wildcards like '*' are supported.
 
 max_file_size = 4000000
 
 # File extensions that are considered code and will be checked by default.
+# Grouped by category for easier review.
 code_extensions = [
-    ".md", ".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".cpp", ".c", ".h",
-    ".cs", ".php", ".rb", ".go", ".rs", ".swift", ".kt", ".scala", ".html",
-    ".css", ".scss", ".sass", ".less", ".sql", ".sh", ".yaml", ".yml",
-    ".json", ".xml", ".vue", ".r", ".m", ".f90", ".f95", ".f03", ".f08",
-    ".gradle", ".groovy", ".ps1", ".psm1", ".ipynb", ".txt", ".lock",
-    ".toml", ".ini", ".conf", ".cfg", ".properties"
+    # -- Web & Frontend --
+    ".html", ".css", ".scss", ".sass", ".less", ".js", ".jsx", ".ts", ".tsx",
+    ".vue", ".svelte", ".astro",
+
+    # -- Backend & General Purpose --
+    ".py", ".java", ".c", ".cpp", ".h", ".cs", ".php", ".rb", ".go", ".rs",
+    ".swift", ".kt", ".scala", ".r", ".m", ".pl", ".lua", ".dart", ".erl",
+    ".ex", ".exs", ".clj",
+
+    # -- Scripts & Shell --
+    ".sh", ".bash", ".zsh", ".ps1", ".psm1", ".groovy",
+
+    # -- Data & Markup --
+    ".json", ".xml", ".yaml", ".yml", ".toml", ".ini", ".md", ".sql", ".csv",
+    ".tsv",
+
+    # -- Config & Build --
+    ".conf", ".cfg", ".properties", ".gradle", ".f90", ".f95", ".f03", ".f08",
+    ".editorconfig", "Dockerfile", ".env.example", ".env.sample", "Jenkinsfile",
+    
+    # -- Notebooks & Text --
+    ".ipynb", ".txt",
+
+    # -- Lock files (sometimes useful for context, but often excluded below) --
+    ".lock",
 ]
 
 # --- UNIFIED INCLUSION/EXCLUSION LISTS using .gitignore syntax ---
 
 # Patterns for files/dirs to be checked *by default*.
+# These are high-value files that provide critical context about a project.
 default_include_patterns = [
+    # Core project documentation
     "README.md",
     "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "CODE_OF_CONDUCT.md",
+
+    # Core project definition files
+    "pyproject.toml",
+    "package.json",
+    "requirements.txt",
+    "pom.xml",
+    "build.gradle",
+    "Gemfile",
+    "go.mod",
+    "Cargo.toml",
+    "composer.json",
+
+    # Environment and containerization
+    "Dockerfile",
+    "docker-compose.yml",
+    ".env.example",
+    ".env.sample",
+
+    # Important configuration or documentation
     "important.txt",
     "important_docs/",
-    "requirements.txt"
 ]
 
-# Patterns for files/dirs to be excluded from the GUI list or unchecked.
+# Patterns for files/dirs to be excluded from the GUI list or unchecked by default.
+# Grouped by category for clarity.
 exclude_patterns = [
-    # Directories (note the trailing slash)
+    # -- Version Control --
     ".git/",
+    ".svn/",
+    ".hg/",
+
+    # -- Dependency & Package Manager Directories --
     "node_modules/",
+    "bower_components/",
+    "vendor/",
+    "deps/", # Elixir
+
+    # -- Python-specific --
     "venv/",
     ".venv/",
     "__pycache__/",
-    "build/",
-    "dist/",
-    ".idea/",
     "Lib/",
     "site-packages/",
+    "*.egg-info/",
+    ".tox/",
+
+    # -- IDE & Editor Directories --
+    ".idea/",
     ".vscode/",
-    ".github/",
-    "spec/",
-    "fixtures/",
-    "migrations/",
-    "logs/",
-    "tmp/",
-    "cache/",
-    "assets/",
-    "public/",
-    "static/",
-    "uploads/",
-    "vendor/",
+    ".project",
+    ".classpath",
+    ".settings/",
+    "nbproject/", # Netbeans
+    "*.sublime-project",
+    "*.sublime-workspace",
+
+    # -- Build, Dist & Compilation Output --
+    "build/",
+    "dist/",
+    "dist-ssr/",
     "bin/",
     "obj/",
     "out/",
     "target/",
-    "coverage/",
-    "reports/",
-    ".pytest_cache/",
-    ".mypy_cache/",
-    ".ipynb_checkpoints/",
-    ".nyc_output/",
-    "test-results/",
-    "debug/",
-    ".jest/",
+    "_build/", # Elixir, Erlang
+    "*.o",
+    "*.pyc",
+    "*.class",
+    "*.exe",
+    "*.dll",
+    "*.so",
+    "*.dylib",
+    "*.jar",
+    "*.war",
+    "*.ear",
+
+    # -- Framework & Tool Caches/Builds --
+    ".parcel-cache/",
     ".next/",
     ".nuxt/",
     ".svelte-kit/",
-    ".expo/",
-    "dist-ssr/",
-    ".parcel-cache/",
-    ".serverless/",
-    ".vercel/",
+    ".docusaurus/",
     ".angular/",
     ".quasar/",
     ".redwood/",
     ".fusebox/",
-    ".docusaurus/",
-    ".terraform/",
+    ".expo/",
+    ".serverless/",
+    ".vercel/",
+    ".dart_tool/",
+    ".elixir_ls/",
+
+    # -- Test, Coverage & Report Artifacts --
+    "coverage/",
+    "reports/",
+    "test-results/",
+    "test-reports/",
+    "playwright-report/",
+    "junit.xml",
+    "coverage.xml",
+    "*.lcov",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    ".nyc_output/",
+    ".jest/",
     "*snapshots*/",
 
-    # Lock files and metadata
+    # -- Logs & Temporary Files --
+    "logs/",
+    "tmp/",
+    "temp/",
+    "cache/",
+    ".cache/",
+    "*.log",
+    "*.log.*",
+    "npm-debug.log*",
+    "yarn-error.log",
+    "*.swp",
+    "*.swo",
+    "*.un~",
+    "~$*",
+    "*.temp",
+
+    # -- OS & System Files --
+    ".DS_Store",
+    "Thumbs.db",
+    "desktop.ini",
+
+    # -- Lock files (usually not needed as they are machine-generated) --
     "package-lock.json",
     "yarn.lock",
     "Gemfile.lock",
     "composer.lock",
     "pnpm-lock.yaml",
-    "bun.lock",
     "bun.lockb",
     "cargo.lock",
     "poetry.lock",
     "Pipfile.lock",
-    ".DS_Store",
-    "Thumbs.db",
 
-    # Secrets and Keys
+    # -- Secrets, Keys & Sensitive Environment Files --
     ".npmrc",
     ".env",
     ".env.*",
+    "!.env.example", # Re-include example files if they were excluded by .env.*
+    "!.env.sample",
     ".flaskenv",
     ".dockerenv",
     "env.json",
@@ -114,28 +211,28 @@ exclude_patterns = [
     "id_rsa",
     "id_dsa",
 
-    # Build artifacts & logs
-    "Dockerfile.*.cache",
-    "coverage.xml",
-    "*.lcov",
-    "*.log",
+    # -- Terraform State --
+    ".terraform/",
+    ".terraform.lock.hcl",
+    "terraform.tfstate",
+    "terraform.tfstate.backup",
 
-    # Binary and compiled files by extension
-    "*.exe", "*.dll", "*.so", "*.dylib", "*.jar", "*.war",
-    "*.ear", "*.o", "*.class",
+    # -- General Generated & Minified Patterns --
+    "*generated*",
+    "*.min.js",
+    "*.min.css",
+    "*.min.*",
+    "*bundle.js",
+    "*chunk.js",
+    "*.snap", # Jest snapshots
+    "*.test.",
+    ".spec.",
+    ".bench.",
 
-    # General patterns
-    "*.min.js", "*.min.css", "*bundle.js", "*chunk.js",
-    "*test.js", "*spec.js", "*generated.ts",
-    "*.swp", "*.swo", "*.un~", "~$*",
-    "*.min.*", "*-lock.*", "*.snap",
-    ".test.", ".spec.", ".bench.",
-    "*.cache", "*.temp"
 ]
-
 </code>
 
-aicodeprep_gui_c\apptheme.py:
+aigui\apptheme.py:
 <code>
 from PySide6 import QtCore, QtGui, QtWidgets
 import platform
@@ -326,7 +423,7 @@ def get_checkbox_style_light() -> str:
 
 </code>
 
-aicodeprep_gui_c\file_processor.py:
+aigui\file_processor.py:
 <code>
 import os
 import sys
@@ -347,7 +444,7 @@ def _write_one_file_xml(outfile, rel_path, abs_path):
             outfile.write(".. contents skipped (read error) ..")
     outfile.write("\n</code>\n\n")
 
-from aicodeprep_gui_c.smart_logic import is_binary_file
+from aigui.smart_logic import is_binary_file
 
 def _write_one_file_md(outfile, rel_path, abs_path):
     outfile.write(f"### {rel_path}\n")
@@ -398,17 +495,17 @@ def process_files(selected_files: List[str], output_file: str, fmt: OutputFmt = 
 
 </code>
 
-aicodeprep_gui_c\gui.py:
+aigui\gui.py:
 <code>
 import os
 import sys
 import platform
 import logging
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
-from aicodeprep_gui_c.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
+from aigui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
 from typing import List, Tuple
-from aicodeprep_gui_c import smart_logic
-from aicodeprep_gui_c.file_processor import process_files
+from aigui import smart_logic
+from aigui.file_processor import process_files
 
 class FlowLayout(QtWidgets.QLayout):
     def __init__(self, parent=None, margin=-1, hspacing=-1, vspacing=-1):
@@ -876,9 +973,23 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             finally:
                 self.tree_widget.blockSignals(False)
 
+            # Auto-expand parent folders if a file is checked (using QTimer to avoid timing issues)
+            if item.checkState(0) == QtCore.Qt.Checked:
+                file_path = item.data(0, QtCore.Qt.UserRole)
+                if file_path and os.path.isfile(file_path):
+                    # Use QTimer to ensure expansion happens after signal processing
+                    QtCore.QTimer.singleShot(0, lambda: self.expand_parents_of_item(item))
+
             self.update_token_counter()
             if self.remember_checkbox and self.remember_checkbox.isChecked():
                 self.save_prefs()
+
+    def expand_parents_of_item(self, item):
+        """Expand all parent folders of the given item."""
+        parent = item.parent()
+        while parent is not None:
+            self.tree_widget.expandItem(parent)
+            parent = parent.parent()
     
     def _load_global_presets(self):
         try:
@@ -924,7 +1035,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             event.acceptProposedAction()
     def dropEvent(self, event):
         folder_path = event.mimeData().urls()[0].toLocalFile()
-        os.chdir(folder_path); from aicodeprep_gui_c.smart_logic import collect_all_files
+        os.chdir(folder_path); from aigui.smart_logic import collect_all_files
         self.new_gui = FileSelectionGUI(collect_all_files()); self.new_gui.show(); self.close()
     def select_all(self):
         def check_all(item):
@@ -1107,15 +1218,15 @@ def _read_prefs_file():
 
 </code>
 
-aicodeprep_gui_c\main.py:
+aigui\main.py:
 <code>
 import os
 import sys
 import argparse
 import logging
 from typing import List
-from aicodeprep_gui_c.smart_logic import collect_all_files
-from aicodeprep_gui_c.gui import show_file_selection_gui
+from aigui.smart_logic import collect_all_files
+from aigui.gui import show_file_selection_gui
 
 # Configure logging with explicit console handler only
 logger = logging.getLogger()
@@ -1192,7 +1303,7 @@ if __name__ == "__main__":
 
 </code>
 
-aicodeprep_gui_c\smart_logic.py:
+aigui\smart_logic.py:
 <code>
 from importlib import resources
 import os
@@ -1210,10 +1321,10 @@ def get_config_path():
     """Get the path to the default configuration file."""
     if getattr(sys, 'frozen', False):
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.toml')
+        config_path = os.path.join(base_path, 'aigui', 'data', 'default_config.toml')
     else:
         try:
-            with resources.path('aicodeprep_gui_c.data', 'default_config.toml') as config_file:
+            with resources.path('aigui.data', 'default_config.toml') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
             config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.toml')
@@ -1332,7 +1443,7 @@ def matches_pattern(filename: str, pattern: str) -> bool:
 
 </code>
 
-aicodeprep_gui_c\__init__.py:
+aigui\__init__.py:
 <code>
 from .main import main
 </code>
@@ -1344,7 +1455,7 @@ requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aicodeprep_gui_c"
+name = "aigui"
 version = "0.9.8"
 description = "Prepare code for AI chatbot assistance"
 readme = "README.md"
@@ -1364,7 +1475,7 @@ dependencies = [
 requires-python = ">=3.6"
 
 [project.scripts]
-aicodeprep_gui_c = "aicodeprep_gui_c.main:main" # Use an underscore here
+aigui = "aigui.main:main"
 
 [project.urls]
 Homepage = "https://github.com/detroittommy879/aicodeprep"
@@ -1373,7 +1484,7 @@ Homepage = "https://github.com/detroittommy879/aicodeprep"
 where = ["."]
 
 [tool.setuptools.package-data]
-aicodeprep_gui_c = ["data/default_config.toml"]
+aigui = ["data/default_config.toml"]
 
 </code>
 
@@ -1403,6 +1514,6 @@ pathspec
 
 
 
-Can you help me debug this code?
+the UI - when a file deep within some subfolder is checked with the smart algorithm, it should auto-expand the tree to see that file, but this is not working and so the user cannot see if a file inside is checked unless they manually expand the folders, can you analyze all the code in aigui/ and figure out why?
 
 .. some other files were skipped ..

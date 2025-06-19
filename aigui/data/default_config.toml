@@ -1,0 +1,230 @@
+# AI Code Prep GUI Default Configuration File
+# This file provides the baseline settings for file filtering.
+# You can override these settings by creating an `aicodeprep.toml` file
+# in your project's root directory.
+#
+# This file uses the TOML format.
+# All exclusion/inclusion patterns use the same syntax as a .gitignore file.
+# - A trailing slash '/' matches a directory (e.g., "build/").
+# - A leading '!' negates a pattern, re-including a file if it was excluded by a previous pattern.
+# - Wildcards like '*' are supported.
+
+max_file_size = 4000000
+
+# File extensions that are considered code and will be checked by default.
+# Grouped by category for easier review.
+code_extensions = [
+    # -- Web & Frontend --
+    ".html", ".css", ".scss", ".sass", ".less", ".js", ".jsx", ".ts", ".tsx",
+    ".vue", ".svelte", ".astro",
+
+    # -- Backend & General Purpose --
+    ".py", ".java", ".c", ".cpp", ".h", ".cs", ".php", ".rb", ".go", ".rs",
+    ".swift", ".kt", ".scala", ".r", ".m", ".pl", ".lua", ".dart", ".erl",
+    ".ex", ".exs", ".clj",
+
+    # -- Scripts & Shell --
+    ".sh", ".bash", ".zsh", ".ps1", ".psm1", ".groovy",
+
+    # -- Data & Markup --
+    ".json", ".xml", ".yaml", ".yml", ".toml", ".ini", ".md", ".sql", ".csv",
+    ".tsv",
+
+    # -- Config & Build --
+    ".conf", ".cfg", ".properties", ".gradle", ".f90", ".f95", ".f03", ".f08",
+    ".editorconfig", "Dockerfile", ".env.example", ".env.sample", "Jenkinsfile",
+    
+    # -- Notebooks & Text --
+    ".ipynb", ".txt",
+
+    # -- Lock files (sometimes useful for context, but often excluded below) --
+    ".lock",
+]
+
+# --- UNIFIED INCLUSION/EXCLUSION LISTS using .gitignore syntax ---
+
+# Patterns for files/dirs to be checked *by default*.
+# These are high-value files that provide critical context about a project.
+default_include_patterns = [
+    # Core project documentation
+    "README.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "CODE_OF_CONDUCT.md",
+
+    # Core project definition files
+    "pyproject.toml",
+    "package.json",
+    "requirements.txt",
+    "pom.xml",
+    "build.gradle",
+    "Gemfile",
+    "go.mod",
+    "Cargo.toml",
+    "composer.json",
+
+    # Environment and containerization
+    "Dockerfile",
+    "docker-compose.yml",
+    ".env.example",
+    ".env.sample",
+
+    # Important configuration or documentation
+    "important.txt",
+    "important_docs/",
+]
+
+# Patterns for files/dirs to be excluded from the GUI list or unchecked by default.
+# Grouped by category for clarity.
+exclude_patterns = [
+    # -- Version Control --
+    ".git/",
+    ".svn/",
+    ".hg/",
+
+    # -- Dependency & Package Manager Directories --
+    "node_modules/",
+    "bower_components/",
+    "vendor/",
+    "deps/", # Elixir
+
+    # -- Python-specific --
+    "venv/",
+    ".venv/",
+    "__pycache__/",
+    "Lib/",
+    "site-packages/",
+    "*.egg-info/",
+    ".tox/",
+
+    # -- IDE & Editor Directories --
+    ".idea/",
+    ".vscode/",
+    ".project",
+    ".classpath",
+    ".settings/",
+    "nbproject/", # Netbeans
+    "*.sublime-project",
+    "*.sublime-workspace",
+
+    # -- Build, Dist & Compilation Output --
+    "build/",
+    "dist/",
+    "dist-ssr/",
+    "bin/",
+    "obj/",
+    "out/",
+    "target/",
+    "_build/", # Elixir, Erlang
+    "*.o",
+    "*.pyc",
+    "*.class",
+    "*.exe",
+    "*.dll",
+    "*.so",
+    "*.dylib",
+    "*.jar",
+    "*.war",
+    "*.ear",
+
+    # -- Framework & Tool Caches/Builds --
+    ".parcel-cache/",
+    ".next/",
+    ".nuxt/",
+    ".svelte-kit/",
+    ".docusaurus/",
+    ".angular/",
+    ".quasar/",
+    ".redwood/",
+    ".fusebox/",
+    ".expo/",
+    ".serverless/",
+    ".vercel/",
+    ".dart_tool/",
+    ".elixir_ls/",
+
+    # -- Test, Coverage & Report Artifacts --
+    "coverage/",
+    "reports/",
+    "test-results/",
+    "test-reports/",
+    "playwright-report/",
+    "junit.xml",
+    "coverage.xml",
+    "*.lcov",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    ".nyc_output/",
+    ".jest/",
+    "*snapshots*/",
+
+    # -- Logs & Temporary Files --
+    "logs/",
+    "tmp/",
+    "temp/",
+    "cache/",
+    ".cache/",
+    "*.log",
+    "*.log.*",
+    "npm-debug.log*",
+    "yarn-error.log",
+    "*.swp",
+    "*.swo",
+    "*.un~",
+    "~$*",
+    "*.temp",
+
+    # -- OS & System Files --
+    ".DS_Store",
+    "Thumbs.db",
+    "desktop.ini",
+
+    # -- Lock files (usually not needed as they are machine-generated) --
+    "package-lock.json",
+    "yarn.lock",
+    "Gemfile.lock",
+    "composer.lock",
+    "pnpm-lock.yaml",
+    "bun.lockb",
+    "cargo.lock",
+    "poetry.lock",
+    "Pipfile.lock",
+
+    # -- Secrets, Keys & Sensitive Environment Files --
+    ".npmrc",
+    ".env",
+    ".env.*",
+    "!.env.example", # Re-include example files if they were excluded by .env.*
+    "!.env.sample",
+    ".flaskenv",
+    ".dockerenv",
+    "env.json",
+    "credentials.yaml",
+    "secret*.json",
+    "*.key",
+    "*.pem",
+    "*.crt",
+    "*.pub",
+    "id_rsa",
+    "id_dsa",
+
+    # -- Terraform State --
+    ".terraform/",
+    ".terraform.lock.hcl",
+    "terraform.tfstate",
+    "terraform.tfstate.backup",
+
+    # -- General Generated & Minified Patterns --
+    "*generated*",
+    "*.min.js",
+    "*.min.css",
+    "*.min.*",
+    "*bundle.js",
+    "*chunk.js",
+    "*.snap", # Jest snapshots
+    "*.test.",
+    ".spec.",
+    ".bench.",
+
+]
