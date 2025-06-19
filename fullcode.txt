@@ -410,6 +410,117 @@ from typing import List, Tuple
 from aicodeprep_gui_c import smart_logic
 from aicodeprep_gui_c.file_processor import process_files
 
+class FlowLayout(QtWidgets.QLayout):
+    def __init__(self, parent=None, margin=-1, hspacing=-1, vspacing=-1):
+        super(FlowLayout, self).__init__(parent)
+        self._items = []
+        self.setContentsMargins(margin, margin, margin, margin)
+        self._hspacing = hspacing
+        self._vspacing = vspacing
+
+    def __del__(self):
+        del self._items[:]
+
+    def addItem(self, item):
+        self._items.append(item)
+        self.invalidate()
+
+    def horizontalSpacing(self):
+        if self._hspacing >= 0:
+            return self._hspacing
+        return self.smartSpacing(QtWidgets.QStyle.PM_LayoutHorizontalSpacing)
+
+    def verticalSpacing(self):
+        if self._vspacing >= 0:
+            return self._vspacing
+        return self.smartSpacing(QtWidgets.QStyle.PM_LayoutVerticalSpacing)
+
+    def count(self):
+        return len(self._items)
+
+    def itemAt(self, index):
+        if 0 <= index < len(self._items):
+            return self._items[index]
+        return None
+
+    def takeAt(self, index):
+        if 0 <= index < len(self._items):
+            item = self._items.pop(index)
+            self.invalidate()
+            return item
+        return None
+        
+    def insertWidget(self, index, widget):
+        self.insertItem(index, QtWidgets.QWidgetItem(widget))
+
+    def insertItem(self, index, item):
+        self._items.insert(index, item)
+        self.invalidate()
+
+    def removeWidget(self, widget):
+        for i, item in enumerate(self._items):
+            if item.widget() is widget:
+                self.takeAt(i)
+                # Do not delete the widget, the caller is responsible
+                break
+    
+    def expandingDirections(self):
+        return QtCore.Qt.Orientation(0)
+
+    def hasHeightForWidth(self):
+        return True
+
+    def heightForWidth(self, width):
+        return self.doLayout(QtCore.QRect(0, 0, width, 0), True)
+
+    def setGeometry(self, rect):
+        super(FlowLayout, self).setGeometry(rect)
+        self.doLayout(rect, False)
+
+    def sizeHint(self):
+        return self.minimumSize()
+
+    def minimumSize(self):
+        size = QtCore.QSize()
+        for item in self._items:
+            size = size.expandedTo(item.minimumSize())
+        margins = self.contentsMargins()
+        size += QtCore.QSize(margins.left() + margins.right(), margins.top() + margins.bottom())
+        return size
+
+    def doLayout(self, rect, testOnly):
+        m = self.contentsMargins()
+        x = rect.x() + m.left()
+        y = rect.y() + m.top()
+        lineHeight = 0
+
+        spaceX = self.horizontalSpacing()
+        spaceY = self.verticalSpacing()
+
+        for item in self._items:
+            nextX = x + item.sizeHint().width() + spaceX
+            if nextX - spaceX > rect.right() - m.right() and lineHeight > 0:
+                x = rect.x() + m.left()
+                y = y + lineHeight + spaceY
+                lineHeight = 0
+            
+            if not testOnly:
+                item.setGeometry(QtCore.QRect(QtCore.QPoint(x, y), item.sizeHint()))
+
+            x = x + item.sizeHint().width() + spaceX
+            lineHeight = max(lineHeight, item.sizeHint().height())
+
+        return y + lineHeight + m.bottom()
+
+    def smartSpacing(self, pm):
+        parent = self.parent()
+        if not parent:
+            return -1
+        if parent.isWidgetType():
+            return parent.style().pixelMetric(pm, None, parent)
+        else:
+            return parent.spacing()
+
 # Version for .aicodeprep file format
 AICODEPREP_VERSION = "1.0"
 
@@ -570,11 +681,36 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
         main_layout.addWidget(self.info_label)
 
-        self.text_label = QtWidgets.QLabel(""); self.text_label.setWordWrap(True); main_layout.addWidget(self.text_label)
-        self.preset_strip = QtWidgets.QHBoxLayout(); self.preset_strip.addWidget(QtWidgets.QLabel("Presets:")); self.preset_strip.addStretch()
-        add_preset_btn = QtWidgets.QPushButton("✚"); add_preset_btn.setFixedSize(24, 24); add_preset_btn.setToolTip("New Preset…"); add_preset_btn.clicked.connect(self.add_new_preset_dialog)
+        self.text_label = QtWidgets.QLabel("")
+        self.text_label.setWordWrap(True)
+        main_layout.addWidget(self.text_label)
+
+        # Create scrollable preset area
+        presets_wrapper = QtWidgets.QHBoxLayout()
+        presets_wrapper.addWidget(QtWidgets.QLabel("Presets:"))
+        
+        # Scrollable area for preset buttons
+        scroll_area = QtWidgets.QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setFixedHeight(52)  # Enough height for 22px buttons + padding
+        
+        scroll_widget = QtWidgets.QWidget()
+        self.preset_strip = QtWidgets.QHBoxLayout(scroll_widget)
+        self.preset_strip.setContentsMargins(0, 0, 0, 0)
+        
+        add_preset_btn = QtWidgets.QPushButton("✚")
+        add_preset_btn.setFixedSize(24, 24)
+        add_preset_btn.setToolTip("New Preset…")
+        add_preset_btn.clicked.connect(self.add_new_preset_dialog)
         self.preset_strip.addWidget(add_preset_btn)
-        main_layout.addLayout(self.preset_strip)
+        self.preset_strip.addStretch()
+        
+        scroll_area.setWidget(scroll_widget)
+        presets_wrapper.addWidget(scroll_area)
+        
+        main_layout.addLayout(presets_wrapper)
         main_layout.addSpacing(8)
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
@@ -617,8 +753,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     new_parent.setIcon(0, self.folder_icon)
                     new_parent.setFlags(new_parent.flags() | QtCore.Qt.ItemIsUserCheckable)
                     new_parent.setCheckState(0, QtCore.Qt.Unchecked)
-                    # Add placeholder for lazy loading
-                    QtWidgets.QTreeWidgetItem(new_parent, ["Loading..."])
                     self.path_to_item[path_so_far] = new_parent
                     parent_node = new_parent
 
@@ -634,8 +768,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if os.path.isdir(abs_path):
                 item.setIcon(0, self.folder_icon)
                 item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                # LAZY LOADING: Add a placeholder so it's expandable
-                QtWidgets.QTreeWidgetItem(item, ["Loading..."])
             else: # It's a file
                 item.setIcon(0, self.file_icon)
                 item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
@@ -682,44 +814,51 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def on_item_expanded(self, item):
         """Handler for when a tree item is expanded, used for lazy loading."""
-        if item.childCount() == 1 and item.child(0).text(0) == "Loading...":
-            placeholder = item.child(0)
-            item.removeChild(placeholder)
+        # Check if this folder has already been loaded
+        dir_path = item.data(0, QtCore.Qt.UserRole)
+        if not dir_path or not os.path.isdir(dir_path): 
+            return
             
-            dir_path = item.data(0, QtCore.Qt.UserRole)
-            if not dir_path or not os.path.isdir(dir_path): return
+        # Check if children have already been loaded
+        if item.childCount() > 0:
+            # If first child is a real item (not placeholder), already loaded
+            first_child = item.child(0)
+            if first_child.data(0, QtCore.Qt.UserRole):
+                return
             
-            try:
-                for name in sorted(os.listdir(dir_path)):
-                    abs_path = os.path.join(dir_path, name)
-                    rel_path = os.path.relpath(abs_path, os.getcwd())
-                    
-                    if rel_path in self.path_to_item: continue # Already exists
+        try:
+            # Clear any existing children first
+            item.takeChildren()
+        
+            for name in sorted(os.listdir(dir_path)):
+                abs_path = os.path.join(dir_path, name)
+                rel_path = os.path.relpath(abs_path, os.getcwd())
+                
+                if rel_path in self.path_to_item: continue # Already exists
 
-                    new_item = QtWidgets.QTreeWidgetItem(item, [name])
-                    new_item.setData(0, QtCore.Qt.UserRole, abs_path)
-                    new_item.setFlags(new_item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                    self.path_to_item[rel_path] = new_item
-                    
-                    is_excluded = smart_logic.exclude_spec.match_file(rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
-                    
-                    if os.path.isdir(abs_path):
-                        new_item.setIcon(0, self.folder_icon)
-                        QtWidgets.QTreeWidgetItem(new_item, ["Loading..."]) # Recursive placeholder
-                    else: # File
-                        new_item.setIcon(0, self.file_icon)
-                        # Don't block binary files, just leave them unchecked
-                        if smart_logic.is_binary_file(abs_path):
-                            is_excluded = True
+                new_item = QtWidgets.QTreeWidgetItem(item, [name])
+                new_item.setData(0, QtCore.Qt.UserRole, abs_path)
+                new_item.setFlags(new_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                self.path_to_item[rel_path] = new_item
+                
+                is_excluded = smart_logic.exclude_spec.match_file(rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
+                
+                if os.path.isdir(abs_path):
+                    new_item.setIcon(0, self.folder_icon)
+                else: # File
+                    new_item.setIcon(0, self.file_icon)
+                    # Don't block binary files, just leave them unchecked
+                    if smart_logic.is_binary_file(abs_path):
+                        is_excluded = True
 
-                    # Set check state based on parent, unless it's excluded
-                    if is_excluded:
-                        new_item.setCheckState(0, QtCore.Qt.Unchecked)
-                    else:
-                        new_item.setCheckState(0, item.checkState(0))
+                # Set check state based on parent, unless it's excluded
+                if is_excluded:
+                    new_item.setCheckState(0, QtCore.Qt.Unchecked)
+                else:
+                    new_item.setCheckState(0, item.checkState(0))
 
-            except OSError as e:
-                logging.error(f"Error scanning directory {dir_path}: {e}")
+        except OSError as e:
+            logging.error(f"Error scanning directory {dir_path}: {e}")
 
     def handle_item_changed(self, item, column):
         if column == 0:
@@ -729,8 +868,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 def apply_to_children(parent_item, state):
                     for i in range(parent_item.childCount()):
                         child = parent_item.child(i)
-                        # Don't propagate to lazy-loading placeholders
-                        if child.text(0) == "Loading...": continue
                         if child.flags() & QtCore.Qt.ItemIsUserCheckable and child.flags() & QtCore.Qt.ItemIsEnabled:
                             child.setCheckState(0, state)
                             if child.childCount() > 0:
@@ -745,15 +882,19 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     
     def _load_global_presets(self):
         try:
-            for label, text in global_preset_manager.get_all_presets():
+            presets = global_preset_manager.get_all_presets()
+            for label, text in presets:
                 self._add_preset_button(label, text, from_global=True)
-        except Exception as e: logging.error(f"Failed to load global presets: {e}")
+        except Exception as e: 
+            logging.error(f"Failed to load global presets: {e}")
     def _add_preset_button(self, label: str, text: str, from_local=False, from_global=False):
         btn = QtWidgets.QPushButton(label); btn.setFixedHeight(22); btn.clicked.connect(lambda _=None, t=text: self._apply_preset(t))
         btn.setContextMenuPolicy(QtCore.Qt.CustomContextMenu); btn.customContextMenuRequested.connect(lambda pos, l=label, b=btn, fg=from_global: self._show_preset_context_menu(pos, l, b, fg))
         if from_global: btn.setToolTip(f"Global preset: {label}\nRight-click to delete")
         else: btn.setToolTip(f"Preset: {label}\nRight-click to delete")
-        self.preset_strip.insertWidget(self.preset_strip.count()-1, btn)
+        # Insert before the "✚" button (which is the last widget)
+        insert_index = self.preset_strip.count() - 1
+        self.preset_strip.insertWidget(insert_index, btn)
     def _show_preset_context_menu(self, pos, label, button, from_global):
         menu = QtWidgets.QMenu(self); delete_action = menu.addAction("Delete Preset")
         if menu.exec(button.mapToGlobal(pos)) == delete_action: self._delete_preset(label, button, from_global)
@@ -763,7 +904,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if from_global:
                 if not global_preset_manager.delete_preset(label): QtWidgets.QMessageBox.warning(self, "Error", f"Failed to delete global preset '{label}'"); return
             else: self.presets = [(l, t) for l, t in self.presets if l != label]; self.save_prefs()
-            self.preset_strip.removeWidget(button); button.deleteLater(); logging.info(f"Deleted preset: {label}")
+            self.preset_strip.removeWidget(button)
+            button.deleteLater()
+            logging.info(f"Deleted preset: {label}")
     def _apply_preset(self, preset_text: str):
         current = self.prompt_textbox.toPlainText(); self.prompt_textbox.setPlainText((current.rstrip() + "\n\n" if current else "") + preset_text)
     def add_new_preset_dialog(self):
@@ -1259,5 +1402,7 @@ pathspec
 </code>
 
 
+
+Can you help me debug this code?
 
 .. some other files were skipped ..
