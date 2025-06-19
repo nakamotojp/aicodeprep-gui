@@ -1,302 +1,135 @@
 from importlib import resources
 import os
 import sys
-import pathlib
-import json
 import logging
 from typing import List, Tuple
 import fnmatch
+
+# New imports for the refactoring
+import toml
+from pathspec import PathSpec
+from pathspec.patterns import GitWildMatchPattern
 
 def get_config_path():
     """Get the path to the default configuration file."""
     if getattr(sys, 'frozen', False):
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'config.md')
+        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.toml')
     else:
         try:
-            with resources.path('aicodeprep_gui_c.data', 'config.md') as config_file:
+            with resources.path('aicodeprep_gui_c.data', 'default_config.toml') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
-            config_path = os.path.join(os.path.dirname(__file__), 'data', 'config.md')
+            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.toml')
     return config_path
 
-def get_exe_directory():
-    """Get the directory of the executable or script"""
-    if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
-    return os.path.dirname(os.path.abspath(__file__))
-
-def parse_simple_markdown_config(content: str) -> dict:
-    """
-    Parse a simple markdown config file with sections like:
-    ### code_extensions
-    .py
-    .js
-    Returns a dict with section names as keys and lists of values.
-    """
-    import re
-    config = {}
-    current_section = None
-    for line in content.splitlines():
-        line = line.strip()
-        if line.startswith("### "):
-            current_section = line[4:].strip()
-            config[current_section] = []
-        elif current_section and line and not line.startswith("#"):
-            config[current_section].append(line)
-    # Map to expected keys
-    mapped = {}
-    # List sections
-    for key in [
-        "code_extensions",
-        "exclude_extensions",
-        "exclude_dirs",
-        "exclude_files",
-        "exclude_patterns",
-        "include_dirs",
-        "include_files"
-    ]:
-        if key in config:
-            mapped[key] = config[key]
-    # Scalar values
-    if "max_file_size" in config and config["max_file_size"]:
-        try:
-            mapped["max_file_size"] = int(config["max_file_size"][0])
-        except Exception:
-            pass
-    return mapped
-
-def load_default_config() -> dict:
-    """Load the default configuration from Markdown file in simple section format"""
+def load_config_from_path(path: str) -> dict:
+    """Loads a TOML configuration file from a given path."""
+    if not os.path.exists(path):
+        return {}
     try:
-        config_path = get_config_path()
-        logging.info(f"Looking for config at {config_path}")
-
-        try:
-            with open(config_path, 'r') as f:
-                content = f.read()
-            config = parse_simple_markdown_config(content)
-        except FileNotFoundError:
-            logging.warning("Default config file not found, using built-in defaults")
-            config = None
-
-        if config is None or not config:
-            config = {
-                'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
-                                   '.rs', '.swift', '.kt'],
-                'exclude_extensions': ['.pyc', '.class', '.o', '.obj'],
-                'exclude_patterns': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-                'exclude_dirs': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-                'include_dirs': [],
-                'exclude_files': [],
-                'include_files': [],
-                'max_file_size': 1000000
-            }
-
-        if 'exclude_patterns' in config:
-            config['exclude_patterns'] = [pattern.lstrip('.') for pattern in config['exclude_patterns']]
-
-        if 'code_extensions' not in config or not config['code_extensions']:
-            config['code_extensions'] = ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb',
-                                         '.go', '.rs', '.swift', '.kt']
-
-        logging.info(f"Loaded configuration with {len(config.get('code_extensions', []))} code extensions")
-        return config
-
+        with open(path, "r", encoding="utf-8") as f:
+            return toml.load(f)
     except Exception as e:
-        logging.error(f"Error in configuration handling: {str(e)}")
-        return {
-            'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
-                               '.rs', '.swift', '.kt'],
-            'exclude_extensions': ['.pyc', '.class', '.o', '.obj'],
-            'exclude_patterns': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-            'exclude_dirs': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-            'include_dirs': [],
-            'exclude_files': [],
-            'include_files': [],
-            'max_file_size': 1000000
-        }
+        logging.error(f"Error loading or parsing TOML config at {path}: {e}")
+        return {}
 
-def load_user_config() -> dict:
-    """Load user-specific configuration from Markdown file with JSON code block"""
-    try:
-        config_path = os.path.join(get_exe_directory(), 'aicodeprep_config.md')
-        if os.path.exists(config_path):
-            with open(config_path, 'r') as f:
-                content = f.read()
-            import re
-            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
-            if match:
-                json_str = match.group(1)
-                config = json.loads(json_str)
-                if config and 'exclude_patterns' in config:
-                    config['exclude_patterns'] = [
-                        pattern.lstrip('.') for pattern in config['exclude_patterns']
-                    ]
-                return config
-            else:
-                logging.warning("No JSON code block found in user config markdown")
-                return {}
-    except Exception as e:
-        logging.error(f"Error loading user configuration: {str(e)}")
-    return {}
+def load_configurations() -> dict:
+    """Load default config, then load user config and merge them."""
+    default_config_path = get_config_path()
+    config = load_config_from_path(default_config_path)
+    if not config:
+        logging.critical("Failed to load default configuration. Exiting.")
+        sys.exit("Could not load the default configuration file.")
+    user_config_path = os.path.join(os.getcwd(), 'aicodeprep.toml')
+    user_config = load_config_from_path(user_config_path)
+    if user_config:
+        logging.info(f"Found user configuration at {user_config_path}. Merging settings.")
+        config.update(user_config)
+    return config
 
 def is_binary_file(filepath: str) -> bool:
-    """
-    Return True if this file is likely binary.  We treat any
-    NUL byte in the first 1KB as binary, but special-case common
-    Unicode BOMs (UTF-8 / UTF-16 / UTF-32) as text.
-    """
+    """Return True if this file is likely binary."""
     try:
-        with open(filepath, 'rb') as f:
-            chunk = f.read(1024)
-    except OSError:
-        # unreadable files are treated as text so checkboxes stay enabled
-        return False
-
-    # If it starts with a known BOM, count as text
-    if chunk.startswith((
-        b'\xef\xbb\xbf',      # UTF-8 BOM
-        b'\xff\xfe',          # UTF-16 LE BOM
-        b'\xfe\xff',          # UTF-16 BE BOM
-        b'\xff\xfe\x00\x00',  # UTF-32 LE BOM
-        b'\x00\x00\xfe\xff'   # UTF-32 BE BOM
-    )):
-        return False
-
-    # Any NUL in the first chunk => binary
+        with open(filepath, 'rb') as f: chunk = f.read(1024)
+    except OSError: return False
+    if chunk.startswith((b'\xEF\xBB\xBF', b'\xFF\xFE', b'\xFE\xFF', b'\xFF\xFE\x00\x00', b'\x00\x00\xFE\xFF')): return False
     return b'\x00' in chunk
 
-def matches_pattern(filename: str, pattern: str) -> bool:
-    """Check if filename matches the given glob-style pattern (supports *, ?, [])"""
-    return fnmatch.fnmatch(filename.lower(), pattern.lower())
+# --- CONFIG AND PATHSPEC LOADING ---
+config = load_configurations()
+CODE_EXTENSIONS = set(config.get('code_extensions', []))
+MAX_FILE_SIZE = config.get('max_file_size', 1000000)
+exclude_spec = PathSpec.from_lines(GitWildMatchPattern, config.get('exclude_patterns', []))
+include_spec = PathSpec.from_lines(GitWildMatchPattern, config.get('default_include_patterns', []))
+# These are still useful for some simple checks in the GUI and logic
+EXCLUDE_DIRS = [p.rstrip('/') for p in config.get('exclude_patterns', []) if p.endswith('/')]
+EXCLUDE_FILES = [p for p in config.get('exclude_patterns', []) if not p.endswith('/')]
+EXCLUDE_PATTERNS = EXCLUDE_FILES # Simplified for backward compatibility
+INCLUDE_FILES = config.get('default_include_patterns', [])
+INCLUDE_DIRS = [p.rstrip('/') for p in INCLUDE_FILES if p.endswith('/')]
+EXCLUDE_EXTENSIONS = [] # This concept is now handled by patterns
+
+# --- REWRITTEN collect_all_files FOR LAZY LOADING ---
+def collect_all_files() -> List[Tuple[str, str, bool]]:
+    """
+    Collects files and directories. For excluded directories, it returns them as
+    a single entry without their contents, allowing the GUI to lazy-load them.
+    Returns a list of (absolute_path, relative_path, is_checked_by_default).
+    """
+    all_paths = []
+    root_dir = os.getcwd()
+    seen_paths = set()
+    logging.info(f"Starting initial fast scan in: {root_dir}")
+
+    for root, dirs, files in os.walk(root_dir, topdown=True):
+        rel_root = os.path.relpath(root, root_dir)
+        if rel_root == '.': rel_root = ''
+
+        # Add the directory itself unless it's the root
+        if rel_root and root not in seen_paths:
+             all_paths.append((root, rel_root, False))
+             seen_paths.add(root)
+
+        # Prune directories from the walk
+        dirs_to_prune = []
+        for d in dirs:
+            rel_dir_path = os.path.join(rel_root, d)
+            if exclude_spec.match_file(rel_dir_path + '/'):
+                dirs_to_prune.append(d)
+        dirs[:] = [d for d in dirs if d not in dirs_to_prune]
+
+        # Process all items (unpruned dirs and files)
+        for name in dirs + files:
+            abs_path = os.path.join(root, name)
+            rel_path = os.path.join(rel_root, name)
+            if abs_path in seen_paths: continue
+
+            # Determine default check state
+            is_checked = False
+            check_path = rel_path + '/' if os.path.isdir(abs_path) else rel_path
+
+            if include_spec.match_file(check_path):
+                is_checked = True
+            elif os.path.isfile(abs_path) and os.path.splitext(name)[1].lower() in CODE_EXTENSIONS:
+                 is_checked = True
+
+            # Final filters for files
+            if os.path.isfile(abs_path):
+                if is_binary_file(abs_path) or os.path.getsize(abs_path) > MAX_FILE_SIZE:
+                    is_checked = False
+
+            all_paths.append((abs_path, rel_path, is_checked))
+            seen_paths.add(abs_path)
+
+    logging.info(f"Initial scan collected {len(all_paths)} items.")
+    return all_paths
 
 def is_excluded_directory(path: str) -> bool:
-    """Check if the directory should be excluded"""
-    path_parts = pathlib.Path(path).parts
-    
-    # Check if any part of the path exactly matches an excluded directory
-    if any(part in EXCLUDE_DIRS for part in path_parts):
-        return True
-        
-    # Specifically check for venv directories with case insensitivity
-    if any('venv' in part.lower() for part in path_parts):
-        return True
-        
-    return False
+    """Simplified check used by GUI folder-click logic."""
+    dir_name = os.path.basename(path)
+    return any(fnmatch.fnmatch(dir_name, pat) for pat in EXCLUDE_DIRS)
 
-def should_process_directory(dir_path: str) -> bool:
-    """Determine if a directory should be processed"""
-    if is_excluded_directory(dir_path):
-        return False
-
-    dir_name = os.path.basename(dir_path)
-    if dir_name in INCLUDE_DIRS:
-        return True
-    if dir_name in EXCLUDE_DIRS or 'venv' in dir_name.lower():
-        return False
-    
-    # Check if any parent directory should be excluded
-    path_parts = pathlib.Path(dir_path).parts
-    if any(excluded in part.lower() for part in path_parts 
-           for excluded in ['venv', '.venv']):
-        return False
-        
-    return True
-
-def collect_all_files() -> List[Tuple[str, str, bool]]:
-    """Collect all files in the target directory with inclusion flags"""
-    seen_dirs: set[str] = set()
-    all_files = []
-    logging.info("Starting file collection...")
-
-    if len(sys.argv) > 1:
-        root_dir = sys.argv[1]
-    else:
-        root_dir = os.getcwd()
-        logging.info(f"Processing directory: {root_dir}")
-    logging.info(f"Code extensions configured: {CODE_EXTENSIONS}")
-    
-    for root, dirs, files in os.walk(root_dir):
-        # ── record every sub-directory so it shows up in the GUI, even if empty
-        for d in dirs:
-            dir_path = os.path.join(root, d)
-            if dir_path not in seen_dirs:
-                rel_dir = os.path.relpath(dir_path, root_dir)
-                all_files.append((dir_path, rel_dir, False))   # unchecked folder
-                seen_dirs.add(dir_path)
-        # Filter out directories to skip them entirely based on EXCLUDE_DIRS
-        # This is more effective than just checking the name
-        # Walk every non-hidden dir; only skip virtual-envs explicitly.
-        dirs[:] = [d for d in dirs if
-                   not d.startswith('.') and
-                   not any(excluded_dir in d.lower()
-                           for excluded_dir in ('venv', '.venv'))]
-
-        for file in files:
-            if file == "aicp_FULLCODE.txt":
-                continue
-
-            file_path = os.path.join(root, file)
-            relative_path = os.path.relpath(file_path, root_dir)
-
-            if any(part.startswith('.') for part in pathlib.Path(file_path).parts):
-                continue
-
-            try:
-                if os.path.getsize(file_path) > MAX_FILE_SIZE:
-                    continue
-            except (OSError, IOError):
-                continue
-
-            # First check if it's a binary file
-            if is_binary_file(file_path):
-                included = False
-                all_files.append((file_path, relative_path, included))
-                logging.info(f"Skipping binary file: {relative_path}")
-                continue
-
-            included = False
-            if file in INCLUDE_FILES:
-                included = True
-            elif os.path.basename(root) in INCLUDE_DIRS:
-                extension = pathlib.Path(file_path).suffix.lower()
-                if extension in CODE_EXTENSIONS:
-                    if (file not in EXCLUDE_FILES and
-                            extension not in EXCLUDE_EXTENSIONS and
-                            not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS)):
-                        included = True
-            else:
-                extension = pathlib.Path(file_path).suffix.lower()
-                if extension in CODE_EXTENSIONS:
-                    # Check if the file should be excluded based on path or name
-                    path_parts = pathlib.Path(root).parts
-                    excluded_by_dir = any(excluded_dir in part.lower() for part in path_parts 
-                                         for excluded_dir in EXCLUDE_DIRS)
-                    
-                    if (file not in EXCLUDE_FILES and
-                            extension not in EXCLUDE_EXTENSIONS and
-                            not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS) and
-                            not excluded_by_dir and
-                            not any(excluded_dir in root.lower() for excluded_dir in ['venv', '.venv'])):
-                        included = True
-
-            all_files.append((file_path, relative_path, included))
-            logging.info(f"Collected file: {relative_path}, Included by default: {included}")
-
-    logging.info(f"Total files collected: {len(all_files)}")
-    return all_files
-
-# Load configurations
-default_config = load_default_config()
-user_config = load_user_config()
-config = {**default_config, **user_config}
-
-CODE_EXTENSIONS = set(config.get('code_extensions', []))
-EXCLUDE_EXTENSIONS = set(config.get('exclude_extensions', []))
-EXCLUDE_PATTERNS = set(config.get('exclude_patterns', []))
-EXCLUDE_DIRS = set(config.get('exclude_dirs', []))
-INCLUDE_DIRS = set(config.get('include_dirs', []))
-EXCLUDE_FILES = set(config.get('exclude_files', []))
-INCLUDE_FILES = set(config.get('include_files', []))
-MAX_FILE_SIZE = config.get('max_file_size', 1000000)
+def matches_pattern(filename: str, pattern: str) -> bool:
+    """Helper used by GUI logic."""
+    return fnmatch.fnmatch(filename.lower(), pattern.lower())

@@ -2,6 +2,66 @@
 
 ---
 
+## [0.9.8] - 2025-06-18
+
+### 🚀 Major Refactoring: TOML Configuration & Lazy Loading
+
+#### ✨ New Features
+
+- **TOML Configuration System:**
+
+  - Replaced custom Markdown configuration with industry-standard TOML format
+  - New `default_config.toml` file with comprehensive configuration options
+  - Support for user-specific configuration via `aicodeprep.toml` in working directory
+  - `.gitignore`-style pattern matching using `pathspec` library for robust file exclusion
+
+- **Lazy Loading File Tree:**
+
+  - Implemented lazy loading for excluded directories (like `node_modules`, `venv`, etc.)
+  - Extremely fast initial startup by avoiding scanning large excluded directories
+  - On-demand expansion of any directory for fine-grained file selection
+  - Users can now manually expand and select specific files from previously excluded directories
+
+- **Enhanced Pattern Matching:**
+  - All file and directory exclusion now uses `.gitignore`-style patterns
+  - More powerful and standardized exclusion rules
+  - Unified inclusion/exclusion lists for better organization
+
+#### 🔄 Changed
+
+- **Dependencies:**
+
+  - Added `toml` for configuration parsing
+  - Added `pathspec` for `.gitignore`-style pattern matching
+  - Removed `tiktoken` dependency (no longer used)
+
+- **Configuration Format:**
+
+  - Migrated from `config.md` to `default_config.toml`
+  - More structured and maintainable configuration system
+  - Better support for complex exclusion patterns
+
+- **Performance Improvements:**
+  - Significantly faster startup times due to lazy loading
+  - Reduced memory usage during initial file scanning
+  - More responsive UI when working with large codebases
+
+#### 🛠️ Technical Improvements
+
+- **Code Architecture:**
+
+  - Complete rewrite of `smart_logic.py` for better performance and maintainability
+  - Improved GUI tree building logic with lazy loading support
+  - Enhanced checkbox styling using Unicode characters instead of temporary files
+  - Better error handling and descriptive error messages for debugging
+
+- **File Processing:**
+  - More efficient directory traversal with intelligent pruning
+  - Better binary file detection and handling
+  - Improved pathspec-based filtering throughout the application
+
+---
+
 ## [0.9.9] - 2025-06-10 (Example Date)
 
 ### ✨ New Features

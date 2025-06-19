@@ -3,7 +3,7 @@ import sys
 import argparse
 import logging
 from typing import List
-from aicodeprep_gui_c.smart_logic import collect_all_files
+from aicodeprep_gui_c.smart_logic import collect_all_files, load_default_config, load_user_config
 from aicodeprep_gui_c.gui import show_file_selection_gui
 
 # Configure logging with explicit console handler only
@@ -48,8 +48,8 @@ def main():
         logger.setLevel(logging.DEBUG)
         console_handler.setLevel(logging.DEBUG)
 
-    # Get the target directory from the parsed arguments
-    target_dir = args.directory
+    # Get the target directory from command line argument (%V)
+    target_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
     logger.info(f"Target directory: {target_dir}")
 
     # Change to the specified directory with error handling

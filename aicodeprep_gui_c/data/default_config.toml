@@ -1,0 +1,132 @@
+# AI Code Prep GUI Default Configuration File
+# This file uses the TOML format.
+# All exclusion patterns use the same syntax as a .gitignore file.
+# A trailing slash '/' matches a directory.
+# A leading '!' negates a pattern.
+
+max_file_size = 4000000
+
+# File extensions that are considered code and will be checked by default.
+code_extensions = [
+    ".md", ".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".cpp", ".c", ".h",
+    ".cs", ".php", ".rb", ".go", ".rs", ".swift", ".kt", ".scala", ".html",
+    ".css", ".scss", ".sass", ".less", ".sql", ".sh", ".yaml", ".yml",
+    ".json", ".xml", ".vue", ".r", ".m", ".f90", ".f95", ".f03", ".f08",
+    ".gradle", ".groovy", ".ps1", ".psm1", ".ipynb", ".txt", ".lock",
+    ".toml", ".ini", ".conf", ".cfg", ".properties"
+]
+
+# --- UNIFIED INCLUSION/EXCLUSION LISTS using .gitignore syntax ---
+
+# Patterns for files/dirs to be checked *by default*.
+default_include_patterns = [
+    "README.md",
+    "CONTRIBUTING.md",
+    "important.txt",
+    "important_docs/",
+    "requirements.txt"
+]
+
+# Patterns for files/dirs to be excluded from the GUI list or unchecked.
+exclude_patterns = [
+    # Directories (note the trailing slash)
+    ".git/",
+    "node_modules/",
+    "venv/",
+    ".venv/",
+    "__pycache__/",
+    "build/",
+    "dist/",
+    ".idea/",
+    "Lib/",
+    "site-packages/",
+    ".vscode/",
+    ".github/",
+    "spec/",
+    "fixtures/",
+    "migrations/",
+    "logs/",
+    "tmp/",
+    "cache/",
+    "assets/",
+    "public/",
+    "static/",
+    "uploads/",
+    "vendor/",
+    "bin/",
+    "obj/",
+    "out/",
+    "target/",
+    "coverage/",
+    "reports/",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    ".ipynb_checkpoints/",
+    ".nyc_output/",
+    "test-results/",
+    "debug/",
+    ".jest/",
+    ".next/",
+    ".nuxt/",
+    ".svelte-kit/",
+    ".expo/",
+    "dist-ssr/",
+    ".parcel-cache/",
+    ".serverless/",
+    ".vercel/",
+    ".angular/",
+    ".quasar/",
+    ".redwood/",
+    ".fusebox/",
+    ".docusaurus/",
+    ".terraform/",
+    "*snapshots*/",
+
+    # Lock files and metadata
+    "package-lock.json",
+    "yarn.lock",
+    "Gemfile.lock",
+    "composer.lock",
+    "pnpm-lock.yaml",
+    "bun.lock",
+    "bun.lockb",
+    "cargo.lock",
+    "poetry.lock",
+    "Pipfile.lock",
+    ".DS_Store",
+    "Thumbs.db",
+
+    # Secrets and Keys
+    ".npmrc",
+    ".env",
+    ".env.*",
+    ".flaskenv",
+    ".dockerenv",
+    "env.json",
+    "credentials.yaml",
+    "secret*.json",
+    "*.key",
+    "*.pem",
+    "*.crt",
+    "*.pub",
+    "id_rsa",
+    "id_dsa",
+
+    # Build artifacts & logs
+    "Dockerfile.*.cache",
+    "coverage.xml",
+    "*.lcov",
+    "*.log",
+
+    # Binary and compiled files by extension
+    "*.exe", "*.dll", "*.so", "*.dylib", "*.jar", "*.war",
+    "*.ear", "*.o", "*.class",
+
+    # General patterns
+    "*.min.js", "*.min.css", "*bundle.js", "*chunk.js",
+    "*test.js", "*spec.js", "*generated.ts",
+    "*.swp", "*.swo", "*.un~", "~$*",
+    "*.min.*", "*-lock.*", "*.snap",
+    ".test.", ".spec.", ".bench.",
+    "*.cache", "*.temp"
+]

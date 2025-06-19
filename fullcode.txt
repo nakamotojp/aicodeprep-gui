@@ -1,210 +1,137 @@
-aicodeprep_gui_c\data\config.md:
+aicodeprep_gui_c\data\default_config.toml:
 <code>
-# AI Code Prep GUI Config File
+# AI Code Prep GUI Default Configuration File
+# This file uses the TOML format.
+# All exclusion patterns use the same syntax as a .gitignore file.
+# A trailing slash '/' matches a directory.
+# A leading '!' negates a pattern.
 
-### code_extensions
+max_file_size = 4000000
 
-.md
-.py
-.js
-.jsx
-.ts
-.tsx
-.java
-.cpp
-.c
-.h
-.cs
-.php
-.rb
-.go
-.rs
-.swift
-.kt
-.scala
-.html
-.css
-.scss
-.sass
-.less
-.sql
-.sh
-.yaml
-.yml
-.json
-.xml
-.vue
-.r
-.m
-.f90
-.f95
-.f03
-.f08
-.gradle
-.groovy
-.ps1
-.psm1
-.ipynb
-.md
-.txt
-.lock
-.toml
-.ini
-.conf
-.cfg
-.properties
+# File extensions that are considered code and will be checked by default.
+code_extensions = [
+    ".md", ".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".cpp", ".c", ".h",
+    ".cs", ".php", ".rb", ".go", ".rs", ".swift", ".kt", ".scala", ".html",
+    ".css", ".scss", ".sass", ".less", ".sql", ".sh", ".yaml", ".yml",
+    ".json", ".xml", ".vue", ".r", ".m", ".f90", ".f95", ".f03", ".f08",
+    ".gradle", ".groovy", ".ps1", ".psm1", ".ipynb", ".txt", ".lock",
+    ".toml", ".ini", ".conf", ".cfg", ".properties"
+]
 
-### exclude_extensions
+# --- UNIFIED INCLUSION/EXCLUSION LISTS using .gitignore syntax ---
 
-.txt
-.log
-.temp
-.exe
-.dll
-.so
-.dylib
-.jar
-.war
-.ear
-.o
-.class
+# Patterns for files/dirs to be checked *by default*.
+default_include_patterns = [
+    "README.md",
+    "CONTRIBUTING.md",
+    "important.txt",
+    "important_docs/",
+    "requirements.txt"
+]
 
-### include_files
+# Patterns for files/dirs to be excluded from the GUI list or unchecked.
+exclude_patterns = [
+    # Directories (note the trailing slash)
+    ".git/",
+    "node_modules/",
+    "venv/",
+    ".venv/",
+    "__pycache__/",
+    "build/",
+    "dist/",
+    ".idea/",
+    "Lib/",
+    "site-packages/",
+    ".vscode/",
+    ".github/",
+    "spec/",
+    "fixtures/",
+    "migrations/",
+    "logs/",
+    "tmp/",
+    "cache/",
+    "assets/",
+    "public/",
+    "static/",
+    "uploads/",
+    "vendor/",
+    "bin/",
+    "obj/",
+    "out/",
+    "target/",
+    "coverage/",
+    "reports/",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    ".ipynb_checkpoints/",
+    ".nyc_output/",
+    "test-results/",
+    "debug/",
+    ".jest/",
+    ".next/",
+    ".nuxt/",
+    ".svelte-kit/",
+    ".expo/",
+    "dist-ssr/",
+    ".parcel-cache/",
+    ".serverless/",
+    ".vercel/",
+    ".angular/",
+    ".quasar/",
+    ".redwood/",
+    ".fusebox/",
+    ".docusaurus/",
+    ".terraform/",
+    "*snapshots*/",
 
-README.md
-CONTRIBUTING.md
-important.txt
+    # Lock files and metadata
+    "package-lock.json",
+    "yarn.lock",
+    "Gemfile.lock",
+    "composer.lock",
+    "pnpm-lock.yaml",
+    "bun.lock",
+    "bun.lockb",
+    "cargo.lock",
+    "poetry.lock",
+    "Pipfile.lock",
+    ".DS_Store",
+    "Thumbs.db",
 
-### include_dirs
+    # Secrets and Keys
+    ".npmrc",
+    ".env",
+    ".env.*",
+    ".flaskenv",
+    ".dockerenv",
+    "env.json",
+    "credentials.yaml",
+    "secret*.json",
+    "*.key",
+    "*.pem",
+    "*.crt",
+    "*.pub",
+    "id_rsa",
+    "id_dsa",
 
-important_docs
+    # Build artifacts & logs
+    "Dockerfile.*.cache",
+    "coverage.xml",
+    "*.lcov",
+    "*.log",
 
-### exclude_dirs
+    # Binary and compiled files by extension
+    "*.exe", "*.dll", "*.so", "*.dylib", "*.jar", "*.war",
+    "*.ear", "*.o", "*.class",
 
-.git
-node_modules
-venv
-build_env
-**pycache**
-build
-dist
-.idea
-Lib
-site-packages
-.venv
-.vscode
-.github
-spec
-fixtures
-migrations
-logs
-tmp
-cache
-assets
-public
-static
-uploads
-vendor
-bin
-obj
-out
-target
-coverage
-reports
-.pytest_cache
-.mypy_cache
-.ipynb_checkpoints
-.nyc_output
-test-results
-debug
-.jest
-.next
-.nuxt
-.svelte-kit
-.expo
-dist-ssr
-.parcel-cache
-.serverless
-.vercel
-.angular
-.quasar
-.redwood
-.fusebox
-.docusaurus
-.terraform
-snapshots
-
-### exclude_files
-
-package-lock.json
-yarn.lock
-requirements.txt
-Gemfile.lock
-composer.lock
-.DS*Store
-Thumbs.db
-pnpm-lock.yaml
-bun.lock
-bun.lockb
-cargo.lock
-poetry.lock
-Pipfile.lock
-.npmrc
-.env
-.env.*
-.env.local
-.env.prod
-.env.staging
-.env.dev
-.flaskenv
-.dockerenv
-env.json
-credentials.yaml
-secret*.json
-*.key
-_.pem
-_.crt
-_.pub
-id_rsa
-id_dsa
-Dockerfile._.cache
-coverage.xml
-\_.lcov
-
-### exclude_patterns
-
-min.js
-min.css
-bundle.js
-chunk.js
-test.js
-spec.js
-generated.ts
-_.swp
-_.swo
-_.un~
-~$_
-_.min._
-_-lock._
-_.snap
-.test.
-.spec.
-.bench.
-.cache
-.temp
-_.lock
-_.class
-_.exe
-_.dll
-_.so
-_.dylib
-_.jar
-_.war
-_.ear
-
-### max_file_size
-
-4000000
+    # General patterns
+    "*.min.js", "*.min.css", "*bundle.js", "*chunk.js",
+    "*test.js", "*spec.js", "*generated.ts",
+    "*.swp", "*.swo", "*.un~", "~$*",
+    "*.min.*", "*-lock.*", "*.snap",
+    ".test.", ".spec.", ".bench.",
+    "*.cache", "*.temp"
+]
 
 </code>
 
@@ -311,139 +238,92 @@ def create_checkmark_pixmap(size=16, color="#0078D4"):
     painter.end()
     return pixmap
 
-def _checkbox_style_with_images(dark: bool) -> str:
-    """Alternative approach using programmatically created images."""
+def create_x_mark_pixmap(size=16, color="#0078D4"):
+    """Create an X mark pixmap programmatically (alternative to checkmark)."""
+    pixmap = QtGui.QPixmap(size, size)
+    pixmap.fill(QtCore.Qt.transparent)
     
-    if dark:
-        bg_unchecked = '#2B2B2B'
-        bg_checked = '#2B2B2B'
-        border_unchecked = '#555555'
-        border_checked = '#0078D4'
-        checkmark_color = '#0078D4'
-    else:
-        bg_unchecked = '#FFFFFF'
-        bg_checked = '#FFFFFF'
-        border_unchecked = '#AAAAAA'
-        border_checked = '#0078D4'
-        checkmark_color = '#0078D4'
+    painter = QtGui.QPainter(pixmap)
+    painter.setRenderHint(QtGui.QPainter.Antialiasing)
+    
+    pen = QtGui.QPen(QtGui.QColor(color))
+    pen.setWidth(2)
+    pen.setCapStyle(QtCore.Qt.RoundCap)
+    painter.setPen(pen)
+    
+    # Draw X mark
+    margin = 3
+    painter.drawLine(margin, margin, size-margin, size-margin)
+    painter.drawLine(margin, size-margin, size-margin, margin)
+    
+    painter.end()
+    return pixmap
 
-    # Create checkmark image and save it temporarily
-    import tempfile
-    checkmark_pixmap = create_checkmark_pixmap(16, checkmark_color)
-    temp_dir = tempfile.gettempdir()
-    checkmark_path = os.path.join(temp_dir, f"checkmark_{'dark' if dark else 'light'}.png")
-    checkmark_pixmap.save(checkmark_path)
-
-    return f"""
-    QTreeView::indicator, QTreeWidget::indicator {{
-        width: 16px;
-        height: 16px;
-        border-radius: 3px;
-    }}
-
-    QTreeView::indicator:unchecked,
-    QTreeWidget::indicator:unchecked {{
-        background-color: {bg_unchecked};
-        border: 2px solid {border_unchecked};
-    }}
-
-    QTreeView::indicator:checked,
-    QTreeWidget::indicator:checked {{
-        background-color: {bg_checked};
-        border: 2px solid {border_checked};
-        image: url({checkmark_path.replace(os.sep, '/')});
-    }}
-
-    QTreeView::indicator:unchecked:hover,
-    QTreeWidget::indicator:unchecked:hover {{
-        border-color: {border_checked};
-    }}
-    """
+def _checkbox_style_with_images(dark: bool) -> str:
+    """Use SVG-based checkboxes - same as _checkbox_style but with descriptive name."""
+    return _checkbox_style(dark)
 
 
 
 def _checkbox_style(dark: bool) -> str:
-    """Return a style-sheet that shows a visible tick using Unicode checkmarks."""
+    """Return checkbox styling using permanent image files."""
     
+    # Get the directory where this module is located
+    module_dir = os.path.dirname(os.path.abspath(__file__))
+    images_dir = os.path.join(module_dir, "images")
+    
+    # Use appropriate images for theme
     if dark:
-        bg_unchecked = '#2B2B2B'
-        bg_checked = '#2B2B2B'
-        border_unchecked = '#555555'
-        border_checked = '#0078D4'
-        checkmark_color = '#0078D4'
-        disabled_bg = '#1F1F1F'
-        disabled_border = '#3A3A3A'
+        unchecked_filename = "checkbox_unchecked_dark.png"
+        checked_filename = "checkbox_checked_dark.png"
     else:
-        bg_unchecked = '#FFFFFF'
-        bg_checked = '#FFFFFF'
-        border_unchecked = '#AAAAAA'
-        border_checked = '#0078D4'
-        checkmark_color = '#0078D4'
-        disabled_bg = '#F5F5F5'
-        disabled_border = '#CCCCCC'
-
+        unchecked_filename = "checkbox_unchecked.png"
+        checked_filename = "checkbox_checked.png"
+    
+    unchecked_path = os.path.join(images_dir, unchecked_filename)
+    checked_path = os.path.join(images_dir, checked_filename)
+    
+    # Convert Windows paths to proper URLs for Qt
+    if os.name == 'nt':  # Windows
+        unchecked_url = unchecked_path.replace('\\', '/')
+        checked_url = checked_path.replace('\\', '/')
+    else:
+        unchecked_url = unchecked_path
+        checked_url = checked_path
+    
+    hover_border_color = "#00c3ff"
+    
     return f"""
     QTreeView::indicator, QTreeWidget::indicator {{
         width: 16px;
         height: 16px;
-        border-radius: 3px;
+        border: none;
+        background: transparent;
+        image: url({unchecked_url});
     }}
-
-    /* Unchecked state */
-    QTreeView::indicator:unchecked,
-    QTreeWidget::indicator:unchecked {{
-        background-color: {bg_unchecked};
-        border: 2px solid {border_unchecked};
+    
+    QTreeView::indicator:checked, QTreeWidget::indicator:checked {{
+        image: url({checked_url});
     }}
-
-    /* Checked state with Unicode checkmark */
-    QTreeView::indicator:checked,
-    QTreeWidget::indicator:checked {{
-        background-color: {bg_checked};
-        border: 2px solid {border_checked};
-        color: {checkmark_color};
-        font-weight: bold;
-        font-size: 12px;
-        text-align: center;
+    
+    QTreeView::indicator:hover, QTreeWidget::indicator:hover {{
+        border: 1px solid {hover_border_color};
+        border-radius: 2px;
     }}
-
-    QTreeView::indicator:checked::after,
-    QTreeWidget::indicator:checked::after {{
-        content: "✓";
-        color: {checkmark_color};
-        font-weight: bold;
-        font-size: 12px;
-        position: absolute;
-        top: -1px;
-        left: 1px;
-    }}
-
-    /* Disabled states */
-    QTreeView::indicator:disabled,
-    QTreeWidget::indicator:disabled {{
-        background-color: {disabled_bg};
-        border: 2px solid {disabled_border};
-    }}
-
-    /* Hover effects */
-    QTreeView::indicator:unchecked:hover,
-    QTreeWidget::indicator:unchecked:hover {{
-        border-color: {border_checked};
-        background-color: {bg_unchecked};
-    }}
-
-    QTreeView::indicator:checked:hover,
-    QTreeWidget::indicator:checked:hover {{
-        background-color: {bg_checked};
-        border-color: {border_checked};
+    
+    QTreeView::indicator:checked:hover, QTreeWidget::indicator:checked:hover {{
+        border: 1px solid {hover_border_color};
+        border-radius: 2px;
+        image: url({checked_url});
     }}
     """
 
 def get_checkbox_style_dark()  -> str: 
-    return _checkbox_style_with_images(True)
+    return _checkbox_style(True)
 
 def get_checkbox_style_light() -> str: 
-    return _checkbox_style_with_images(False)
+    return _checkbox_style(False)
+
 </code>
 
 aicodeprep_gui_c\file_processor.py:
@@ -481,7 +361,7 @@ def _write_one_file_md(outfile, rel_path, abs_path):
             outfile.write(".. contents skipped (read error) ..\n")
     outfile.write(f"\n### END {rel_path}\n\n")
 
-def process_files(selected_files: List[str], output_file: str, fmt: OutputFmt = 'xml') -> int:
+def process_files(selected_files: List[str], output_file: str, fmt: OutputFmt = 'xml', prompt: str = "") -> int:
     """
     Write the concatenation of `selected_files` into `output_file`.
     `fmt` is either 'xml' (default, uses <code> … </code>) or
@@ -505,8 +385,11 @@ def process_files(selected_files: List[str], output_file: str, fmt: OutputFmt = 
                 except Exception as exc:
                     logging.error(f"Error processing {file_path}: {exc}")
 
+            if prompt:
+                outfile.write("\n\n" + prompt.strip())
+
             # generic tail line – no XML tags any more
-            outfile.write(".. some other files were skipped ..\n")
+            outfile.write("\n\n.. some other files were skipped ..\n")
 
         return len(selected_files)
     except Exception as exc:
@@ -522,21 +405,14 @@ import sys
 import platform
 import logging
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
-from aicodeprep_gui_c.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette
+from aicodeprep_gui_c.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
 from typing import List, Tuple
-# --- Removed tiktoken dependency for token counting ---
-tiktoken = None
 from aicodeprep_gui_c import smart_logic
-from aicodeprep_gui_c.smart_logic import (
-    EXCLUDE_DIRS, EXCLUDE_FILES, EXCLUDE_EXTENSIONS, EXCLUDE_PATTERNS, CODE_EXTENSIONS,
-    matches_pattern, is_excluded_directory
-)
 from aicodeprep_gui_c.file_processor import process_files
 
 # Version for .aicodeprep file format
 AICODEPREP_VERSION = "1.0"
 
-# Global preset manager using QSettings
 class GlobalPresetManager:
     def __init__(self):
         try:
@@ -552,13 +428,11 @@ class GlobalPresetManager:
             if not self.settings:
                 return
                 
-            # Check if we have any presets at all
             self.settings.beginGroup("presets")
             existing_keys = self.settings.childKeys()
             self.settings.endGroup()
             
             if not existing_keys:
-                # Add default presets
                 default_presets = [
                     ("Debug", "Can you help me debug this code?"),
                     ("Security check", "Can you analyze this code for any security issues?"),
@@ -577,15 +451,11 @@ class GlobalPresetManager:
     def get_all_presets(self):
         """Get all saved presets as list of (label, text) tuples"""
         try:
-            if not self.settings:
-                return []
-                
+            if not self.settings: return []
             presets = []
             self.settings.beginGroup("presets")
             for key in self.settings.childKeys():
-                value = self.settings.value(key, "")
-                if value:
-                    presets.append((key, value))
+                presets.append((key, self.settings.value(key, "")))
             self.settings.endGroup()
             return presets
         except Exception as e:
@@ -593,11 +463,8 @@ class GlobalPresetManager:
             return []
     
     def add_preset(self, label, text):
-        """Add a new preset"""
         try:
-            if not self.settings or not label.strip() or not text.strip():
-                return False
-                
+            if not self.settings or not label.strip() or not text.strip(): return False
             self.settings.beginGroup("presets")
             self.settings.setValue(label.strip(), text.strip())
             self.settings.endGroup()
@@ -607,11 +474,8 @@ class GlobalPresetManager:
             return False
     
     def delete_preset(self, label):
-        """Delete a preset by label"""
         try:
-            if not self.settings or not label.strip():
-                return False
-                
+            if not self.settings or not label.strip(): return False
             self.settings.beginGroup("presets")
             self.settings.remove(label.strip())
             self.settings.endGroup()
@@ -620,83 +484,27 @@ class GlobalPresetManager:
             logging.error(f"Failed to delete preset '{label}': {e}")
             return False
 
-# Global instance
 global_preset_manager = GlobalPresetManager()
 
-def get_resource_path(relative_path):
-    """Get absolute path to resource, works for dev and for PyInstaller"""
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_path, relative_path)
-
-def get_checkbox_style():
-    return """
-    QCheckBox {
-        spacing: 8px;
-        color: #E0E0E0;
-        font-size: 11px;
-    }
-    
-    QCheckBox::indicator {
-        width: 16px;
-        height: 16px;
-        border: 2px solid #555555;
-        border-radius: 3px;
-        background-color: #2B2B2B;
-    }
-    
-    QCheckBox::indicator:hover {
-        border-color: #777777;
-        background-color: #353535;
-    }
-    
-    QCheckBox::indicator:checked {
-        border-color: #0078D4;
-        background-color: #2B2B2B;
-    
-    }
-    
-    QCheckBox::indicator:checked {
-        border-color: #0078D4;
-        background-color: #2B2B2B;
-        font-family: "Segoe UI Symbol";
-        font-size: 14px;
-        color: #0078D4;
-        text-align: center;
-        qproperty-text: "✓";
-    }
-    """
-
-# ❷ QWidget ⇒ QMainWindow to get a native menu-bar for free
 class FileSelectionGUI(QtWidgets.QMainWindow):
     def __init__(self, files):
         super().__init__()
         self.presets = []
-        self.setAcceptDrops(True)  # Enable drag-and-drop for the widget
-        self.files = files  # Store files for preferences loading
+        self.setAcceptDrops(True)
+        self.files = files
 
-        # --- Usage logging: silent fetch to remote server with local time ---
         from datetime import datetime
         self.network_manager = QtNetwork.QNetworkAccessManager(self)
         now = datetime.now()
-        hour = now.strftime("%I").lstrip("0") or "12"
-        minute = now.strftime("%M")
-        ampm = now.strftime("%p").lower()
-        time_str = f"{hour}{minute}{ampm}"
-        url = f"https://wuu73.org/dixels/loads.html?t={time_str}"
-        request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
+        time_str = f"{now.strftime('%I').lstrip('0') or '12'}{now.strftime('%M')}{now.strftime('%p').lower()}"
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/loads.html?t={time_str}"))
         self.network_manager.get(request)
-        # No signal connection, no error handling, no UI indication
+
         self.setWindowTitle("AI Code Prep - File Selection")
         self.app = QtWidgets.QApplication.instance()
-        if self.app is None:
-            self.app = QtWidgets.QApplication([])
-        self.action = 'quit'  # Track user action: 'process' or 'quit'
+        if self.app is None: self.app = QtWidgets.QApplication([])
+        self.action = 'quit'
 
-        # .aicodeprep prefs
         self.prefs_filename = ".aicodeprep"
         self.remember_checkbox = None
         self.checked_files_from_prefs = set()
@@ -704,911 +512,455 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.window_size_from_prefs = None
         self.load_prefs_if_exists()
 
-        # DPI Awareness and Scaling
         if platform.system() == 'Windows':
-            screen = self.app.primaryScreen()
-            scale_factor = screen.logicalDotsPerInch() / 96.0
+            scale_factor = self.app.primaryScreen().logicalDotsPerInch() / 96.0
         else:
             scale_factor = self.app.primaryScreen().devicePixelRatio()
 
-        # Font Configuration
         default_font_size = 9
-        try:
-            if platform.system() == 'Windows':
-                system_font = 'Segoe UI'
-            else:
-                system_font = 'Arial'
+        system_font = 'Segoe UI' if platform.system() == 'Windows' else 'Arial'
+        default_font_size = int(default_font_size * scale_factor)
+        self.default_font = QtGui.QFont(system_font, default_font_size)
+        self.setFont(self.default_font)
+        style = self.style()
+        self.folder_icon = style.standardIcon(QtWidgets.QStyle.SP_DirIcon)
+        self.file_icon = style.standardIcon(QtWidgets.QStyle.SP_FileIcon)
 
-            default_font_size = int(default_font_size * scale_factor)
-            self.default_font = QtGui.QFont(system_font, default_font_size)
-            self.tree_font = QtGui.QFont(system_font, default_font_size + 1)
-            self.checkbox_font = QtGui.QFont(system_font, int(default_font_size * 1.2))
-            self.setFont(self.default_font)
-            logging.info(f"Using system font: {system_font}, Size: {default_font_size}")
-
-            # --- standard icons (folder / file) for the tree entries -------------
-            style = self.style()
-            self.folder_icon = style.standardIcon(QtWidgets.QStyle.SP_DirIcon)
-            self.file_icon   = style.standardIcon(QtWidgets.QStyle.SP_FileIcon)
-        except Exception as e:
-            logging.warning(f"Font/scaling error: {e}")
-            self.default_font = QtGui.QFont('Arial', default_font_size)
-            self.tree_font = QtGui.QFont('Arial', default_font_size + 1)
-            self.checkbox_font = QtGui.QFont('Arial', int(default_font_size * 1.2))
-
-        # Geometry
         if self.window_size_from_prefs:
             w, h = self.window_size_from_prefs
             self.setGeometry(100, 100, w, h)
         else:
             self.setGeometry(100, 100, int(600 * scale_factor), int(400 * scale_factor))
 
-        # Initialize dark mode based on system preference
         self.is_dark_mode = system_pref_is_dark()
-        if self.is_dark_mode:
-            apply_dark_palette(self.app)
-        
-        # QMainWindow needs a central widget first
+        if self.is_dark_mode: apply_dark_palette(self.app)
+
         central = QtWidgets.QWidget()
         self.setCentralWidget(central)
         main_layout = QtWidgets.QVBoxLayout(central)
-        # Add left and right margins/padding to the entire app
         main_layout.setContentsMargins(20, 10, 20, 10)
-        
-        # Add padding to the central widget itself for consistent spacing
-        central.setStyleSheet("QWidget { padding: 0px 10px 0px 10px; }")
 
-        # ❸ MENU BAR ---------------------------------------------------
         mb = self.menuBar()
         file_menu = mb.addMenu("&File")
-        quit_act = QtGui.QAction("&Quit", self)
-        quit_act.triggered.connect(self.quit_without_processing)
-        file_menu.addAction(quit_act)
-
+        quit_act = QtGui.QAction("&Quit", self); quit_act.triggered.connect(self.quit_without_processing); file_menu.addAction(quit_act)
         edit_menu = mb.addMenu("&Edit")
-        new_preset_act = QtGui.QAction("&New Preset…", self)
-        new_preset_act.triggered.connect(self.add_new_preset_dialog)
-        edit_menu.addAction(new_preset_act)
-        # --------------------------------------------------------------
+        new_preset_act = QtGui.QAction("&New Preset…", self); new_preset_act.triggered.connect(self.add_new_preset_dialog); edit_menu.addAction(new_preset_act)
 
-        # Dark mode toggle
         title_bar_layout = QtWidgets.QHBoxLayout()
-
-        # ----------  NEW  Format-selector combobox  ----------
-        self.format_combo = QtWidgets.QComboBox()
-        self.format_combo.addItems(["XML <code>", "Markdown ###"])
-        self.format_combo.setFixedWidth(130)
-        # store the internal key in userData
-        self.format_combo.setItemData(0, 'xml')
-        self.format_combo.setItemData(1, 'markdown')
-        output_label = QtWidgets.QLabel("&Output format:")
-        output_label.setBuddy(self.format_combo)
-        title_bar_layout.addWidget(output_label)
-        title_bar_layout.addWidget(self.format_combo)
-        title_bar_layout.addStretch()
-        self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
-        self.dark_mode_box.setChecked(self.is_dark_mode)
-        self.dark_mode_box.stateChanged.connect(self.toggle_dark_mode)
+        self.format_combo = QtWidgets.QComboBox(); self.format_combo.addItems(["XML <code>", "Markdown ###"]); self.format_combo.setFixedWidth(130)
+        self.format_combo.setItemData(0, 'xml'); self.format_combo.setItemData(1, 'markdown')
+        output_label = QtWidgets.QLabel("&Output format:"); output_label.setBuddy(self.format_combo)
+        title_bar_layout.addWidget(output_label); title_bar_layout.addWidget(self.format_combo); title_bar_layout.addStretch()
+        self.dark_mode_box = QtWidgets.QCheckBox("Dark mode"); self.dark_mode_box.setChecked(self.is_dark_mode); self.dark_mode_box.stateChanged.connect(self.toggle_dark_mode)
         title_bar_layout.addWidget(self.dark_mode_box)
         main_layout.addLayout(title_bar_layout)
-        # Token count label
         self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
         main_layout.addWidget(self.token_label)
-        # Add spacing after output format/token row
         main_layout.addSpacing(8)
 
-        # Fancy "Vibe Code Faster" label
         self.vibe_label = QtWidgets.QLabel("AI Code Prep GUI")
-        vibe_font = QtGui.QFont(self.default_font)
-        vibe_font.setBold(True)
-        vibe_font.setPointSize(self.default_font.pointSize() + 8)
-        self.vibe_label.setFont(vibe_font)
-        self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter)
-        # Use a visually strong blue-purple gradient background with white bold text for contrast
-        self.vibe_label.setStyleSheet(
-            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00c3ff, stop:1 #7f00ff);"
-            "color: white;"
-            "padding: 0;"
-            "border-radius: 8px;"
-        )
+        vibe_font = QtGui.QFont(self.default_font); vibe_font.setBold(True); vibe_font.setPointSize(self.default_font.pointSize() + 8)
+        self.vibe_label.setFont(vibe_font); self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter)
+        self.vibe_label.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00c3ff, stop:1 #7f00ff); color: white; padding: 0; border-radius: 8px;")
         self.vibe_label.setFixedHeight(44)
-        # Wrap in QWidget for horizontal margins
-        banner_wrap = QtWidgets.QWidget()
-        banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
-        banner_layout.setContentsMargins(14, 0, 14, 0)
-        banner_layout.addWidget(self.vibe_label)
+        banner_wrap = QtWidgets.QWidget(); banner_layout = QtWidgets.QHBoxLayout(banner_wrap); banner_layout.setContentsMargins(14, 0, 14, 0); banner_layout.addWidget(self.vibe_label)
         main_layout.addWidget(banner_wrap)
-        # Add vertical spacing below banner
         main_layout.addSpacing(8)
-
-        # Info line under banner
         self.info_label = QtWidgets.QLabel("I tried to guess which code files you will likely want included, adjust as needed")
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
         main_layout.addWidget(self.info_label)
 
-        # Status label for messages
-        self.text_label = QtWidgets.QLabel("")
-        self.text_label.setWordWrap(True)
-        main_layout.addWidget(self.text_label)
-
-        # ❹ strip that will hold dynamic preset buttons
-        self.preset_strip = QtWidgets.QHBoxLayout()
-        self.preset_strip.addWidget(QtWidgets.QLabel("Presets:"))
-        self.preset_strip.addStretch()
-        # Add "✚" button for quick new preset
-        add_preset_btn = QtWidgets.QPushButton("✚")
-        add_preset_btn.setFixedSize(24, 24)
-        add_preset_btn.setToolTip("New Preset…")
-        add_preset_btn.clicked.connect(self.add_new_preset_dialog)
+        self.text_label = QtWidgets.QLabel(""); self.text_label.setWordWrap(True); main_layout.addWidget(self.text_label)
+        self.preset_strip = QtWidgets.QHBoxLayout(); self.preset_strip.addWidget(QtWidgets.QLabel("Presets:")); self.preset_strip.addStretch()
+        add_preset_btn = QtWidgets.QPushButton("✚"); add_preset_btn.setFixedSize(24, 24); add_preset_btn.setToolTip("New Preset…"); add_preset_btn.clicked.connect(self.add_new_preset_dialog)
         self.preset_strip.addWidget(add_preset_btn)
         main_layout.addLayout(self.preset_strip)
-        # Add spacing after presets strip
         main_layout.addSpacing(8)
 
-        # --- Splitter for file tree and prompt ---
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
-        # File tree
         self.tree_widget = QtWidgets.QTreeWidget()
         self.tree_widget.setHeaderLabels(["File/Folder"])
-        self.tree_widget.setColumnCount(1)
-        self.tree_widget.setColumnWidth(0, int(400 * scale_factor))  # Wider for file paths
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        # Fix: The original code had a syntax error here, it should be a direct string assignment.
+        # Apply initial checkbox styling along with other styles
+        base_style = """
+            QTreeView, QTreeWidget {
+                outline: 2; /* Remove focus rectangle */
+            }
+        """
+        checkbox_style = get_checkbox_style_dark() if self.is_dark_mode else get_checkbox_style_light()
+        self.tree_widget.setStyleSheet(base_style + checkbox_style)
         
-        # Set stylesheet for better checkbox visibility
-        from aicodeprep_gui_c.apptheme import get_checkbox_style_dark, get_checkbox_style_light
-        if self.is_dark_mode:
-            self.tree_widget.setStyleSheet(get_checkbox_style_dark())
-            print(f"DEBUG: Initial tree_widget stylesheet (dark): {self.tree_widget.styleSheet()}")
-        else:
-            self.tree_widget.setStyleSheet(get_checkbox_style_light())
-            print(f"DEBUG: Initial tree_widget stylesheet (light): {self.tree_widget.styleSheet()}")
         self.splitter.addWidget(self.tree_widget)
-        # Add spacing after file/folder header (tree)
-        main_layout.addSpacing(8)
-        # Prompt area (label + textbox in a widget)
-        prompt_widget = QtWidgets.QWidget()
-        prompt_layout = QtWidgets.QVBoxLayout(prompt_widget)
-        prompt_layout.setContentsMargins(0, 0, 0, 0)
-        prompt_label = QtWidgets.QLabel("Optional prompt/question for LLM (will be appended to the end):")
-        prompt_layout.addWidget(prompt_label)
-        # Add spacing after prompt label
-        prompt_layout.addSpacing(8)
-        self.prompt_textbox = QtWidgets.QPlainTextEdit()
-        self.prompt_textbox.setPlaceholderText(
-            "Type your question or prompt here (optional)…")
-        self.prompt_textbox.setLineWrapMode(QtWidgets.QPlainTextEdit.WidgetWidth)
-        self.prompt_textbox.setMinimumHeight(50)
-        self.prompt_textbox.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
+        prompt_widget = QtWidgets.QWidget(); prompt_layout = QtWidgets.QVBoxLayout(prompt_widget); prompt_layout.setContentsMargins(0,0,0,0)
+        prompt_layout.addWidget(QtWidgets.QLabel("Optional prompt/question for LLM (will be appended to the end):")); prompt_layout.addSpacing(8)
+        self.prompt_textbox = QtWidgets.QPlainTextEdit(); self.prompt_textbox.setPlaceholderText("Type your question or prompt here (optional)…")
         prompt_layout.addWidget(self.prompt_textbox)
         self.splitter.addWidget(prompt_widget)
-        self.splitter.setStretchFactor(0, 4)
-        self.splitter.setStretchFactor(1, 1)
+        self.splitter.setStretchFactor(0, 4); self.splitter.setStretchFactor(1, 1)
         main_layout.addWidget(self.splitter)
 
-        # --- Build folder/file tree ---
-        self.path_to_item = {}  # Maps folder path to QTreeWidgetItem
-        self.checked_paths = set()
-        for file_path, relative_path, is_included in files:
-            is_directory = os.path.isdir(file_path)
-            # If prefs loaded, override: only check files in prefs, uncheck all others
+        # --- NEW TREE BUILDING LOGIC ---
+        self.path_to_item = {}  # Maps relative_path to QTreeWidgetItem
+        root_node = self.tree_widget.invisibleRootItem()
+        for abs_path, rel_path, is_checked in files:
+            parts = rel_path.split(os.sep)
+            parent_node = root_node
+            path_so_far = ""
+            for part in parts[:-1]:
+                path_so_far = os.path.join(path_so_far, part) if path_so_far else part
+                if path_so_far in self.path_to_item:
+                    parent_node = self.path_to_item[path_so_far]
+                else:
+                    # This case implies a directory was not in the `files` list, create it
+                    new_parent = QtWidgets.QTreeWidgetItem(parent_node, [part])
+                    new_parent.setIcon(0, self.folder_icon)
+                    new_parent.setFlags(new_parent.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    new_parent.setCheckState(0, QtCore.Qt.Unchecked)
+                    # Add placeholder for lazy loading
+                    QtWidgets.QTreeWidgetItem(new_parent, ["Loading..."])
+                    self.path_to_item[path_so_far] = new_parent
+                    parent_node = new_parent
+
+            # Create the final item
+            item_text = parts[-1]
+            item = QtWidgets.QTreeWidgetItem(parent_node, [item_text])
+            item.setData(0, QtCore.Qt.UserRole, abs_path) # Store absolute path
+            self.path_to_item[rel_path] = item
+
             if self.prefs_loaded:
-                is_included = relative_path in self.checked_files_from_prefs
-            if is_included:
-                self.checked_paths.add(relative_path)
-            parts = relative_path.split(os.sep)
-            parent = self.tree_widget
-            parent_path = ""
-            for i, part in enumerate(parts):
-                curr_path = os.sep.join(parts[:i+1])
-                # treat the last segment as a file **only** if the underlying path is a real file
-                is_file = (i == len(parts) - 1) and os.path.isfile(file_path)
-                if curr_path not in self.path_to_item:
-                    if is_file:
-                        item = QtWidgets.QTreeWidgetItem()
-                        item.setText(0, part)  # Show filename in column 0
-                        item.setIcon(0, self.file_icon)
-                        
-                        # Check if it's a binary file
-                        if smart_logic.is_binary_file(file_path):
-                            # Remove BOTH flags so it cannot receive clicks nor programmatic changes
-                            item.setFlags(item.flags() & ~(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable))
-                            item.setCheckState(0, QtCore.Qt.Unchecked)
-                            # Set a gray text color
-                            item.setForeground(0, QtGui.QBrush(QtGui.QColor('#808080')))
-                        else:
-                            item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                            item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
-                        
-                        item.setData(0, QtCore.Qt.UserRole, file_path)
-                        parent.addTopLevelItem(item) if parent is self.tree_widget else parent.addChild(item)
-                        self.path_to_item[curr_path] = item
-                    else:
-                        folder_item = QtWidgets.QTreeWidgetItem()
-                        folder_item.setText(0, part)
-                        folder_item.setIcon(0, self.folder_icon)
-                        # Make folders checkable
-                        folder_item.setFlags(folder_item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                        folder_item.setCheckState(0, QtCore.Qt.Checked if is_included else QtCore.Qt.Unchecked)
-                        parent.addTopLevelItem(folder_item) if parent is self.tree_widget else parent.addChild(folder_item)
-                        self.path_to_item[curr_path] = folder_item
-                    parent = self.path_to_item[curr_path]
-                else:
-                    parent = self.path_to_item[curr_path]
+                is_checked = rel_path in self.checked_files_from_prefs
+            
+            if os.path.isdir(abs_path):
+                item.setIcon(0, self.folder_icon)
+                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                # LAZY LOADING: Add a placeholder so it's expandable
+                QtWidgets.QTreeWidgetItem(item, ["Loading..."])
+            else: # It's a file
+                item.setIcon(0, self.file_icon)
+                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                # Don't block binary files, just leave them unchecked by default
+                if smart_logic.is_binary_file(abs_path):
+                    is_checked = False
+            
+            item.setCheckState(0, QtCore.Qt.Checked if is_checked else QtCore.Qt.Unchecked)
 
+        # Connect signals for lazy loading and item changes
+        self.tree_widget.itemExpanded.connect(self.on_item_expanded)
         self.tree_widget.itemChanged.connect(self.handle_item_changed)
-
-        # --- Auto-expand folders to checked files ---
-        def expand_to_checked(item):
-            expanded = False
-            for i in range(item.childCount()):
-                child = item.child(i)
-                if child.childCount() > 0:
-                    if expand_to_checked(child):
-                        self.tree_widget.expandItem(child)
-                        expanded = True
-                else:
-                    if child.checkState(0) == QtCore.Qt.Checked:
-                        expanded = True
-            return expanded
-
-        for i in range(self.tree_widget.topLevelItemCount()):
-            top_item = self.tree_widget.topLevelItem(i)
-            if expand_to_checked(top_item):
-                self.tree_widget.expandItem(top_item)
-
-        # --- Preferences Checkbox ---
+        
+        # Auto-expand folders containing checked files and common project folders
+        if self.prefs_loaded and self.checked_files_from_prefs:
+            self.auto_expand_checked_folders()
+        else:
+            # Auto-expand common folders on first load
+            self.auto_expand_common_folders()
+        
         prefs_checkbox_layout = QtWidgets.QHBoxLayout()
         self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep) and window size")
         self.remember_checkbox.setChecked(True)
         prefs_checkbox_layout.addWidget(self.remember_checkbox)
-        prefs_checkbox_layout.addStretch()
         main_layout.addLayout(prefs_checkbox_layout)
-
-        # --- Button Layout: two rows, right-aligned ---
-        button_layout1 = QtWidgets.QHBoxLayout()
-        button_layout2 = QtWidgets.QHBoxLayout()
-        main_layout.addLayout(button_layout1)
-        main_layout.addLayout(button_layout2)
-        # Add bottom margin to main layout
-        main_layout.setContentsMargins(0, 0, 0, 10)
-
-        # Website link (left side, above buttons)
-        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">wuu73.org/aicp</a>")
-        website_label.setOpenExternalLinks(True)
-        website_label.setTextFormat(QtCore.Qt.RichText)
-        main_layout.insertWidget(main_layout.count() - 2, website_label)  # Place above buttons
-
-        # First row of buttons (right-aligned with margin)
+        
+        button_layout1 = QtWidgets.QHBoxLayout(); button_layout2 = QtWidgets.QHBoxLayout()
+        main_layout.addLayout(button_layout1); main_layout.addLayout(button_layout2)
+        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">wuu73.org/aicp</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
         button_layout1.addStretch()
-        process_button = QtWidgets.QPushButton("Process Selected")
-        process_button.clicked.connect(self.process_selected)
-        button_layout1.addWidget(process_button)
-
-        select_all_button = QtWidgets.QPushButton("Select All")
-        select_all_button.clicked.connect(self.select_all)
-        button_layout1.addWidget(select_all_button)
-
-        deselect_all_button = QtWidgets.QPushButton("Deselect All")
-        deselect_all_button.clicked.connect(self.deselect_all)
-        button_layout1.addWidget(deselect_all_button)
-        
-        # Add right margin to button layout
-        button_layout1.addSpacing(20)
-
-        # Second row of buttons (right-aligned with margin)
+        process_button = QtWidgets.QPushButton("Process Selected"); process_button.clicked.connect(self.process_selected); button_layout1.addWidget(process_button)
+        select_all_button = QtWidgets.QPushButton("Select All"); select_all_button.clicked.connect(self.select_all); button_layout1.addWidget(select_all_button)
+        deselect_all_button = QtWidgets.QPushButton("Deselect All"); deselect_all_button.clicked.connect(self.deselect_all); button_layout1.addWidget(deselect_all_button)
         button_layout2.addStretch()
-        load_prefs_button = QtWidgets.QPushButton("Load from .aicodeprep")
-        load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked)
-        button_layout2.addWidget(load_prefs_button)
-
-        quit_button = QtWidgets.QPushButton("Quit")
-        quit_button.clicked.connect(self.quit_without_processing)
-        button_layout2.addWidget(quit_button)
-        
-        # Add right margin to button layout
-        button_layout2.addSpacing(20)
+        load_prefs_button = QtWidgets.QPushButton("Load from .aicodeprep"); load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked); button_layout2.addWidget(load_prefs_button)
+        quit_button = QtWidgets.QPushButton("Quit"); quit_button.clicked.connect(self.quit_without_processing); button_layout2.addWidget(quit_button)
 
         self.selected_files = []
         self.file_token_counts = {}
         self.update_token_counter()
-
-        # ❺ Load global presets from QSettings (takes precedence over .aicodeprep)
         self._load_global_presets()
-        
-        # ❻ Also load any saved presets that were found in .aicodeprep (for backward compatibility)
         if self.prefs_loaded and self.loaded_presets:
-            for label, text in self.loaded_presets:
-                self._add_preset_button(label, text, from_local=True)
+            for label, text in self.loaded_presets: self._add_preset_button(label, text, from_local=True)
 
-    # PRESET UTILS
-    # ---------------------------------------------------------------------
-    def _load_global_presets(self):
-        """Load presets from global QSettings"""
-        try:
-            global_presets = global_preset_manager.get_all_presets()
-            for label, text in global_presets:
-                self._add_preset_button(label, text, from_global=True)
-        except Exception as e:
-            logging.error(f"Failed to load global presets: {e}")
-    
-    def _add_preset_button(self, label: str, text: str, from_local=False, from_global=False):
-        """Create the small button in the preset strip with right-click context menu for deletion."""
-        btn = QtWidgets.QPushButton(label)
-        btn.setFixedHeight(22)
-        btn.clicked.connect(lambda _=None, t=text: self._apply_preset(t))
-        
-        # Add right-click context menu for deletion
-        btn.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        btn.customContextMenuRequested.connect(
-            lambda pos, l=label, b=btn, fg=from_global: self._show_preset_context_menu(pos, l, b, fg)
-        )
-        
-        # Tooltip to indicate source
-        if from_global:
-            btn.setToolTip(f"Global preset: {label}\nRight-click to delete")
-        elif from_local:
-            btn.setToolTip(f"Local preset: {label}\nRight-click to delete")
-        else:
-            btn.setToolTip(f"Preset: {label}\nRight-click to delete")
-        
-        # insert just before the Stretch (index -1)
-        self.preset_strip.insertWidget(self.preset_strip.count()-1, btn)
-    
-    def _show_preset_context_menu(self, pos, label, button, from_global):
-        """Show context menu for preset button"""
-        try:
-            menu = QtWidgets.QMenu(self)
-            delete_action = menu.addAction("Delete Preset")
+    def on_item_expanded(self, item):
+        """Handler for when a tree item is expanded, used for lazy loading."""
+        if item.childCount() == 1 and item.child(0).text(0) == "Loading...":
+            placeholder = item.child(0)
+            item.removeChild(placeholder)
             
-            action = menu.exec(button.mapToGlobal(pos))
-            if action == delete_action:
-                self._delete_preset(label, button, from_global)
-        except Exception as e:
-            logging.error(f"Error showing preset context menu: {e}")
-    
-    def _delete_preset(self, label, button, from_global):
-        """Delete a preset with confirmation"""
-        try:
-            # Ask for confirmation
-            reply = QtWidgets.QMessageBox.question(
-                self, 
-                "Delete Preset", 
-                f"Are you sure you want to delete the preset '{label}'?",
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                QtWidgets.QMessageBox.No
-            )
+            dir_path = item.data(0, QtCore.Qt.UserRole)
+            if not dir_path or not os.path.isdir(dir_path): return
             
-            if reply == QtWidgets.QMessageBox.Yes:
-                # Remove from appropriate storage
-                if from_global:
-                    success = global_preset_manager.delete_preset(label)
-                    if not success:
-                        QtWidgets.QMessageBox.warning(self, "Error", f"Failed to delete global preset '{label}'")
-                        return
-                else:
-                    # Remove from local presets
-                    self.presets = [(l, t) for l, t in self.presets if l != label]
-                    self.save_prefs()
-                
-                # Remove button from UI
-                self.preset_strip.removeWidget(button)
-                button.deleteLater()
-                
-                logging.info(f"Deleted preset: {label}")
-        except Exception as e:
-            logging.error(f"Error deleting preset '{label}': {e}")
-            QtWidgets.QMessageBox.critical(self, "Error", f"Failed to delete preset: {e}")
+            try:
+                for name in sorted(os.listdir(dir_path)):
+                    abs_path = os.path.join(dir_path, name)
+                    rel_path = os.path.relpath(abs_path, os.getcwd())
+                    
+                    if rel_path in self.path_to_item: continue # Already exists
 
-    def _apply_preset(self, preset_text: str):
-        """Append (or insert) preset into the LLM box."""
-        current = self.prompt_textbox.toPlainText()
-        if current:
-            self.prompt_textbox.setPlainText(current.rstrip() + "\n\n" + preset_text)
-        else:
-            self.prompt_textbox.setPlainText(preset_text)
+                    new_item = QtWidgets.QTreeWidgetItem(item, [name])
+                    new_item.setData(0, QtCore.Qt.UserRole, abs_path)
+                    new_item.setFlags(new_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    self.path_to_item[rel_path] = new_item
+                    
+                    is_excluded = smart_logic.exclude_spec.match_file(rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
+                    
+                    if os.path.isdir(abs_path):
+                        new_item.setIcon(0, self.folder_icon)
+                        QtWidgets.QTreeWidgetItem(new_item, ["Loading..."]) # Recursive placeholder
+                    else: # File
+                        new_item.setIcon(0, self.file_icon)
+                        # Don't block binary files, just leave them unchecked
+                        if smart_logic.is_binary_file(abs_path):
+                            is_excluded = True
 
-    def add_new_preset_dialog(self):
-        """Ask user for label + text, then create button & persist globally."""
-        try:
-            lbl, ok = QtWidgets.QInputDialog.getText(self, "New preset", "Button label:")
-            if not ok or not lbl.strip():
-                return
-            
-            dlg = QtWidgets.QDialog(self)
-            dlg.setWindowTitle("Preset text")
-            dlg.setMinimumSize(400, 300)
-            v = QtWidgets.QVBoxLayout(dlg)
-            
-            label = QtWidgets.QLabel("Enter the preset text:")
-            v.addWidget(label)
-            
-            text_edit = QtWidgets.QPlainTextEdit()
-            text_edit.setPlaceholderText("Enter your preset text here...")
-            v.addWidget(text_edit)
-            
-            bb = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
-                                            QtWidgets.QDialogButtonBox.Cancel)
-            v.addWidget(bb)
-            bb.accepted.connect(dlg.accept)
-            bb.rejected.connect(dlg.reject)
-            
-            if dlg.exec() != QtWidgets.QDialog.Accepted:
-                return
-                
-            txt = text_edit.toPlainText().strip()
-            if not txt:
-                QtWidgets.QMessageBox.warning(self, "Error", "Preset text cannot be empty.")
-                return
-            
-            # Save to global settings
-            success = global_preset_manager.add_preset(lbl.strip(), txt)
-            if success:
-                self._add_preset_button(lbl.strip(), txt, from_global=True)
-                logging.info(f"Added global preset: {lbl.strip()}")
-            else:
-                QtWidgets.QMessageBox.warning(self, "Error", "Failed to save preset.")
-        except Exception as e:
-            logging.error(f"Error creating new preset: {e}")
-            QtWidgets.QMessageBox.critical(self, "Error", f"Failed to create preset: {e}")
-    # ---------------------------------------------------------------------
+                    # Set check state based on parent, unless it's excluded
+                    if is_excluded:
+                        new_item.setCheckState(0, QtCore.Qt.Unchecked)
+                    else:
+                        new_item.setCheckState(0, item.checkState(0))
 
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            urls = event.mimeData().urls()
-            if urls and urls[0].isLocalFile():
-                path = urls[0].toLocalFile()
-                if os.path.isdir(path):
-                    event.acceptProposedAction()
-                    return
-        event.ignore()
-
-    def dropEvent(self, event):
-        if event.mimeData().hasUrls():
-            urls = event.mimeData().urls()
-            if urls and urls[0].isLocalFile():
-                folder_path = urls[0].toLocalFile()
-                if os.path.isdir(folder_path):
-                    try:
-                        os.chdir(folder_path)
-                        from aicodeprep_gui_c.smart_logic import collect_all_files
-                        new_files = collect_all_files()
-                        # Launch new GUI and close current
-                        self.new_gui = FileSelectionGUI(new_files)
-                        self.new_gui.show()
-                        self.close()
-                    except Exception as e:
-                        QtWidgets.QMessageBox.warning(self, "Error", f"Failed to load folder:\n{e}")
-        event.accept()
+            except OSError as e:
+                logging.error(f"Error scanning directory {dir_path}: {e}")
 
     def handle_item_changed(self, item, column):
         if column == 0:
-            file_path = item.data(0, QtCore.Qt.UserRole)
-            # If it's a folder (no file_path), do smart recursive check/uncheck
-            if file_path is None:
-                def should_skip_folder(folder_item):
-                    # Compose full path from tree
-                    path_parts = []
-                    curr = folder_item
-                    while curr is not None and curr.parent() is not None:
-                        path_parts.insert(0, curr.text(0))
-                        curr = curr.parent()
-                    if curr is not None and curr.parent() is None:
-                        path_parts.insert(0, curr.text(0))
-                    folder_path = os.path.join(*path_parts)
-                    return (folder_item.text(0) in EXCLUDE_DIRS or
-                            is_excluded_directory(folder_path))
-                def smart_check(item, check_state, is_root=False):
-                    # If this is NOT the folder the user clicked and the
-                    # folder is on the skip list, ignore it.
-                    if not is_root and should_skip_folder(item):
-                        item.setCheckState(0, QtCore.Qt.Unchecked)
-                        return
-                    for i in range(item.childCount()):
-                        child = item.child(i)
-                        child_file_path = child.data(0, QtCore.Qt.UserRole)
-                        if child_file_path:
-                            # It's a file
-                            filename = os.path.basename(child_file_path)
-                            ext = os.path.splitext(filename)[1].lower()
-                            if smart_logic.is_binary_file(child_file_path):
-                                child.setCheckState(0, QtCore.Qt.Unchecked)
-                                continue
-                            if (filename in EXCLUDE_FILES or
-                                ext in EXCLUDE_EXTENSIONS or
-                                any(matches_pattern(filename, pat) for pat in EXCLUDE_PATTERNS)):
-                                child.setCheckState(0, QtCore.Qt.Unchecked)
-                                continue
-                            child.setCheckState(0, check_state)
-                        else:
-                            # It's a folder
-                            smart_check(child, check_state)
-                    item.setCheckState(0, check_state)
-                # first call: is_root=True
-                smart_check(item, item.checkState(0), is_root=True)
-            else:
-                # File item: update selected_files as before
-                if item.checkState(0) == QtCore.Qt.Checked:
-                    if file_path and file_path not in self.selected_files:
-                        self.selected_files.append(file_path)
-                else:
-                    if file_path and file_path in self.selected_files:
-                        self.selected_files.remove(file_path)
-            self.update_token_counter()
-            # Save preferences on checkbox change if "Remember" is checked
-            if self.remember_checkbox and self.remember_checkbox.isChecked():
-                self.save_prefs()
-
-    def select_all(self):
-        # Recursively select all file items
-        def check_all_items(item):
-            if not (item.flags() & QtCore.Qt.ItemIsUserCheckable):
-                return           # skip non-checkable (e.g. binaries)
-            if not (item.flags() & QtCore.Qt.ItemIsEnabled):
-                return           # skip disabled items
-            item.setCheckState(0, QtCore.Qt.Checked)
-            for i in range(item.childCount()):
-                check_all_items(item.child(i))
-
-        for i in range(self.tree_widget.topLevelItemCount()):
-            check_all_items(self.tree_widget.topLevelItem(i))
-        self.update_token_counter()
-
-    def deselect_all(self):
-        # Recursively deselect all file items
-        def uncheck_all_items(item):
-            if item.flags() & QtCore.Qt.ItemIsUserCheckable:
-                item.setCheckState(0, QtCore.Qt.Unchecked)
-            for i in range(item.childCount()):
-                uncheck_all_items(item.child(i))
-
-        for i in range(self.tree_widget.topLevelItemCount()):
-            uncheck_all_items(self.tree_widget.topLevelItem(i))
-        self.update_token_counter()
-
-    def get_selected_files(self):
-        self.selected_files = []
-
-        # Recursively collect all checked files
-        def collect_checked_files(item):
-            if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.checkState(0) == QtCore.Qt.Checked:
-                file_path = item.data(0, QtCore.Qt.UserRole)
-                if file_path:
-                    self.selected_files.append(file_path)
-
-            for i in range(item.childCount()):
-                collect_checked_files(item.child(i))
-
-        for i in range(self.tree_widget.topLevelItemCount()):
-            collect_checked_files(self.tree_widget.topLevelItem(i))
-
-        return self.selected_files
-
-    def process_selected(self):
-        self.action = 'process'  # Set action first
-        logging.info(f"Process Selected clicked - action set to: {self.action}")
-        selected_files = self.get_selected_files()
-        chosen_fmt = self.format_combo.currentData()  # 'xml' or 'markdown'
-        files_processed_count = process_files(selected_files, "fullcode.txt", fmt=chosen_fmt)
-        if files_processed_count > 0:
-            output_path = os.path.join(os.getcwd(), "fullcode.txt")
+            self.tree_widget.blockSignals(True)
             try:
-                with open(output_path, "r", encoding="utf-8") as f:
-                    full_code = f.read()
-                # Append prompt if present
-                prompt = self.prompt_textbox.toPlainText().strip()
-                if prompt:
-                    full_code += "\n\n" + prompt
-                    with open(output_path, "w", encoding="utf-8") as f:
-                        f.write(full_code)
-                app = QtWidgets.QApplication.instance()
-                if app is None:
-                    app = QtWidgets.QApplication([])
-                clipboard = app.clipboard()
-                clipboard.setText(full_code)
-                logging.info(f"Copied {len(full_code)} characters to clipboard from {output_path}")
-                # --- Usage logging: silent fetch with token count ---
-                url = f"https://wuu73.org/dixels/loads.html?tok={self.total_tokens}"
-                request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
-                self.network_manager.get(request)
-                # Flash "Copied to clipboard and fullcode.txt" message
-                self.text_label.setStyleSheet("font-size: 20px; color: #00c3ff; font-weight: bold;")
-                self.text_label.setText("Copied to clipboard and fullcode.txt")
-                QtCore.QTimer.singleShot(1500, self.close)
-            except Exception as e:
-                logging.error(f"Failed to copy to clipboard: {e}")
-            # Save prefs if checkbox is checked
+                new_state = item.checkState(0)
+                def apply_to_children(parent_item, state):
+                    for i in range(parent_item.childCount()):
+                        child = parent_item.child(i)
+                        # Don't propagate to lazy-loading placeholders
+                        if child.text(0) == "Loading...": continue
+                        if child.flags() & QtCore.Qt.ItemIsUserCheckable and child.flags() & QtCore.Qt.ItemIsEnabled:
+                            child.setCheckState(0, state)
+                            if child.childCount() > 0:
+                                apply_to_children(child, state)
+                apply_to_children(item, new_state)
+            finally:
+                self.tree_widget.blockSignals(False)
+
+            self.update_token_counter()
+            if self.remember_checkbox and self.remember_checkbox.isChecked():
+                self.save_prefs()
+    
+    def _load_global_presets(self):
+        try:
+            for label, text in global_preset_manager.get_all_presets():
+                self._add_preset_button(label, text, from_global=True)
+        except Exception as e: logging.error(f"Failed to load global presets: {e}")
+    def _add_preset_button(self, label: str, text: str, from_local=False, from_global=False):
+        btn = QtWidgets.QPushButton(label); btn.setFixedHeight(22); btn.clicked.connect(lambda _=None, t=text: self._apply_preset(t))
+        btn.setContextMenuPolicy(QtCore.Qt.CustomContextMenu); btn.customContextMenuRequested.connect(lambda pos, l=label, b=btn, fg=from_global: self._show_preset_context_menu(pos, l, b, fg))
+        if from_global: btn.setToolTip(f"Global preset: {label}\nRight-click to delete")
+        else: btn.setToolTip(f"Preset: {label}\nRight-click to delete")
+        self.preset_strip.insertWidget(self.preset_strip.count()-1, btn)
+    def _show_preset_context_menu(self, pos, label, button, from_global):
+        menu = QtWidgets.QMenu(self); delete_action = menu.addAction("Delete Preset")
+        if menu.exec(button.mapToGlobal(pos)) == delete_action: self._delete_preset(label, button, from_global)
+    def _delete_preset(self, label, button, from_global):
+        reply = QtWidgets.QMessageBox.question(self, "Delete Preset", f"Are you sure you want to delete the preset '{label}'?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            if from_global:
+                if not global_preset_manager.delete_preset(label): QtWidgets.QMessageBox.warning(self, "Error", f"Failed to delete global preset '{label}'"); return
+            else: self.presets = [(l, t) for l, t in self.presets if l != label]; self.save_prefs()
+            self.preset_strip.removeWidget(button); button.deleteLater(); logging.info(f"Deleted preset: {label}")
+    def _apply_preset(self, preset_text: str):
+        current = self.prompt_textbox.toPlainText(); self.prompt_textbox.setPlainText((current.rstrip() + "\n\n" if current else "") + preset_text)
+    def add_new_preset_dialog(self):
+        lbl, ok = QtWidgets.QInputDialog.getText(self, "New preset", "Button label:");
+        if not ok or not lbl.strip(): return
+        dlg = QtWidgets.QDialog(self); dlg.setWindowTitle("Preset text"); dlg.setMinimumSize(400, 300); v = QtWidgets.QVBoxLayout(dlg)
+        v.addWidget(QtWidgets.QLabel("Enter the preset text:")); text_edit = QtWidgets.QPlainTextEdit(); v.addWidget(text_edit)
+        bb = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel); v.addWidget(bb); bb.accepted.connect(dlg.accept); bb.rejected.connect(dlg.reject)
+        if dlg.exec() != QtWidgets.QDialog.Accepted: return
+        txt = text_edit.toPlainText().strip()
+        if txt and global_preset_manager.add_preset(lbl.strip(), txt): self._add_preset_button(lbl.strip(), txt, from_global=True)
+        else: QtWidgets.QMessageBox.warning(self, "Error", "Failed to save preset.")
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls() and event.mimeData().urls()[0].isLocalFile() and os.path.isdir(event.mimeData().urls()[0].toLocalFile()):
+            event.acceptProposedAction()
+    def dropEvent(self, event):
+        folder_path = event.mimeData().urls()[0].toLocalFile()
+        os.chdir(folder_path); from aicodeprep_gui_c.smart_logic import collect_all_files
+        self.new_gui = FileSelectionGUI(collect_all_files()); self.new_gui.show(); self.close()
+    def select_all(self):
+        def check_all(item):
+            if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.flags() & QtCore.Qt.ItemIsEnabled: item.setCheckState(0, QtCore.Qt.Checked)
+            for i in range(item.childCount()): check_all(item.child(i))
+        for i in range(self.tree_widget.topLevelItemCount()): check_all(self.tree_widget.topLevelItem(i))
+        self.update_token_counter()
+    def deselect_all(self):
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.tree_widget)
+        while iterator.value():
+            item = iterator.value()
+            if item.flags() & QtCore.Qt.ItemIsUserCheckable: item.setCheckState(0, QtCore.Qt.Unchecked)
+            iterator += 1
+        self.update_token_counter()
+    def get_selected_files(self):
+        selected = []; iterator = QtWidgets.QTreeWidgetItemIterator(self.tree_widget)
+        while iterator.value():
+            item = iterator.value()
+            if item.checkState(0) == QtCore.Qt.Checked:
+                file_path = item.data(0, QtCore.Qt.UserRole)
+                if file_path and os.path.isfile(file_path): selected.append(file_path)
+            iterator += 1
+        return selected
+    def process_selected(self):
+        self.action = 'process'
+        selected_files = self.get_selected_files()
+        chosen_fmt = self.format_combo.currentData()
+        prompt = self.prompt_textbox.toPlainText().strip()
+
+        if process_files(selected_files, "fullcode.txt", fmt=chosen_fmt, prompt=prompt) > 0:
+            output_path = os.path.join(os.getcwd(), "fullcode.txt")
+            
+            # Now, just read the final content for the clipboard
+            with open(output_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            QtWidgets.QApplication.clipboard().setText(content)
+            logging.info(f"Copied {len(content)} chars to clipboard.")
+            self.text_label.setStyleSheet("font-size: 20px; color: #00c3ff; font-weight: bold;")
+            self.text_label.setText("Copied to clipboard and fullcode.txt")
+            QtCore.QTimer.singleShot(1500, self.close)
             if self.remember_checkbox and self.remember_checkbox.isChecked():
                 self.save_prefs()
         else:
-            logging.warning("No files selected or processed; skipping clipboard operation.")
-        logging.info(f"Process Selected closing - action is: {self.action}")
-        if files_processed_count <= 0:
             self.close()
-
-    def fetch_text_content(self):
-        url = "https://wuu73.org/aicp/display.txt"  # URL to fetch text from
-        request = QtNetwork.QNetworkRequest(QtCore.QUrl(url))
-        self.network_manager.get(request)
-
-    def handle_network_reply(self, reply):
-        if reply.error() == QtNetwork.QNetworkReply.NoError:
-            text = reply.readAll().data().decode()
-            # Check if the text is not just whitespace
-            if text.strip():
-                # Convert plain text links to HTML links (basic link handling)
-                text_with_links = self.convert_text_links_to_html(text)
-                self.text_label.setText(text_with_links)
-        # If there's an error or the content is empty, do nothing (silent handling)
-
-    def convert_text_links_to_html(self, text):
-        """Converts URLs in plain text to clickable HTML links (very basic)."""
-        import re
-        url_pattern = re.compile(r'(https?://\S+)')
-        return url_pattern.sub(r'<a href="\1">\1</a>', text)
-
-    def load_from_prefs_button_clicked(self):
-        import os
-        prefs_path = _prefs_path()
-        if os.path.exists(prefs_path):
-            self.load_prefs_if_exists()
-            # Uncheck all first, then check those in prefs
-            self.deselect_all()
-            for file_path, relative_path, is_included in self.files:
-                if relative_path in self.checked_files_from_prefs:
-                    parts = relative_path.split(os.sep)
-                    curr_path = os.sep.join(parts)
-                    item = self.path_to_item.get(curr_path)
-                    if item:
-                        item.setCheckState(0, QtCore.Qt.Checked)
-            # Optionally show a message
-            self.text_label.setText("Loaded selection from .aicodeprep")
-            self.update_token_counter()
-        else:
-            self.text_label.setText(".aicodeprep not found")
-
-    def quit_without_processing(self):
-        # Immediately close the window and exit the app without processing
-        logging.info("Quit button clicked - setting action to quit")
-        self.action = 'quit'
-        self.close()
-
+    def quit_without_processing(self): self.action = 'quit'; self.close()
     def update_token_counter(self):
-        selected_files = self.get_selected_files()
         total_tokens = 0
-        for file_path in selected_files:
-            if smart_logic.is_binary_file(file_path):
-                continue
+        for file_path in self.get_selected_files():
             if file_path not in self.file_token_counts:
                 try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        text = f.read()
-                    # Approximate token count: 1 token ≈ 4 characters (roughly OpenAI's rule of thumb)
-                    token_count = len(text) // 4
-                    self.file_token_counts[file_path] = token_count
-                except Exception as e:
-                    logging.error(f"Token counting failed for {file_path}: {e}")
-                    self.file_token_counts[file_path] = 0
+                    with open(file_path, "r", encoding="utf-8", errors="ignore") as f: text = f.read()
+                    self.file_token_counts[file_path] = len(text) // 4
+                except Exception: self.file_token_counts[file_path] = 0
             total_tokens += self.file_token_counts[file_path]
-        self.total_tokens = total_tokens
-        self.token_label.setText(f"Estimated tokens: {total_tokens:,}")
+        self.total_tokens = total_tokens; self.token_label.setText(f"Estimated tokens: {total_tokens:,}")
+    def auto_expand_checked_folders(self):
+        """Auto-expand folders that contain checked files from preferences."""
+        folders_to_expand = set()
+        
+        # Find all folders that should be expanded (containing checked files)
+        for checked_path in self.checked_files_from_prefs:
+            # Get all parent directories of checked files
+            path_parts = checked_path.split(os.sep)
+            for i in range(1, len(path_parts)):
+                folder_path = os.sep.join(path_parts[:i])
+                if folder_path and folder_path in self.path_to_item:
+                    folders_to_expand.add(folder_path)
+        
+        # Expand the folders
+        for folder_path in folders_to_expand:
+            item = self.path_to_item[folder_path]
+            self.tree_widget.expandItem(item)
+
+    def auto_expand_common_folders(self):
+        """Auto-expand common project folders on first load."""
+        common_folders = ['src', 'lib', 'app', 'components', 'utils', 'helpers', 'models', 'views', 'controllers']
+        
+        for folder_name in common_folders:
+            if folder_name in self.path_to_item:
+                item = self.path_to_item[folder_name]
+                self.tree_widget.expandItem(item)
+
+    def load_from_prefs_button_clicked(self):
+        if os.path.exists(_prefs_path()):
+            self.load_prefs_if_exists()
+            self.deselect_all()
+            for rel_path, item in self.path_to_item.items():
+                if rel_path in self.checked_files_from_prefs: item.setCheckState(0, QtCore.Qt.Checked)
+            # Auto-expand folders after loading preferences
+            self.auto_expand_checked_folders()
+            self.text_label.setText("Loaded selection from .aicodeprep")
+            self.update_token_counter()
+        else: self.text_label.setText(".aicodeprep not found")
+
+    def closeEvent(self, event):
+        if self.action != 'process': self.action = 'quit'
+        super(FileSelectionGUI, self).closeEvent(event)
+
+    def load_prefs_if_exists(self):
+        if os.path.exists(_prefs_path()):
+            checked, window_size, _, presets = _read_prefs_file() # The _read_prefs_file returns 4 values, but only the first 3 are used here.
+            self.checked_files_from_prefs = checked
+            self.window_size_from_prefs = window_size
+            self.prefs_loaded = True
+            self.loaded_presets = presets # This will be None based on _read_prefs_file
+
+    def save_prefs(self):
+        checked_relpaths = []
+        for rel_path, item in self.path_to_item.items():
+            if item.checkState(0) == QtCore.Qt.Checked:
+                checked_relpaths.append(rel_path)
+        size = self.size()
+        _write_prefs_file(checked_relpaths, window_size=(size.width(), size.height()))
+
+    def toggle_dark_mode(self, state):
+        self.is_dark_mode = bool(state)
+        base_style = """
+            QTreeView, QTreeWidget {
+                outline: 2; /* Remove focus rectangle */
+            }
+        """
+        if self.is_dark_mode:
+            apply_dark_palette(self.app)
+            checkbox_style = get_checkbox_style_dark()
+        else:
+            apply_light_palette(self.app)
+            checkbox_style = get_checkbox_style_light()
+        
+        self.tree_widget.setStyleSheet(base_style + checkbox_style)
 
 def show_file_selection_gui(files):
-    app = QtWidgets.QApplication.instance()
-    if app is None:
-        app = QtWidgets.QApplication([])
-
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     gui = FileSelectionGUI(files)
     gui.show()
     app.exec()
-    logging.info(f"GUI event loop finished - final action value: {gui.action}")
-    return gui.action, gui.selected_files
+    return gui.action, gui.get_selected_files()
 
-# --- Preferences Save/Load Methods ---
-
-def _prefs_path():
-    # Always save/load in current working directory
-    return os.path.join(os.getcwd(), ".aicodeprep")
-
-def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, presets: list[tuple[str, str]] | None = None):
+def _prefs_path(): return os.path.join(os.getcwd(), ".aicodeprep")
+def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, presets=None):
     try:
         with open(_prefs_path(), "w", encoding="utf-8") as f:
-            # Write version header
-            f.write(f"# AICodePrep preferences file version {AICODEPREP_VERSION}\n")
-            f.write(f"version={AICODEPREP_VERSION}\n\n")
-            
-            if window_size or splitter_state:
-                f.write("[window]\n")
-                if window_size:
-                    f.write(f"width={window_size[0]}\n")
-                    f.write(f"height={window_size[1]}\n")
-                if splitter_state:
-                    # Convert splitter_state (QByteArray) to bytes, then hex string
-                    f.write(f"splitter={bytes(splitter_state).hex()}\n")
-                f.write("\n")
-            
-            # Write checked files section
-            if checked_relpaths:
-                f.write("[files]\n")
-                for relpath in checked_relpaths:
-                    f.write(relpath + "\n")
-                f.write("\n")
-            
-            # --- PRESETS ----
-            if presets:
-                f.write("[presets]\n")
-                import json, base64
-                for label, text in presets:
-                    safe = base64.b64encode(text.encode()).decode()
-                    f.write(f"{label}|{safe}\n")
-    except Exception as e:
-        logging.warning(f"Could not write .aicodeprep: {e}")
-
-
+            f.write(f"# AICodePrep preferences file version {AICODEPREP_VERSION}\nversion={AICODEPREP_VERSION}\n\n")
+            if window_size: f.write(f"[window]\nwidth={window_size[0]}\nheight={window_size[1]}\n\n")
+            if checked_relpaths: f.write("[files]\n" + "\n".join(checked_relpaths) + "\n")
+    except Exception as e: logging.warning(f"Could not write .aicodeprep: {e}")
 def _read_prefs_file():
-    checked = set()
-    window_size = None
-    splitter_state = None
-    presets: list[tuple[str, str]] = []
-    file_version = None
+    checked, window_size, presets = set(), None, None # Initialize presets to None
+    
+    # Initialize temporary variables for window size parsing
+    width_val, height_val = None, None 
     
     try:
         with open(_prefs_path(), "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        
-        section = None
-        
-        for line in lines:
-            line = line.strip()
+            section = None
+            for line in f.read().splitlines():
+                if line.strip().startswith('[') and line.strip().endswith(']'):
+                    section = line.strip()[1:-1]
+                    continue
+                if not section: continue # Skip lines before the first section header
+
+                if section == "files":
+                    if line.strip(): checked.add(line.strip())
+                elif section == "window":
+                    if line.startswith('width='):
+                        try: width_val = int(line.split('=')[1])
+                        except (ValueError, IndexError): pass
+                    elif line.startswith('height='):
+                        try: height_val = int(line.split('=')[1])
+                        except (ValueError, IndexError): pass
             
-            # Skip empty lines and comments
-            if not line or line.startswith('#'):
-                continue
-            
-            # Check for version info
-            if line.startswith('version='):
-                try:
-                    file_version = line.split('=', 1)[1]
-                    logging.info(f"Loading .aicodeprep file version {file_version}")
-                except Exception:
-                    pass
-                continue
-            
-            # Handle section headers
-            if line.startswith('[') and line.endswith(']'):
-                section = line[1:-1]
-                continue
-            
-            # Process content based on current section
-            if section == "window":
-                if line.startswith('width='):
-                    try:
-                        width = int(line.split('=', 1)[1])
-                        if window_size:
-                            window_size = (width, window_size[1])
-                        else:
-                            window_size = (width, None)
-                    except Exception:
-                        pass
-                elif line.startswith('height='):
-                    try:
-                        height = int(line.split('=', 1)[1])
-                        if window_size:
-                            window_size = (window_size[0], height)
-                        else:
-                            window_size = (None, height)
-                    except Exception:
-                        pass
-                elif line.startswith('splitter='):
-                    try:
-                        splitter_state = bytes.fromhex(line.split('=', 1)[1])
-                    except Exception:
-                        pass
-            
-            elif section == "files":
-                # File paths for backward compatibility and new format
-                checked.add(line)
-            
-            elif section == "presets":
-                # Preset data
-                try:
-                    if '|' in line:
-                        label, b64 = line.split("|", 1)
-                        import base64
-                        text = base64.b64decode(b64).decode()
-                        presets.append((label, text))
-                except Exception as e:
-                    logging.warning(f"Failed to parse preset line: {line}, error: {e}")
-            
-            elif section is None:
-                # Handle legacy format (files without section header)
-                # This provides backward compatibility with old .aicodeprep files
-                if not line.startswith('version=') and not line.startswith('['):
-                    checked.add(line)
-        
-        # Ensure window_size is properly formatted
-        if window_size and window_size[0] and window_size[1]:
-            window_size = (window_size[0], window_size[1])
-        else:
-            window_size = None
-            
+            if width_val is not None and height_val is not None:
+                window_size = (width_val, height_val)
+                
+    except FileNotFoundError:
+        logging.info(".aicodeprep file not found, creating a new one on save.")
     except Exception as e:
         logging.error(f"Error reading .aicodeprep file: {e}")
-    
-    return checked, window_size, splitter_state, presets
-
-# Add closeEvent to set action to 'quit' ONLY if window is closed via 'X'
-def closeEvent(self, event):
-    logging.info(f"closeEvent triggered - action before: {self.action}")
-    # Only set to 'quit' if it wasn't already set to 'process'
-    if self.action != 'process':
-        self.action = 'quit'
-    logging.info(f"closeEvent triggered - action after: {self.action}")
-    super(FileSelectionGUI, self).closeEvent(event)
-
-# Patch methods into FileSelectionGUI
-
-def load_prefs_if_exists(self):
-    prefs_path = _prefs_path()
-    if os.path.exists(prefs_path):
-        checked, window_size, splitter_state, presets = _read_prefs_file()
-        self.checked_files_from_prefs = checked
-        self.window_size_from_prefs = window_size
-        self.prefs_loaded = True
-        self.loaded_presets = presets
-        # Restore splitter state if available
-        if splitter_state and hasattr(self, "splitter"):
-            self.splitter.restoreState(splitter_state)
-    else:
-        self.checked_files_from_prefs = set()
-        self.window_size_from_prefs = None
-        self.prefs_loaded = False
-        self.loaded_presets = []
-
-def save_prefs(self):
-    checked_relpaths = []
-    # Collect checked files using relative_path from self.files
-    checked_files_set = set()
-
-    def collect_checked_files(item):
-        if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.checkState(0) == QtCore.Qt.Checked:
-            file_path = item.data(0, QtCore.Qt.UserRole)
-            if file_path:
-                checked_files_set.add(os.path.abspath(file_path))
-        for i in range(item.childCount()):
-            collect_checked_files(item.child(i))
-
-    for i in range(self.tree_widget.topLevelItemCount()):
-        collect_checked_files(self.tree_widget.topLevelItem(i))
-
-    for file_path, relative_path, _ in self.files:
-        if os.path.abspath(file_path) in checked_files_set:
-            checked_relpaths.append(relative_path)
-
-    # Save window size and splitter state
-    size = self.size()
-    window_size = (size.width(), size.height())
-    splitter_state = self.splitter.saveState() if hasattr(self, "splitter") else None
-    _write_prefs_file(checked_relpaths, window_size=window_size, splitter_state=splitter_state, presets=self.presets)
-
-FileSelectionGUI.load_prefs_if_exists = load_prefs_if_exists
-FileSelectionGUI.save_prefs = save_prefs
-FileSelectionGUI.closeEvent = closeEvent
-
-def toggle_dark_mode(self, state):
-    """Toggle between light and dark mode."""
-    from aicodeprep_gui_c.apptheme import get_checkbox_style_dark, get_checkbox_style_light
-    self.is_dark_mode = bool(state)
-    if self.is_dark_mode:
-        apply_dark_palette(self.app)
-        self.tree_widget.setStyleSheet(get_checkbox_style_dark())
-        print(f"DEBUG: Toggled tree_widget stylesheet (dark): {self.tree_widget.styleSheet()}")
-    else:
-        apply_light_palette(self.app)
-        self.tree_widget.setStyleSheet(get_checkbox_style_light())
-        print(f"DEBUG: Toggled tree_widget stylesheet (light): {self.tree_widget.styleSheet()}")
-
-FileSelectionGUI.toggle_dark_mode = toggle_dark_mode
-FileSelectionGUI.toggle_dark_mode = toggle_dark_mode
+    return checked, window_size, None, presets # Return None for splitter_state and presets
 
 </code>
 
@@ -1619,7 +971,7 @@ import sys
 import argparse
 import logging
 from typing import List
-from aicodeprep_gui_c.smart_logic import collect_all_files, load_default_config, load_user_config
+from aicodeprep_gui_c.smart_logic import collect_all_files
 from aicodeprep_gui_c.gui import show_file_selection_gui
 
 # Configure logging with explicit console handler only
@@ -1664,8 +1016,8 @@ def main():
         logger.setLevel(logging.DEBUG)
         console_handler.setLevel(logging.DEBUG)
 
-    # Get the target directory from command line argument (%V)
-    target_dir = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
+    # Get the target directory from the parsed arguments
+    target_dir = args.directory
     logger.info(f"Target directory: {target_dir}")
 
     # Change to the specified directory with error handling
@@ -1702,305 +1054,138 @@ aicodeprep_gui_c\smart_logic.py:
 from importlib import resources
 import os
 import sys
-import pathlib
-import json
 import logging
 from typing import List, Tuple
 import fnmatch
+
+# New imports for the refactoring
+import toml
+from pathspec import PathSpec
+from pathspec.patterns import GitWildMatchPattern
 
 def get_config_path():
     """Get the path to the default configuration file."""
     if getattr(sys, 'frozen', False):
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'config.md')
+        config_path = os.path.join(base_path, 'aicodeprep_gui_c', 'data', 'default_config.toml')
     else:
         try:
-            with resources.path('aicodeprep_gui_c.data', 'config.md') as config_file:
+            with resources.path('aicodeprep_gui_c.data', 'default_config.toml') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
-            config_path = os.path.join(os.path.dirname(__file__), 'data', 'config.md')
+            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.toml')
     return config_path
 
-def get_exe_directory():
-    """Get the directory of the executable or script"""
-    if getattr(sys, 'frozen', False):
-        return os.path.dirname(sys.executable)
-    return os.path.dirname(os.path.abspath(__file__))
-
-def parse_simple_markdown_config(content: str) -> dict:
-    """
-    Parse a simple markdown config file with sections like:
-    ### code_extensions
-    .py
-    .js
-    Returns a dict with section names as keys and lists of values.
-    """
-    import re
-    config = {}
-    current_section = None
-    for line in content.splitlines():
-        line = line.strip()
-        if line.startswith("### "):
-            current_section = line[4:].strip()
-            config[current_section] = []
-        elif current_section and line and not line.startswith("#"):
-            config[current_section].append(line)
-    # Map to expected keys
-    mapped = {}
-    # List sections
-    for key in [
-        "code_extensions",
-        "exclude_extensions",
-        "exclude_dirs",
-        "exclude_files",
-        "exclude_patterns",
-        "include_dirs",
-        "include_files"
-    ]:
-        if key in config:
-            mapped[key] = config[key]
-    # Scalar values
-    if "max_file_size" in config and config["max_file_size"]:
-        try:
-            mapped["max_file_size"] = int(config["max_file_size"][0])
-        except Exception:
-            pass
-    return mapped
-
-def load_default_config() -> dict:
-    """Load the default configuration from Markdown file in simple section format"""
+def load_config_from_path(path: str) -> dict:
+    """Loads a TOML configuration file from a given path."""
+    if not os.path.exists(path):
+        return {}
     try:
-        config_path = get_config_path()
-        logging.info(f"Looking for config at {config_path}")
-
-        try:
-            with open(config_path, 'r') as f:
-                content = f.read()
-            config = parse_simple_markdown_config(content)
-        except FileNotFoundError:
-            logging.warning("Default config file not found, using built-in defaults")
-            config = None
-
-        if config is None or not config:
-            config = {
-                'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
-                                   '.rs', '.swift', '.kt'],
-                'exclude_extensions': ['.pyc', '.class', '.o', '.obj'],
-                'exclude_patterns': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-                'exclude_dirs': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-                'include_dirs': [],
-                'exclude_files': [],
-                'include_files': [],
-                'max_file_size': 1000000
-            }
-
-        if 'exclude_patterns' in config:
-            config['exclude_patterns'] = [pattern.lstrip('.') for pattern in config['exclude_patterns']]
-
-        if 'code_extensions' not in config or not config['code_extensions']:
-            config['code_extensions'] = ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb',
-                                         '.go', '.rs', '.swift', '.kt']
-
-        logging.info(f"Loaded configuration with {len(config.get('code_extensions', []))} code extensions")
-        return config
-
+        with open(path, "r", encoding="utf-8") as f:
+            return toml.load(f)
     except Exception as e:
-        logging.error(f"Error in configuration handling: {str(e)}")
-        return {
-            'code_extensions': ['.py', '.js', '.java', '.cpp', '.h', '.c', '.hpp', '.cs', '.php', '.rb', '.go',
-                               '.rs', '.swift', '.kt'],
-            'exclude_extensions': ['.pyc', '.class', '.o', '.obj'],
-            'exclude_patterns': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-            'exclude_dirs': ['__pycache__', '.git', 'node_modules', 'build', 'dist'],
-            'include_dirs': [],
-            'exclude_files': [],
-            'include_files': [],
-            'max_file_size': 1000000
-        }
+        logging.error(f"Error loading or parsing TOML config at {path}: {e}")
+        return {}
 
-def load_user_config() -> dict:
-    """Load user-specific configuration from Markdown file with JSON code block"""
-    try:
-        config_path = os.path.join(get_exe_directory(), 'aicodeprep_config.md')
-        if os.path.exists(config_path):
-            with open(config_path, 'r') as f:
-                content = f.read()
-            import re
-            match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
-            if match:
-                json_str = match.group(1)
-                config = json.loads(json_str)
-                if config and 'exclude_patterns' in config:
-                    config['exclude_patterns'] = [
-                        pattern.lstrip('.') for pattern in config['exclude_patterns']
-                    ]
-                return config
-            else:
-                logging.warning("No JSON code block found in user config markdown")
-                return {}
-    except Exception as e:
-        logging.error(f"Error loading user configuration: {str(e)}")
-    return {}
+def load_configurations() -> dict:
+    """Load default config, then load user config and merge them."""
+    default_config_path = get_config_path()
+    config = load_config_from_path(default_config_path)
+    if not config:
+        logging.critical("Failed to load default configuration. Exiting.")
+        sys.exit("Could not load the default configuration file.")
+    user_config_path = os.path.join(os.getcwd(), 'aicodeprep.toml')
+    user_config = load_config_from_path(user_config_path)
+    if user_config:
+        logging.info(f"Found user configuration at {user_config_path}. Merging settings.")
+        config.update(user_config)
+    return config
 
 def is_binary_file(filepath: str) -> bool:
-    """
-    Return True if this file is likely binary.  We treat any
-    NUL byte in the first 1KB as binary, but special-case common
-    Unicode BOMs (UTF-8 / UTF-16 / UTF-32) as text.
-    """
+    """Return True if this file is likely binary."""
     try:
-        with open(filepath, 'rb') as f:
-            chunk = f.read(1024)
-    except OSError:
-        # unreadable files are treated as text so checkboxes stay enabled
-        return False
-
-    # If it starts with a known BOM, count as text
-    if chunk.startswith((
-        b'\xef\xbb\xbf',      # UTF-8 BOM
-        b'\xff\xfe',          # UTF-16 LE BOM
-        b'\xfe\xff',          # UTF-16 BE BOM
-        b'\xff\xfe\x00\x00',  # UTF-32 LE BOM
-        b'\x00\x00\xfe\xff'   # UTF-32 BE BOM
-    )):
-        return False
-
-    # Any NUL in the first chunk => binary
+        with open(filepath, 'rb') as f: chunk = f.read(1024)
+    except OSError: return False
+    if chunk.startswith((b'\xEF\xBB\xBF', b'\xFF\xFE', b'\xFE\xFF', b'\xFF\xFE\x00\x00', b'\x00\x00\xFE\xFF')): return False
     return b'\x00' in chunk
 
-def matches_pattern(filename: str, pattern: str) -> bool:
-    """Check if filename matches the given glob-style pattern (supports *, ?, [])"""
-    return fnmatch.fnmatch(filename.lower(), pattern.lower())
+# --- CONFIG AND PATHSPEC LOADING ---
+config = load_configurations()
+CODE_EXTENSIONS = set(config.get('code_extensions', []))
+MAX_FILE_SIZE = config.get('max_file_size', 1000000)
+exclude_spec = PathSpec.from_lines(GitWildMatchPattern, config.get('exclude_patterns', []))
+include_spec = PathSpec.from_lines(GitWildMatchPattern, config.get('default_include_patterns', []))
+# These are still useful for some simple checks in the GUI and logic
+EXCLUDE_DIRS = [p.rstrip('/') for p in config.get('exclude_patterns', []) if p.endswith('/')]
+EXCLUDE_FILES = [p for p in config.get('exclude_patterns', []) if not p.endswith('/')]
+EXCLUDE_PATTERNS = EXCLUDE_FILES # Simplified for backward compatibility
+INCLUDE_FILES = config.get('default_include_patterns', [])
+INCLUDE_DIRS = [p.rstrip('/') for p in INCLUDE_FILES if p.endswith('/')]
+EXCLUDE_EXTENSIONS = [] # This concept is now handled by patterns
+
+# --- REWRITTEN collect_all_files FOR LAZY LOADING ---
+def collect_all_files() -> List[Tuple[str, str, bool]]:
+    """
+    Collects files and directories. For excluded directories, it returns them as
+    a single entry without their contents, allowing the GUI to lazy-load them.
+    Returns a list of (absolute_path, relative_path, is_checked_by_default).
+    """
+    all_paths = []
+    root_dir = os.getcwd()
+    seen_paths = set()
+    logging.info(f"Starting initial fast scan in: {root_dir}")
+
+    for root, dirs, files in os.walk(root_dir, topdown=True):
+        rel_root = os.path.relpath(root, root_dir)
+        if rel_root == '.': rel_root = ''
+
+        # Add the directory itself unless it's the root
+        if rel_root and root not in seen_paths:
+             all_paths.append((root, rel_root, False))
+             seen_paths.add(root)
+
+        # Prune directories from the walk
+        dirs_to_prune = []
+        for d in dirs:
+            rel_dir_path = os.path.join(rel_root, d)
+            if exclude_spec.match_file(rel_dir_path + '/'):
+                dirs_to_prune.append(d)
+        dirs[:] = [d for d in dirs if d not in dirs_to_prune]
+
+        # Process all items (unpruned dirs and files)
+        for name in dirs + files:
+            abs_path = os.path.join(root, name)
+            rel_path = os.path.join(rel_root, name)
+            if abs_path in seen_paths: continue
+
+            # Determine default check state
+            is_checked = False
+            check_path = rel_path + '/' if os.path.isdir(abs_path) else rel_path
+
+            if include_spec.match_file(check_path):
+                is_checked = True
+            elif os.path.isfile(abs_path) and os.path.splitext(name)[1].lower() in CODE_EXTENSIONS:
+                 is_checked = True
+
+            # Final filters for files
+            if os.path.isfile(abs_path):
+                if is_binary_file(abs_path) or os.path.getsize(abs_path) > MAX_FILE_SIZE:
+                    is_checked = False
+
+            all_paths.append((abs_path, rel_path, is_checked))
+            seen_paths.add(abs_path)
+
+    logging.info(f"Initial scan collected {len(all_paths)} items.")
+    return all_paths
 
 def is_excluded_directory(path: str) -> bool:
-    """Check if the directory should be excluded"""
-    path_parts = pathlib.Path(path).parts
-    
-    # Check if any part of the path exactly matches an excluded directory
-    if any(part in EXCLUDE_DIRS for part in path_parts):
-        return True
-        
-    # Specifically check for venv directories with case insensitivity
-    if any('venv' in part.lower() for part in path_parts):
-        return True
-        
-    return False
+    """Simplified check used by GUI folder-click logic."""
+    dir_name = os.path.basename(path)
+    return any(fnmatch.fnmatch(dir_name, pat) for pat in EXCLUDE_DIRS)
 
-def should_process_directory(dir_path: str) -> bool:
-    """Determine if a directory should be processed"""
-    if is_excluded_directory(dir_path):
-        return False
-
-    dir_name = os.path.basename(dir_path)
-    if dir_name in INCLUDE_DIRS:
-        return True
-    if dir_name in EXCLUDE_DIRS or 'venv' in dir_name.lower():
-        return False
-    
-    # Check if any parent directory should be excluded
-    path_parts = pathlib.Path(dir_path).parts
-    if any(excluded in part.lower() for part in path_parts 
-           for excluded in ['venv', '.venv']):
-        return False
-        
-    return True
-
-def collect_all_files() -> List[Tuple[str, str, bool]]:
-    """Collect all files in the target directory with inclusion flags"""
-    seen_dirs: set[str] = set()
-    all_files = []
-    logging.info("Starting file collection...")
-
-    if len(sys.argv) > 1:
-        root_dir = sys.argv[1]
-    else:
-        root_dir = os.getcwd()
-        logging.info(f"Processing directory: {root_dir}")
-    logging.info(f"Code extensions configured: {CODE_EXTENSIONS}")
-    
-    for root, dirs, files in os.walk(root_dir):
-        # ── record every sub-directory so it shows up in the GUI, even if empty
-        for d in dirs:
-            dir_path = os.path.join(root, d)
-            if dir_path not in seen_dirs:
-                rel_dir = os.path.relpath(dir_path, root_dir)
-                all_files.append((dir_path, rel_dir, False))   # unchecked folder
-                seen_dirs.add(dir_path)
-        # Filter out directories to skip them entirely based on EXCLUDE_DIRS
-        # This is more effective than just checking the name
-        # Walk every non-hidden dir; only skip virtual-envs explicitly.
-        dirs[:] = [d for d in dirs if
-                   not d.startswith('.') and
-                   not any(excluded_dir in d.lower()
-                           for excluded_dir in ('venv', '.venv'))]
-
-        for file in files:
-            if file == "aicp_FULLCODE.txt":
-                continue
-
-            file_path = os.path.join(root, file)
-            relative_path = os.path.relpath(file_path, root_dir)
-
-            if any(part.startswith('.') for part in pathlib.Path(file_path).parts):
-                continue
-
-            try:
-                if os.path.getsize(file_path) > MAX_FILE_SIZE:
-                    continue
-            except (OSError, IOError):
-                continue
-
-            # First check if it's a binary file
-            if is_binary_file(file_path):
-                included = False
-                all_files.append((file_path, relative_path, included))
-                logging.info(f"Skipping binary file: {relative_path}")
-                continue
-
-            included = False
-            if file in INCLUDE_FILES:
-                included = True
-            elif os.path.basename(root) in INCLUDE_DIRS:
-                extension = pathlib.Path(file_path).suffix.lower()
-                if extension in CODE_EXTENSIONS:
-                    if (file not in EXCLUDE_FILES and
-                            extension not in EXCLUDE_EXTENSIONS and
-                            not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS)):
-                        included = True
-            else:
-                extension = pathlib.Path(file_path).suffix.lower()
-                if extension in CODE_EXTENSIONS:
-                    # Check if the file should be excluded based on path or name
-                    path_parts = pathlib.Path(root).parts
-                    excluded_by_dir = any(excluded_dir in part.lower() for part in path_parts 
-                                         for excluded_dir in EXCLUDE_DIRS)
-                    
-                    if (file not in EXCLUDE_FILES and
-                            extension not in EXCLUDE_EXTENSIONS and
-                            not any(matches_pattern(file, pattern) for pattern in EXCLUDE_PATTERNS) and
-                            not excluded_by_dir and
-                            not any(excluded_dir in root.lower() for excluded_dir in ['venv', '.venv'])):
-                        included = True
-
-            all_files.append((file_path, relative_path, included))
-            logging.info(f"Collected file: {relative_path}, Included by default: {included}")
-
-    logging.info(f"Total files collected: {len(all_files)}")
-    return all_files
-
-# Load configurations
-default_config = load_default_config()
-user_config = load_user_config()
-config = {**default_config, **user_config}
-
-CODE_EXTENSIONS = set(config.get('code_extensions', []))
-EXCLUDE_EXTENSIONS = set(config.get('exclude_extensions', []))
-EXCLUDE_PATTERNS = set(config.get('exclude_patterns', []))
-EXCLUDE_DIRS = set(config.get('exclude_dirs', []))
-INCLUDE_DIRS = set(config.get('include_dirs', []))
-EXCLUDE_FILES = set(config.get('exclude_files', []))
-INCLUDE_FILES = set(config.get('include_files', []))
-MAX_FILE_SIZE = config.get('max_file_size', 1000000)
+def matches_pattern(filename: str, pattern: str) -> bool:
+    """Helper used by GUI logic."""
+    return fnmatch.fnmatch(filename.lower(), pattern.lower())
 
 </code>
 
@@ -2017,7 +1202,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aicodeprep_gui_c"
-version = "0.9.7"
+version = "0.9.8"
 description = "Prepare code for AI chatbot assistance"
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
@@ -2030,7 +1215,8 @@ classifiers = [
 keywords = ["ai", "code", "preparation", "chatbot"]
 dependencies = [
     "PySide6>=6.7",
-    "tiktoken"
+    "toml",
+    "pathspec"
 ]
 requires-python = ">=3.6"
 
@@ -2044,7 +1230,7 @@ Homepage = "https://github.com/detroittommy879/aicodeprep"
 where = ["."]
 
 [tool.setuptools.package-data]
-aicodeprep_gui_c = ["data/default_config.md"]
+aicodeprep_gui_c = ["data/default_config.toml"]
 
 </code>
 
@@ -2066,12 +1252,12 @@ pywin32-ctypes==0.2.3
 regex==2024.11.6
 requests==2.32.3
 shiboken6==6.8.1
-tiktoken==0.9.0
 urllib3==2.4.0
+toml
+pathspec
 
 </code>
 
+
+
 .. some other files were skipped ..
-
-
-can you check config.md, and then look at all the app's code to see if this config file is correct - it is supposed to be for which file extensions won't be clicked automatically (it is for helping people give their code to LLMs, so it should try to leave certain folders and files un-checked like node_modules etc) but it is taking a long time sometimes, saying "skipping build_env) why is it trying to skip every indivudual file, is there a way to make it skip an entire directory and subdirectories like that but still allowing someone to manually expand and check files if they want to? can you also analyze config.md and see if there are any errors or methods in there that the code isn't designed to deal with? the app mostly works great but i think can be improved. Speed is important, opening fast is important, etc

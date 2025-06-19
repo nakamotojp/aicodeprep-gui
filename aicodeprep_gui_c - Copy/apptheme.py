@@ -99,88 +99,136 @@ def create_checkmark_pixmap(size=16, color="#0078D4"):
     painter.end()
     return pixmap
 
-def create_x_mark_pixmap(size=16, color="#0078D4"):
-    """Create an X mark pixmap programmatically (alternative to checkmark)."""
-    pixmap = QtGui.QPixmap(size, size)
-    pixmap.fill(QtCore.Qt.transparent)
-    
-    painter = QtGui.QPainter(pixmap)
-    painter.setRenderHint(QtGui.QPainter.Antialiasing)
-    
-    pen = QtGui.QPen(QtGui.QColor(color))
-    pen.setWidth(2)
-    pen.setCapStyle(QtCore.Qt.RoundCap)
-    painter.setPen(pen)
-    
-    # Draw X mark
-    margin = 3
-    painter.drawLine(margin, margin, size-margin, size-margin)
-    painter.drawLine(margin, size-margin, size-margin, margin)
-    
-    painter.end()
-    return pixmap
-
 def _checkbox_style_with_images(dark: bool) -> str:
-    """Use SVG-based checkboxes - same as _checkbox_style but with descriptive name."""
-    return _checkbox_style(dark)
-
-
-
-def _checkbox_style(dark: bool) -> str:
-    """Return checkbox styling using permanent image files."""
+    """Alternative approach using programmatically created images."""
     
-    # Get the directory where this module is located
-    module_dir = os.path.dirname(os.path.abspath(__file__))
-    images_dir = os.path.join(module_dir, "images")
-    
-    # Use appropriate images for theme
     if dark:
-        unchecked_filename = "checkbox_unchecked_dark.png"
-        checked_filename = "checkbox_checked_dark.png"
+        bg_unchecked = '#2B2B2B'
+        bg_checked = '#2B2B2B'
+        border_unchecked = '#555555'
+        border_checked = '#0078D4'
+        checkmark_color = '#0078D4'
     else:
-        unchecked_filename = "checkbox_unchecked.png"
-        checked_filename = "checkbox_checked.png"
-    
-    unchecked_path = os.path.join(images_dir, unchecked_filename)
-    checked_path = os.path.join(images_dir, checked_filename)
-    
-    # Convert Windows paths to proper URLs for Qt
-    if os.name == 'nt':  # Windows
-        unchecked_url = unchecked_path.replace('\\', '/')
-        checked_url = checked_path.replace('\\', '/')
-    else:
-        unchecked_url = unchecked_path
-        checked_url = checked_path
-    
-    hover_border_color = "#00c3ff"
-    
+        bg_unchecked = '#FFFFFF'
+        bg_checked = '#FFFFFF'
+        border_unchecked = '#AAAAAA'
+        border_checked = '#0078D4'
+        checkmark_color = '#0078D4'
+
+    # Create checkmark image and save it temporarily
+    import tempfile
+    checkmark_pixmap = create_checkmark_pixmap(16, checkmark_color)
+    temp_dir = tempfile.gettempdir()
+    checkmark_path = os.path.join(temp_dir, f"checkmark_{'dark' if dark else 'light'}.png")
+    checkmark_pixmap.save(checkmark_path)
+
     return f"""
     QTreeView::indicator, QTreeWidget::indicator {{
         width: 16px;
         height: 16px;
-        border: none;
-        background: transparent;
-        image: url({unchecked_url});
+        border-radius: 3px;
     }}
-    
-    QTreeView::indicator:checked, QTreeWidget::indicator:checked {{
-        image: url({checked_url});
+
+    QTreeView::indicator:unchecked,
+    QTreeWidget::indicator:unchecked {{
+        background-color: {bg_unchecked};
+        border: 2px solid {border_unchecked};
     }}
-    
-    QTreeView::indicator:hover, QTreeWidget::indicator:hover {{
-        border: 1px solid {hover_border_color};
-        border-radius: 2px;
+
+    QTreeView::indicator:checked,
+    QTreeWidget::indicator:checked {{
+        background-color: {bg_checked};
+        border: 2px solid {border_checked};
+        image: url({checkmark_path.replace(os.sep, '/')});
     }}
+
+    QTreeView::indicator:unchecked:hover,
+    QTreeWidget::indicator:unchecked:hover {{
+        border-color: {border_checked};
+    }}
+    """
+
+
+
+def _checkbox_style(dark: bool) -> str:
+    """Return a style-sheet that shows a visible tick using Unicode checkmarks."""
     
-    QTreeView::indicator:checked:hover, QTreeWidget::indicator:checked:hover {{
-        border: 1px solid {hover_border_color};
-        border-radius: 2px;
-        image: url({checked_url});
+    if dark:
+        bg_unchecked = '#2B2B2B'
+        bg_checked = '#2B2B2B'
+        border_unchecked = '#555555'
+        border_checked = '#0078D4'
+        checkmark_color = '#0078D4'
+        disabled_bg = '#1F1F1F'
+        disabled_border = '#3A3A3A'
+    else:
+        bg_unchecked = '#FFFFFF'
+        bg_checked = '#FFFFFF'
+        border_unchecked = '#AAAAAA'
+        border_checked = '#0078D4'
+        checkmark_color = '#0078D4'
+        disabled_bg = '#F5F5F5'
+        disabled_border = '#CCCCCC'
+
+    return f"""
+    QTreeView::indicator, QTreeWidget::indicator {{
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+    }}
+
+    /* Unchecked state */
+    QTreeView::indicator:unchecked,
+    QTreeWidget::indicator:unchecked {{
+        background-color: {bg_unchecked};
+        border: 2px solid {border_unchecked};
+    }}
+
+    /* Checked state with Unicode checkmark */
+    QTreeView::indicator:checked,
+    QTreeWidget::indicator:checked {{
+        background-color: {bg_checked};
+        border: 2px solid {border_checked};
+        color: {checkmark_color};
+        font-weight: bold;
+        font-size: 12px;
+        text-align: center;
+    }}
+
+    QTreeView::indicator:checked::after,
+    QTreeWidget::indicator:checked::after {{
+        content: "✓";
+        color: {checkmark_color};
+        font-weight: bold;
+        font-size: 12px;
+        position: absolute;
+        top: -1px;
+        left: 1px;
+    }}
+
+    /* Disabled states */
+    QTreeView::indicator:disabled,
+    QTreeWidget::indicator:disabled {{
+        background-color: {disabled_bg};
+        border: 2px solid {disabled_border};
+    }}
+
+    /* Hover effects */
+    QTreeView::indicator:unchecked:hover,
+    QTreeWidget::indicator:unchecked:hover {{
+        border-color: {border_checked};
+        background-color: {bg_unchecked};
+    }}
+
+    QTreeView::indicator:checked:hover,
+    QTreeWidget::indicator:checked:hover {{
+        background-color: {bg_checked};
+        border-color: {border_checked};
     }}
     """
 
 def get_checkbox_style_dark()  -> str: 
-    return _checkbox_style(True)
+    return _checkbox_style_with_images(True)
 
 def get_checkbox_style_light() -> str: 
-    return _checkbox_style(False)
+    return _checkbox_style_with_images(False)

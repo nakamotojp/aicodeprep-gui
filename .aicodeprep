@@ -4,7 +4,6 @@ version=1.0
 [window]
 width=694
 height=1132
-splitter=000000ff000000010000000200000300000000de01ffffffff010000000200
 
 [files]
 pyproject.toml
@@ -15,5 +14,4 @@ aicodeprep_gui_c\gui.py
 aicodeprep_gui_c\main.py
 aicodeprep_gui_c\smart_logic.py
 aicodeprep_gui_c\__init__.py
-aicodeprep_gui_c\data\config.md
-
+aicodeprep_gui_c\data\default_config.toml

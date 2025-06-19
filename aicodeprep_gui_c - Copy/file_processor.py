@@ -31,7 +31,7 @@ def _write_one_file_md(outfile, rel_path, abs_path):
             outfile.write(".. contents skipped (read error) ..\n")
     outfile.write(f"\n### END {rel_path}\n\n")
 
-def process_files(selected_files: List[str], output_file: str, fmt: OutputFmt = 'xml', prompt: str = "") -> int:
+def process_files(selected_files: List[str], output_file: str, fmt: OutputFmt = 'xml') -> int:
     """
     Write the concatenation of `selected_files` into `output_file`.
     `fmt` is either 'xml' (default, uses <code> … </code>) or
@@ -55,11 +55,8 @@ def process_files(selected_files: List[str], output_file: str, fmt: OutputFmt = 
                 except Exception as exc:
                     logging.error(f"Error processing {file_path}: {exc}")
 
-            if prompt:
-                outfile.write("\n\n" + prompt.strip())
-
             # generic tail line – no XML tags any more
-            outfile.write("\n\n.. some other files were skipped ..\n")
+            outfile.write(".. some other files were skipped ..\n")
 
         return len(selected_files)
     except Exception as exc:
