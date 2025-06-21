@@ -7,6 +7,7 @@ from aigui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_
 from typing import List, Tuple
 from aigui import smart_logic
 from aigui.file_processor import process_files
+from aigui import __version__
 
 class FlowLayout(QtWidgets.QLayout):
     def __init__(self, parent=None, margin=-1, hspacing=-1, vspacing=-1):
@@ -119,13 +120,13 @@ class FlowLayout(QtWidgets.QLayout):
         else:
             return parent.spacing()
 
-# Version for .aicodeprep file format
-AICODEPREP_VERSION = "1.0"
+# Version for .aigui file format
+AIGUI_VERSION = "1.0"
 
 class GlobalPresetManager:
     def __init__(self):
         try:
-            self.settings = QtCore.QSettings("AICodePrep", "ButtonPresets")
+            self.settings = QtCore.QSettings("aigui", "ButtonPresets")
             self._ensure_default_presets()
         except Exception as e:
             logging.error(f"Failed to initialize global preset manager: {e}")
@@ -209,12 +210,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/loads.html?t={time_str}"))
         self.network_manager.get(request)
 
-        self.setWindowTitle("AI Code Prep - File Selection")
+        self.setWindowTitle("aigui - File Selection")
         self.app = QtWidgets.QApplication.instance()
         if self.app is None: self.app = QtWidgets.QApplication([])
         self.action = 'quit'
 
-        self.prefs_filename = ".aicodeprep"
+        self.prefs_filename = ".aigui"
         self.remember_checkbox = None
         self.checked_files_from_prefs = set()
         self.prefs_loaded = False
@@ -267,15 +268,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(self.token_label)
         main_layout.addSpacing(8)
 
-        self.vibe_label = QtWidgets.QLabel("AI Code Prep GUI")
+        self.vibe_label = QtWidgets.QLabel(f"aigui {__version__}")
         vibe_font = QtGui.QFont(self.default_font); vibe_font.setBold(True); vibe_font.setPointSize(self.default_font.pointSize() + 8)
-        self.vibe_label.setFont(vibe_font); self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter)
-        self.vibe_label.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00c3ff, stop:1 #7f00ff); color: white; padding: 0; border-radius: 8px;")
+        self.vibe_label.setFont(vibe_font); self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        self.vibe_label.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); color: white; padding: 0px 0px 0px 0px; border-radius: 8px;")
         self.vibe_label.setFixedHeight(44)
         banner_wrap = QtWidgets.QWidget(); banner_layout = QtWidgets.QHBoxLayout(banner_wrap); banner_layout.setContentsMargins(14, 0, 14, 0); banner_layout.addWidget(self.vibe_label)
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
-        self.info_label = QtWidgets.QLabel("I tried to guess which code files you will likely want included, adjust as needed")
+        self.info_label = QtWidgets.QLabel("likely code files are already checked, adjust as needed")
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
         main_layout.addWidget(self.info_label)
 
@@ -283,9 +284,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.text_label.setWordWrap(True)
         main_layout.addWidget(self.text_label)
 
+        # Add "Prompt Preset Buttons:" label above presets section
+        prompt_header_label = QtWidgets.QLabel("Prompt Preset Buttons:")
+        main_layout.addWidget(prompt_header_label)
+        
         # Create scrollable preset area
         presets_wrapper = QtWidgets.QHBoxLayout()
-        presets_wrapper.addWidget(QtWidgets.QLabel("Presets:"))
         
         # Scrollable area for preset buttons
         scroll_area = QtWidgets.QScrollArea()
@@ -303,12 +307,25 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         add_preset_btn.setToolTip("New Preset…")
         add_preset_btn.clicked.connect(self.add_new_preset_dialog)
         self.preset_strip.addWidget(add_preset_btn)
+
+        delete_preset_btn = QtWidgets.QPushButton("🗑️")
+        delete_preset_btn.setFixedSize(24, 24)
+        delete_preset_btn.setToolTip("Delete a preset…")
+        delete_preset_btn.clicked.connect(self.delete_preset_dialog)
+        self.preset_strip.addWidget(delete_preset_btn)
+        
         self.preset_strip.addStretch()
         
         scroll_area.setWidget(scroll_widget)
         presets_wrapper.addWidget(scroll_area)
         
         main_layout.addLayout(presets_wrapper)
+        
+        # Add explanation text below presets
+        preset_explanation = QtWidgets.QLabel("Presets help you save more time and will be saved for later use")
+        preset_explanation.setStyleSheet("font-size: 10px; color: gray;")
+        main_layout.addWidget(preset_explanation)
+        
         main_layout.addSpacing(8)
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
@@ -333,6 +350,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.splitter.addWidget(prompt_widget)
         self.splitter.setStretchFactor(0, 4); self.splitter.setStretchFactor(1, 1)
         main_layout.addWidget(self.splitter)
+
+        # Apply saved splitter state if available
+        if hasattr(self, 'splitter_state_from_prefs') and self.splitter_state_from_prefs:
+            try:
+                self.splitter.restoreState(self.splitter_state_from_prefs)
+                logging.info("Restored splitter state from preferences")
+            except Exception as e:
+                logging.warning(f"Failed to restore splitter state: {e}")
 
         # --- NEW TREE BUILDING LOGIC ---
         self.path_to_item = {}  # Maps relative_path to QTreeWidgetItem
@@ -388,20 +413,20 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self._expand_folders_for_paths(initial_checked_paths)
         
         prefs_checkbox_layout = QtWidgets.QHBoxLayout()
-        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep) and window size")
+        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aigui), window size, and splitter position")
         self.remember_checkbox.setChecked(True)
         prefs_checkbox_layout.addWidget(self.remember_checkbox)
         main_layout.addLayout(prefs_checkbox_layout)
         
         button_layout1 = QtWidgets.QHBoxLayout(); button_layout2 = QtWidgets.QHBoxLayout()
         main_layout.addLayout(button_layout1); main_layout.addLayout(button_layout2)
-        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">wuu73.org/aicp</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
+        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aigui\">aigui @ wuu73.org</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
         button_layout1.addStretch()
         process_button = QtWidgets.QPushButton("Process Selected"); process_button.clicked.connect(self.process_selected); button_layout1.addWidget(process_button)
         select_all_button = QtWidgets.QPushButton("Select All"); select_all_button.clicked.connect(self.select_all); button_layout1.addWidget(select_all_button)
         deselect_all_button = QtWidgets.QPushButton("Deselect All"); deselect_all_button.clicked.connect(self.deselect_all); button_layout1.addWidget(deselect_all_button)
         button_layout2.addStretch()
-        load_prefs_button = QtWidgets.QPushButton("Load from .aicodeprep"); load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked); button_layout2.addWidget(load_prefs_button)
+        load_prefs_button = QtWidgets.QPushButton("Load preferences"); load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked); button_layout2.addWidget(load_prefs_button)
         quit_button = QtWidgets.QPushButton("Quit"); quit_button.clicked.connect(self.quit_without_processing); button_layout2.addWidget(quit_button)
 
         self.selected_files = []
@@ -501,16 +526,23 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         except Exception as e: 
             logging.error(f"Failed to load global presets: {e}")
     def _add_preset_button(self, label: str, text: str, from_local=False, from_global=False):
-        btn = QtWidgets.QPushButton(label); btn.setFixedHeight(22); btn.clicked.connect(lambda _=None, t=text: self._apply_preset(t))
-        btn.setContextMenuPolicy(QtCore.Qt.CustomContextMenu); btn.customContextMenuRequested.connect(lambda pos, l=label, b=btn, fg=from_global: self._show_preset_context_menu(pos, l, b, fg))
-        if from_global: btn.setToolTip(f"Global preset: {label}\nRight-click to delete")
-        else: btn.setToolTip(f"Preset: {label}\nRight-click to delete")
-        # Insert before the "✚" button (which is the last widget)
-        insert_index = self.preset_strip.count() - 1
+        btn = QtWidgets.QPushButton(label)
+        btn.setFixedHeight(22)
+        btn.clicked.connect(lambda _=None, t=text: self._apply_preset(t))
+        
+        # The new delete button provides a clearer UX than a context menu.
+        # btn.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        # btn.customContextMenuRequested.connect(lambda pos, l=label, b=btn, fg=from_global: self._show_preset_context_menu(pos, l, b, fg))
+
+        if from_global:
+            btn.setToolTip(f"Global preset: {label}")
+        else:
+            btn.setToolTip(f"Preset: {label}")
+            
+        # Insert before the stretch and control buttons
+        insert_index = self.preset_strip.count() - 2 # there is a stretch after the buttons
         self.preset_strip.insertWidget(insert_index, btn)
-    def _show_preset_context_menu(self, pos, label, button, from_global):
-        menu = QtWidgets.QMenu(self); delete_action = menu.addAction("Delete Preset")
-        if menu.exec(button.mapToGlobal(pos)) == delete_action: self._delete_preset(label, button, from_global)
+
     def _delete_preset(self, label, button, from_global):
         reply = QtWidgets.QMessageBox.question(self, "Delete Preset", f"Are you sure you want to delete the preset '{label}'?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if reply == QtWidgets.QMessageBox.Yes:
@@ -520,8 +552,39 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.preset_strip.removeWidget(button)
             button.deleteLater()
             logging.info(f"Deleted preset: {label}")
+    
     def _apply_preset(self, preset_text: str):
         current = self.prompt_textbox.toPlainText(); self.prompt_textbox.setPlainText((current.rstrip() + "\n\n" if current else "") + preset_text)
+
+    def delete_preset_dialog(self):
+        presets = global_preset_manager.get_all_presets()
+        if not presets:
+            QtWidgets.QMessageBox.information(self, "No Presets", "There are no presets to delete.")
+            return
+
+        preset_labels = [p[0] for p in presets]
+        label_to_delete, ok = QtWidgets.QInputDialog.getItem(self, "Delete Preset", 
+                                                             "Select a preset to delete:", preset_labels, 0, False)
+
+        if ok and label_to_delete:
+            # Find the button widget corresponding to the label
+            button_to_remove = None
+            for i in range(self.preset_strip.count()):
+                item = self.preset_strip.itemAt(i)
+                if item and item.widget():
+                    widget = item.widget()
+                    if isinstance(widget, QtWidgets.QPushButton) and widget.text() == label_to_delete:
+                        button_to_remove = widget
+                        break
+            
+            if button_to_remove:
+                # Call the existing delete logic, which includes the confirmation dialog.
+                # All presets managed this way are considered global.
+                self._delete_preset(label_to_delete, button_to_remove, from_global=True)
+            else:
+                # This is a descriptive error for debugging, in case the UI and data get out of sync.
+                QtWidgets.QMessageBox.warning(self, "Error", "Could not find the corresponding button to delete. The UI might be out of sync.")
+                
     def add_new_preset_dialog(self):
         lbl, ok = QtWidgets.QInputDialog.getText(self, "New preset", "Button label:");
         if not ok or not lbl.strip(): return
@@ -621,16 +684,19 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.tree_widget.expandItem(item)
 
     def load_from_prefs_button_clicked(self):
-        if os.path.exists(_prefs_path()):
+        prefs_path = _prefs_path()
+        if os.path.exists(prefs_path):
             self.load_prefs_if_exists()
             self.deselect_all()
             for rel_path, item in self.path_to_item.items():
                 if rel_path in self.checked_files_from_prefs: item.setCheckState(0, QtCore.Qt.Checked)
             # Auto-expand folders after loading preferences
             self._expand_folders_for_paths(self.checked_files_from_prefs)
-            self.text_label.setText("Loaded selection from .aicodeprep")
+            file_type = ".aigui" if prefs_path.endswith(".aigui") else ".aicodeprep"
+            self.text_label.setText(f"Loaded selection from {file_type}")
             self.update_token_counter()
-        else: self.text_label.setText(".aicodeprep not found")
+        else: 
+            self.text_label.setText("No preferences file found (.aigui or .aicodeprep)")
 
     def closeEvent(self, event):
         if self.action != 'process': self.action = 'quit'
@@ -638,9 +704,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def load_prefs_if_exists(self):
         if os.path.exists(_prefs_path()):
-            checked, window_size, _, presets = _read_prefs_file() # The _read_prefs_file returns 4 values, but only the first 3 are used here.
+            checked, window_size, splitter_state, presets = _read_prefs_file()
             self.checked_files_from_prefs = checked
             self.window_size_from_prefs = window_size
+            self.splitter_state_from_prefs = splitter_state
             self.prefs_loaded = True
             self.loaded_presets = presets # This will be None based on _read_prefs_file
 
@@ -650,7 +717,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if item.checkState(0) == QtCore.Qt.Checked:
                 checked_relpaths.append(rel_path)
         size = self.size()
-        _write_prefs_file(checked_relpaths, window_size=(size.width(), size.height()))
+        splitter_state = self.splitter.saveState()
+        _write_prefs_file(checked_relpaths, window_size=(size.width(), size.height()), splitter_state=splitter_state)
 
     def toggle_dark_mode(self, state):
         self.is_dark_mode = bool(state)
@@ -675,28 +743,57 @@ def show_file_selection_gui(files):
     app.exec()
     return gui.action, gui.get_selected_files()
 
-def _prefs_path(): return os.path.join(os.getcwd(), ".aicodeprep")
-def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, presets=None):
-    try:
-        with open(_prefs_path(), "w", encoding="utf-8") as f:
-            f.write(f"# AICodePrep preferences file version {AICODEPREP_VERSION}\nversion={AICODEPREP_VERSION}\n\n")
-            if window_size: f.write(f"[window]\nwidth={window_size[0]}\nheight={window_size[1]}\n\n")
-            if checked_relpaths: f.write("[files]\n" + "\n".join(checked_relpaths) + "\n")
-    except Exception as e: logging.warning(f"Could not write .aicodeprep: {e}")
-def _read_prefs_file():
-    checked, window_size, presets = set(), None, None # Initialize presets to None
+def _prefs_path(): 
+    """Get the path to the preferences file, preferring .aigui over .aicodeprep"""
+    aigui_path = os.path.join(os.getcwd(), ".aigui")
+    aicodeprep_path = os.path.join(os.getcwd(), ".aicodeprep")
     
-    # Initialize temporary variables for window size parsing
+    # If .aigui exists, use it
+    if os.path.exists(aigui_path):
+        return aigui_path
+    # If only .aicodeprep exists, we'll migrate it later
+    elif os.path.exists(aicodeprep_path):
+        return aicodeprep_path
+    # Default to .aigui for new files
+    else:
+        return aigui_path
+
+def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, presets=None):
+    """Write preferences to .aigui file"""
+    aigui_path = os.path.join(os.getcwd(), ".aigui")
+    try:
+        with open(aigui_path, "w", encoding="utf-8") as f:
+            f.write(f"# AI GUI preferences file version {AIGUI_VERSION}\nversion={AIGUI_VERSION}\n\n")
+            if window_size: 
+                f.write(f"[window]\nwidth={window_size[0]}\nheight={window_size[1]}\n")
+                if splitter_state:
+                    # Convert QByteArray to base64 string for storage
+                    import base64
+                    splitter_data = base64.b64encode(splitter_state).decode('utf-8')
+                    f.write(f"splitter_state={splitter_data}\n")
+                f.write("\n")
+            if checked_relpaths: f.write("[files]\n" + "\n".join(checked_relpaths) + "\n")
+        logging.info(f"Saved preferences to {aigui_path}")
+    except Exception as e: 
+        logging.warning(f"Could not write .aigui: {e}")
+def _read_prefs_file():
+    """Read preferences file with backwards compatibility for .aicodeprep files"""
+    checked, window_size, presets, splitter_state = set(), None, None, None
     width_val, height_val = None, None 
     
+    aigui_path = os.path.join(os.getcwd(), ".aigui")
+    aicodeprep_path = os.path.join(os.getcwd(), ".aicodeprep")
+    
+    prefs_path = _prefs_path()
+    
     try:
-        with open(_prefs_path(), "r", encoding="utf-8") as f:
+        with open(prefs_path, "r", encoding="utf-8") as f:
             section = None
             for line in f.read().splitlines():
                 if line.strip().startswith('[') and line.strip().endswith(']'):
                     section = line.strip()[1:-1]
                     continue
-                if not section: continue # Skip lines before the first section header
+                if not section: continue
 
                 if section == "files":
                     if line.strip(): checked.add(line.strip())
@@ -707,12 +804,31 @@ def _read_prefs_file():
                     elif line.startswith('height='):
                         try: height_val = int(line.split('=')[1])
                         except (ValueError, IndexError): pass
+                    elif line.startswith('splitter_state='):
+                        try:
+                            import base64
+                            splitter_data = line.split('=', 1)[1]
+                            splitter_state = base64.b64decode(splitter_data.encode('utf-8'))
+                        except Exception as e:
+                            logging.warning(f"Failed to decode splitter state: {e}")
             
             if width_val is not None and height_val is not None:
                 window_size = (width_val, height_val)
+        
+        # Migration logic: if we read from .aicodeprep, migrate to .aigui
+        if prefs_path == aicodeprep_path and not os.path.exists(aigui_path):
+            logging.info("Migrating preferences from .aicodeprep to .aigui")
+            try:
+                # Write the data to the new .aigui file
+                _write_prefs_file(list(checked), window_size)
+                logging.info("Successfully migrated preferences to .aigui")
+            except Exception as e:
+                logging.error(f"Failed to migrate preferences: {e}")
                 
     except FileNotFoundError:
-        logging.info(".aicodeprep file not found, creating a new one on save.")
+        file_type = ".aigui" if prefs_path.endswith(".aigui") else ".aicodeprep"
+        logging.info(f"{file_type} file not found, will create on save.")
     except Exception as e:
-        logging.error(f"Error reading .aicodeprep file: {e}")
-    return checked, window_size, None, presets # Return None for splitter_state and presets
+        logging.error(f"Error reading preferences file: {e}")
+    
+    return checked, window_size, splitter_state, presets

@@ -25,7 +25,7 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 def main():
-    parser = argparse.ArgumentParser(description="Concatenate code files into a single text file.")
+    parser = argparse.ArgumentParser(description="aigui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
     parser.add_argument("-n", "--no-copy", action="store_true",
                         help="Do NOT copy output to clipboard (default: copy to clipboard)")
     parser.add_argument("-o", "--output", default="fullcode.txt",

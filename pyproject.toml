@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aigui"
 version = "0.9.8"
-description = "Prepare code for AI chatbot assistance"
+description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
 license = { file = "LICENSE" }
@@ -26,7 +26,7 @@ requires-python = ">=3.6"
 aigui = "aigui.main:main"
 
 [project.urls]
-Homepage = "https://github.com/detroittommy879/aicodeprep"
+Homepage = "https://github.com/detroittommy879/aigui"
 
 [tool.setuptools.packages.find]
 where = ["."]

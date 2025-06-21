@@ -41,7 +41,7 @@ def load_configurations() -> dict:
     if not config:
         logging.critical("Failed to load default configuration. Exiting.")
         sys.exit("Could not load the default configuration file.")
-    user_config_path = os.path.join(os.getcwd(), 'aicodeprep.toml')
+    user_config_path = os.path.join(os.getcwd(), 'aigui.toml')
     user_config = load_config_from_path(user_config_path)
     if user_config:
         logging.info(f"Found user configuration at {user_config_path}. Merging settings.")
