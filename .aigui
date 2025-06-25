@@ -7,8 +7,13 @@ height=1022
 splitter_state=AAAA/wAAAAEAAAACAAAB6QAAAGwB/////wEAAAACAA==
 
 [files]
+images
+CHANGELOG.md
+LICENSE
 pyproject.toml
+README.md
 requirements.txt
+aigui\images
 aigui\apptheme.py
 aigui\file_processor.py
 aigui\gui.py
@@ -16,3 +21,4 @@ aigui\main.py
 aigui\smart_logic.py
 aigui\__init__.py
 aigui\data\default_config.toml
+aigui\images\__init__.py

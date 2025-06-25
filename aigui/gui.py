@@ -228,10 +228,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             scale_factor = self.app.primaryScreen().devicePixelRatio()
 
         default_font_size = 9
-        system_font = 'Segoe UI' if platform.system() == 'Windows' else 'Arial'
+        font_stack = '"Segoe UI", "Ubuntu", "Helvetica Neue", Arial, sans-serif'
         default_font_size = int(default_font_size * scale_factor)
-        self.default_font = QtGui.QFont(system_font, default_font_size)
+        self.default_font = QtGui.QFont("Segoe UI", default_font_size)
         self.setFont(self.default_font)
+        self.setStyleSheet(f"font-family: {font_stack};")
         style = self.style()
         self.folder_icon = style.standardIcon(QtWidgets.QStyle.SP_DirIcon)
         self.file_icon = style.standardIcon(QtWidgets.QStyle.SP_FileIcon)

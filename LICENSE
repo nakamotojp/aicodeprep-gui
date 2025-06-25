@@ -1,35 +1,21 @@
-AI Code Prep GUI End User License Agreement (EULA)
+MIT License
 
-1. Definitions
+Copyright (c) 2025 [Your Name or Organization]
 
-"Software" refers to AI Code Prep GUI, including all associated documentation, and any updates or modifications thereto.
-"Licensee" refers to the individual or entity that has purchased the right to use the Software under the terms of this EULA.
-"Copyright Holder" refers to [Your Name/Company], the owner of the Software's intellectual property.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-2. Grant of License
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-The Copyright Holder grants the Licensee a non-exclusive, non-transferable license to use one (1) copy of the Software, solely for the Licensee's personal or internal business use.
-This license does not include the right to distribute, sublicense, sell, or offer for sale the Software, or any portion thereof.
-
-3. Restrictions
-
-The Licensee shall not:
-Distribute or sublicense the Software to any third party.
-Sell, offer for sale, or otherwise commercially exploit the Software.
-Modify, reverse engineer, decompile, or disassemble the Software.
-Use the Software for any unlawful or unauthorized purpose. 4. Disclaimer of Warranty and Limitation of Liability
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-5. Termination
-
-This EULA will terminate immediately upon any breach by the Licensee of any term or condition herein.
-Upon termination, the Licensee must destroy all copies of the Software. 6. Governing Law
-
-This EULA shall be governed by and construed in accordance with the laws of [Your Country/State].
-Any disputes arising out of or related to this EULA shall be resolved through [Specify Dispute Resolution Process, e.g., arbitration in accordance with the rules of [Arbitration Institution]].
-
-7. Entire Agreement
-
-This EULA constitutes the entire agreement between the parties with respect to the subject matter hereof and supersedes all prior or contemporaneous agreements or understandings.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

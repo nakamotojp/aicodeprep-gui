@@ -4,6 +4,8 @@ import os
 import sys
 import ctypes
 import json
+import logging
+from importlib import resources
 
 def system_pref_is_dark() -> bool:
     """Detect if system is using dark mode."""
@@ -127,11 +129,7 @@ def _checkbox_style_with_images(dark: bool) -> str:
 
 
 def _checkbox_style(dark: bool) -> str:
-    """Return checkbox styling using permanent image files."""
-    
-    # Get the directory where this module is located
-    module_dir = os.path.dirname(os.path.abspath(__file__))
-    images_dir = os.path.join(module_dir, "images")
+    """Return checkbox styling using packaged image files."""
     
     # Use appropriate images for theme
     if dark:
@@ -141,9 +139,20 @@ def _checkbox_style(dark: bool) -> str:
         unchecked_filename = "checkbox_unchecked.png"
         checked_filename = "checkbox_checked.png"
     
-    unchecked_path = os.path.join(images_dir, unchecked_filename)
-    checked_path = os.path.join(images_dir, checked_filename)
-    
+    # --- THIS IS THE NEW, PACKAGE-SAFE WAY TO FIND FILES ---
+    try:
+        # 'aigui.images' corresponds to the aigui/images folder
+        with resources.as_file(resources.files('aigui.images').joinpath(unchecked_filename)) as p:
+            unchecked_path = str(p)
+        with resources.as_file(resources.files('aigui.images').joinpath(checked_filename)) as p:
+            checked_path = str(p)
+    except Exception as e:
+        # Fallback or error logging if resources can't be found
+        logging.error(f"Could not load checkbox images: {e}")
+        return "" # Return empty style if images fail to load
+    # --- END OF THE NEW SECTION ---
+
+    # The rest of the function is the same as before
     # Convert Windows paths to proper URLs for Qt
     if os.name == 'nt':  # Windows
         unchecked_url = unchecked_path.replace('\\', '/')
