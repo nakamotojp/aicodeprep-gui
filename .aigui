@@ -3,16 +3,13 @@ version=1.0
 
 [window]
 width=600
-height=1022
-splitter_state=AAAA/wAAAAEAAAACAAAB6QAAAGwB/////wEAAAACAA==
+height=1181
+splitter_state=AAAA/wAAAAEAAAACAAAB4wAAAHIB/////wEAAAACAA==
 
 [files]
 images
-CHANGELOG.md
-LICENSE
+.aigui
 pyproject.toml
-README.md
-requirements.txt
 aigui\images
 aigui\apptheme.py
 aigui\file_processor.py

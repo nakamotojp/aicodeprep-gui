@@ -146,7 +146,7 @@ class GlobalPresetManager:
                 default_presets = [
                     ("Debug", "Can you help me debug this code?"),
                     ("Security check", "Can you analyze this code for any security issues?"),
-                    ("Best Practices", "Please keep in mind: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic."),
+                    ("Best Practices", "Please analyze this code: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic."),
                     ("Please review for", "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Any security concerns, Suggest improvements and explain your reasoning for each suggestion")
                 ]
                 
@@ -413,10 +413,54 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             initial_checked_paths = {rel_path for _, rel_path, is_checked in files if is_checked}
             self._expand_folders_for_paths(initial_checked_paths)
         
-        prefs_checkbox_layout = QtWidgets.QHBoxLayout()
+        prefs_checkbox_layout = QtWidgets.QVBoxLayout()
+        # --- Remember checked files checkbox with tooltip and ? icon ---
         self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aigui), window size, and splitter position")
         self.remember_checkbox.setChecked(True)
-        prefs_checkbox_layout.addWidget(self.remember_checkbox)
+        self.remember_checkbox.setToolTip("Saves which files are included in the context for this folder, so you don't have to keep doing it over and over")
+        remember_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        remember_help.setToolTip("Saves which files are included in the context for this folder, so you don't have to keep doing it over and over")
+        remember_help.setAlignment(QtCore.Qt.AlignVCenter)
+        remember_layout = QtWidgets.QHBoxLayout()
+        remember_layout.setContentsMargins(0,0,0,0)
+        remember_layout.addWidget(self.remember_checkbox)
+        remember_layout.addWidget(remember_help)
+        remember_layout.addStretch()
+        prefs_checkbox_layout.addLayout(remember_layout)
+
+        # --- Prompt/question to top checkbox with tooltip and ? icon ---
+        self.prompt_top_checkbox = QtWidgets.QCheckBox("Add prompt/question to top")
+        self.prompt_top_checkbox.setToolTip("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_top_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        prompt_top_help.setToolTip("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_top_help.setAlignment(QtCore.Qt.AlignVCenter)
+        prompt_top_layout = QtWidgets.QHBoxLayout()
+        prompt_top_layout.setContentsMargins(0,0,0,0)
+        prompt_top_layout.addWidget(self.prompt_top_checkbox)
+        prompt_top_layout.addWidget(prompt_top_help)
+        prompt_top_layout.addStretch()
+        prefs_checkbox_layout.addLayout(prompt_top_layout)
+
+        # --- Prompt/question to bottom checkbox with tooltip and ? icon ---
+        self.prompt_bottom_checkbox = QtWidgets.QCheckBox("Add prompt/question to bottom")
+        self.prompt_bottom_checkbox.setToolTip("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_bottom_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        prompt_bottom_help.setToolTip("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_bottom_help.setAlignment(QtCore.Qt.AlignVCenter)
+        prompt_bottom_layout = QtWidgets.QHBoxLayout()
+        prompt_bottom_layout.setContentsMargins(0,0,0,0)
+        prompt_bottom_layout.addWidget(self.prompt_bottom_checkbox)
+        prompt_bottom_layout.addWidget(prompt_bottom_help)
+        prompt_bottom_layout.addStretch()
+        prefs_checkbox_layout.addLayout(prompt_bottom_layout)
+
+        # Load global prompt option settings
+        self._load_prompt_options()
+
+        # Save settings when toggled
+        self.prompt_top_checkbox.stateChanged.connect(self._save_prompt_options)
+        self.prompt_bottom_checkbox.stateChanged.connect(self._save_prompt_options)
+
         main_layout.addLayout(prefs_checkbox_layout)
         
         button_layout1 = QtWidgets.QHBoxLayout(); button_layout2 = QtWidgets.QHBoxLayout()
@@ -509,8 +553,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     QtCore.QTimer.singleShot(0, lambda: self.expand_parents_of_item(item))
 
             self.update_token_counter()
-            if self.remember_checkbox and self.remember_checkbox.isChecked():
-                self.save_prefs()
+            # Only save preferences when explicitly requested by the user.
 
     def expand_parents_of_item(self, item):
         """Expand all parent folders of the given item."""
@@ -631,7 +674,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         chosen_fmt = self.format_combo.currentData()
         prompt = self.prompt_textbox.toPlainText().strip()
 
-        if process_files(selected_files, "fullcode.txt", fmt=chosen_fmt, prompt=prompt) > 0:
+        if process_files(
+            selected_files,
+            "fullcode.txt",
+            fmt=chosen_fmt,
+            prompt=prompt,
+            prompt_to_top=self.prompt_top_checkbox.isChecked(),
+            prompt_to_bottom=self.prompt_bottom_checkbox.isChecked()
+        ) > 0:
             output_path = os.path.join(os.getcwd(), "fullcode.txt")
             
             # Now, just read the final content for the clipboard
@@ -642,9 +692,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             logging.info(f"Copied {len(content)} chars to clipboard.")
             self.text_label.setStyleSheet("font-size: 20px; color: #00c3ff; font-weight: bold;")
             self.text_label.setText("Copied to clipboard and fullcode.txt")
+            self.save_prefs()
             QtCore.QTimer.singleShot(1500, self.close)
-            if self.remember_checkbox and self.remember_checkbox.isChecked():
-                self.save_prefs()
         else:
             self.close()
     def quit_without_processing(self): self.action = 'quit'; self.close()
@@ -688,9 +737,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prefs_path = _prefs_path()
         if os.path.exists(prefs_path):
             self.load_prefs_if_exists()
-            self.deselect_all()
-            for rel_path, item in self.path_to_item.items():
-                if rel_path in self.checked_files_from_prefs: item.setCheckState(0, QtCore.Qt.Checked)
+            self.tree_widget.blockSignals(True)
+            try:
+                self.deselect_all()
+                for rel_path, item in self.path_to_item.items():
+                    if rel_path in self.checked_files_from_prefs:
+                        item.setCheckState(0, QtCore.Qt.Checked)
+            finally:
+                self.tree_widget.blockSignals(False)
             # Auto-expand folders after loading preferences
             self._expand_folders_for_paths(self.checked_files_from_prefs)
             file_type = ".aigui" if prefs_path.endswith(".aigui") else ".aicodeprep"
@@ -720,6 +774,19 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         size = self.size()
         splitter_state = self.splitter.saveState()
         _write_prefs_file(checked_relpaths, window_size=(size.width(), size.height()), splitter_state=splitter_state)
+        self._save_prompt_options()
+
+    def _load_prompt_options(self):
+        """Load global prompt/question placement options from QSettings."""
+        settings = QtCore.QSettings("aigui", "PromptOptions")
+        self.prompt_top_checkbox.setChecked(settings.value("prompt_to_top", False, type=bool))
+        self.prompt_bottom_checkbox.setChecked(settings.value("prompt_to_bottom", True, type=bool))
+
+    def _save_prompt_options(self):
+        """Save global prompt/question placement options to QSettings."""
+        settings = QtCore.QSettings("aigui", "PromptOptions")
+        settings.setValue("prompt_to_top", self.prompt_top_checkbox.isChecked())
+        settings.setValue("prompt_to_bottom", self.prompt_bottom_checkbox.isChecked())
 
     def toggle_dark_mode(self, state):
         self.is_dark_mode = bool(state)
