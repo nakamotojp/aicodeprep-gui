@@ -3,6 +3,7 @@ import sys
 import platform
 import logging
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
+from importlib import resources
 from aicodeprep_gui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
 from typing import List, Tuple
 from aicodeprep_gui import smart_logic
@@ -212,7 +213,30 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def __init__(self, files):
         super().__init__()
-        self.presets = []
+        # Set application icon
+        try:
+            with resources.path('aicodeprep_gui.images', 'favicon.ico') as icon_path:
+                app_icon = QtGui.QIcon(str(icon_path))
+            self.setWindowIcon(app_icon)
+            # Add system tray icon with context menu
+            from PySide6.QtWidgets import QSystemTrayIcon, QMenu
+            from PySide6.QtGui import QAction
+            tray = QSystemTrayIcon(app_icon, parent=self)
+            # build a minimal context menu
+            menu = QMenu()
+            show_act = QAction("Show", self)
+            quit_act = QAction("Quit", self)
+            show_act.triggered.connect(self.show)
+            quit_act.triggered.connect(self.quit_without_processing)
+            menu.addAction(show_act)
+            menu.addSeparator()
+            menu.addAction(quit_act)
+            tray.setContextMenu(menu)
+            tray.show()
+            self.tray_icon = tray  # keep a reference so it doesn't get garbage‐collected
+        except FileNotFoundError:
+            logging.warning("Application icon 'favicon.ico' not found in package resources.")
+        self.presets = [] # This local 'presets' list is not used for global presets, but for local ones (which are not saved to the .aicodeprep-gui file, but managed by global_preset_manager through QSettings)
         self.setAcceptDrops(True)
         self.files = files
 
@@ -230,10 +254,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.action = 'quit'
 
         self.prefs_filename = ".aicodeprep-gui"
-        self.remember_checkbox = None
+        self.remember_checkbox = None 
         self.checked_files_from_prefs = set()
         self.prefs_loaded = False
         self.window_size_from_prefs = None
+        self.splitter_state_from_prefs = None # Initialize this attribute
         self.load_prefs_if_exists()
 
         if platform.system() == 'Windows':
@@ -267,6 +292,80 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         mb = self.menuBar()
         file_menu = mb.addMenu("&File")
+
+        # Add this new block for the Windows-only menu item
+        if platform.system() == "Windows":
+            from aicodeprep_gui import windows_registry
+            class RegistryManagerDialog(QtWidgets.QDialog):
+                def __init__(self, parent=None):
+                    super().__init__(parent)
+                    self.setWindowTitle("Windows Context Menu Manager")
+                    self.setMinimumWidth(400)
+                    
+                    self.layout = QtWidgets.QVBoxLayout(self)
+                    
+                    info_text = (
+                        "This tool can add or remove a right-click context menu item in "
+                        "Windows Explorer to open `aicodeprep-gui` in any folder.<br><br>"
+                        "<b>Note:</b> This operation requires administrator privileges. "
+                        "A UAC prompt will appear."
+                    )
+                    self.info_label = QtWidgets.QLabel(info_text)
+                    self.info_label.setWordWrap(True)
+                    self.layout.addWidget(self.info_label)
+
+                    self.status_label = QtWidgets.QLabel("Ready.")
+                    self.status_label.setStyleSheet("font-style: italic;")
+                    
+                    self.install_button = QtWidgets.QPushButton("Install Right-Click Menu")
+                    self.install_button.clicked.connect(self.run_install)
+                    
+                    self.uninstall_button = QtWidgets.QPushButton("Uninstall Right-Click Menu")
+                    self.uninstall_button.clicked.connect(self.run_uninstall)
+
+                    button_layout = QtWidgets.QHBoxLayout()
+                    button_layout.addWidget(self.install_button)
+                    button_layout.addWidget(self.uninstall_button)
+                    
+                    self.layout.addLayout(button_layout)
+                    self.layout.addWidget(self.status_label)
+
+                def _run_action(self, action_name):
+                    if windows_registry.is_admin():
+                        # Already running as admin, just do the action
+                        if action_name == 'install':
+                            success, message = windows_registry.install_context_menu()
+                        else:
+                            success, message = windows_registry.remove_context_menu()
+                        
+                        self.status_label.setText(message)
+                        if success:
+                            QtWidgets.QMessageBox.information(self, "Success", message)
+                        else:
+                            QtWidgets.QMessageBox.warning(self, "Error", message)
+                    else:
+                        # Not admin, need to elevate
+                        success, message = windows_registry.run_as_admin(action_name)
+                        self.status_label.setText(message)
+                        if success:
+                            # Close the main app window as a new elevated process will take over
+                            self.parent().close()
+                
+                def run_install(self):
+                    self._run_action('install')
+
+                def run_uninstall(self):
+                    self._run_action('remove')
+
+            def open_registry_manager(self):
+                dialog = RegistryManagerDialog(self)
+                dialog.exec()
+
+            install_menu_act = QtGui.QAction("Install Right-Click Menu...", self)
+            install_menu_act.triggered.connect(lambda: open_registry_manager(self))
+            file_menu.addAction(install_menu_act)
+            file_menu.addSeparator() # Optional, for visual separation
+
         quit_act = QtGui.QAction("&Quit", self); quit_act.triggered.connect(self.quit_without_processing); file_menu.addAction(quit_act)
         edit_menu = mb.addMenu("&Edit")
         new_preset_act = QtGui.QAction("&New Preset…", self); new_preset_act.triggered.connect(self.add_new_preset_dialog); edit_menu.addAction(new_preset_act)
@@ -274,27 +373,29 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         open_settings_folder_act.triggered.connect(self.open_settings_folder)
         edit_menu.addAction(open_settings_folder_act)
 
-        title_bar_layout = QtWidgets.QHBoxLayout()
-        self.format_combo = QtWidgets.QComboBox(); self.format_combo.addItems(["XML <code>", "Markdown ###"]); self.format_combo.setFixedWidth(130)
-        self.format_combo.setItemData(0, 'xml'); self.format_combo.setItemData(1, 'markdown')
-        output_label = QtWidgets.QLabel("&Output format:"); output_label.setBuddy(self.format_combo)
-        title_bar_layout.addWidget(output_label); title_bar_layout.addWidget(self.format_combo); title_bar_layout.addStretch()
-        self.dark_mode_box = QtWidgets.QCheckBox("Dark mode"); self.dark_mode_box.setChecked(self.is_dark_mode); self.dark_mode_box.stateChanged.connect(self.toggle_dark_mode)
-        title_bar_layout.addWidget(self.dark_mode_box)
-        main_layout.addLayout(title_bar_layout)
+        self.format_combo = QtWidgets.QComboBox()
+        self.format_combo.addItems(["XML <code>", "Markdown ###"])
+        self.format_combo.setFixedWidth(130)
+        self.format_combo.setItemData(0, 'xml')
+        self.format_combo.setItemData(1, 'markdown')
+        output_label = QtWidgets.QLabel("&Output format:")
+        output_label.setBuddy(self.format_combo)
+        self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
+        self.dark_mode_box.setChecked(self.is_dark_mode)
+        self.dark_mode_box.stateChanged.connect(self.toggle_dark_mode)
         self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
         main_layout.addWidget(self.token_label)
         main_layout.addSpacing(8)
 
-        self.vibe_label = QtWidgets.QLabel(f"aicodeprep-gui {__version__}")
+        self.vibe_label = QtWidgets.QLabel("AI Code Prep GUI")
         vibe_font = QtGui.QFont(self.default_font)
         vibe_font.setBold(True)
         vibe_font.setPointSize(self.default_font.pointSize() + 8)
         self.vibe_label.setFont(vibe_font)
         self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         self.vibe_label.setStyleSheet(
-            f"background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
-            f"color: {'white' if self.is_dark_mode else 'black'}; padding: 0px 0px 0px 0px; border-radius: 8px;"
+            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
+            "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
         )
         self.vibe_label.setFixedHeight(44)
         banner_wrap = QtWidgets.QWidget()
@@ -362,7 +463,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.tree_widget = QtWidgets.QTreeWidget()
         self.tree_widget.setHeaderLabels(["File/Folder"])
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        # Fix: The original code had a syntax error here, it should be a direct string assignment.
         # Apply initial checkbox styling along with other styles
         base_style = """
             QTreeView, QTreeWidget {
@@ -389,7 +489,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(self.splitter)
 
         # Apply saved splitter state if available
-        if hasattr(self, 'splitter_state_from_prefs') and self.splitter_state_from_prefs:
+        if self.splitter_state_from_prefs: 
             try:
                 self.splitter.restoreState(self.splitter_state_from_prefs)
                 logging.info("Restored splitter state from preferences")
@@ -428,6 +528,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if os.path.isdir(abs_path):
                 item.setIcon(0, self.folder_icon)
                 item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                # For directories, default to unchecked during initial population.
+                # Their checked state will reflect children or be set explicitly by load_prefs_if_exists
+                item.setCheckState(0, QtCore.Qt.Unchecked) 
             else: # It's a file
                 item.setIcon(0, self.file_icon)
                 item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
@@ -449,9 +552,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             initial_checked_paths = {rel_path for _, rel_path, is_checked in files if is_checked}
             self._expand_folders_for_paths(initial_checked_paths)
         
-        prefs_checkbox_layout = QtWidgets.QVBoxLayout()
         # --- Remember checked files checkbox with tooltip and ? icon ---
-        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep-gui), window size, and splitter position")
+        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder, window size information")
         self.remember_checkbox.setChecked(True)
         self.remember_checkbox.setToolTip("Saves which files are included in the context for this folder, so you don't have to keep doing it over and over")
         remember_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
@@ -462,7 +564,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         remember_layout.addWidget(self.remember_checkbox)
         remember_layout.addWidget(remember_help)
         remember_layout.addStretch()
-        prefs_checkbox_layout.addLayout(remember_layout)
 
         # --- Prompt/question to top checkbox with tooltip and ? icon ---
         self.prompt_top_checkbox = QtWidgets.QCheckBox("Add prompt/question to top")
@@ -475,7 +576,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_top_layout.addWidget(self.prompt_top_checkbox)
         prompt_top_layout.addWidget(prompt_top_help)
         prompt_top_layout.addStretch()
-        prefs_checkbox_layout.addLayout(prompt_top_layout)
 
         # --- Prompt/question to bottom checkbox with tooltip and ? icon ---
         self.prompt_bottom_checkbox = QtWidgets.QCheckBox("Add prompt/question to bottom")
@@ -488,7 +588,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_bottom_layout.addWidget(self.prompt_bottom_checkbox)
         prompt_bottom_layout.addWidget(prompt_bottom_help)
         prompt_bottom_layout.addStretch()
-        prefs_checkbox_layout.addLayout(prompt_bottom_layout)
 
         # Load global prompt option settings
         self._load_prompt_options()
@@ -497,7 +596,24 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.prompt_top_checkbox.stateChanged.connect(self._save_prompt_options)
         self.prompt_bottom_checkbox.stateChanged.connect(self._save_prompt_options)
 
-        main_layout.addLayout(prefs_checkbox_layout)
+        # --- New Options & Settings Group ---
+        options_group_box = QtWidgets.QGroupBox("Options & Settings")
+        options_group_layout = QtWidgets.QVBoxLayout(options_group_box)
+
+        # First row: Output format and Dark mode
+        options_top_row = QtWidgets.QHBoxLayout()
+        options_top_row.addWidget(output_label)
+        options_top_row.addWidget(self.format_combo)
+        options_top_row.addStretch()
+        options_top_row.addWidget(self.dark_mode_box)
+        options_group_layout.addLayout(options_top_row)
+
+        # Add the three checkbox layouts
+        options_group_layout.addLayout(remember_layout)
+        options_group_layout.addLayout(prompt_top_layout)
+        options_group_layout.addLayout(prompt_bottom_layout)
+
+        main_layout.addWidget(options_group_box)
         
         button_layout1 = QtWidgets.QHBoxLayout(); button_layout2 = QtWidgets.QHBoxLayout()
         main_layout.addLayout(button_layout1); main_layout.addLayout(button_layout2)
@@ -514,32 +630,35 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.file_token_counts = {}
         self.update_token_counter()
         self._load_global_presets()
-        if self.prefs_loaded and self.loaded_presets:
-            for label, text in self.loaded_presets: self._add_preset_button(label, text, from_local=True)
 
     def on_item_expanded(self, item):
         """Handler for when a tree item is expanded, used for lazy loading."""
-        # Check if this folder has already been loaded
         dir_path = item.data(0, QtCore.Qt.UserRole)
         if not dir_path or not os.path.isdir(dir_path): 
             return
             
-        # Check if children have already been loaded
-        if item.childCount() > 0:
-            # If first child is a real item (not placeholder), already loaded
-            first_child = item.child(0)
-            if first_child.data(0, QtCore.Qt.UserRole):
-                return
+        # Check if children have already been loaded by verifying if first child is a real item.
+        # If it has children and the first one has a UserRole data, it implies content has been loaded.
+        if item.childCount() > 0 and item.child(0).data(0, QtCore.Qt.UserRole) is not None:
+            return
             
         try:
-            # Clear any existing children first
+            # Clear any existing children (e.g., a dummy placeholder item)
             item.takeChildren()
         
             for name in sorted(os.listdir(dir_path)):
                 abs_path = os.path.join(dir_path, name)
-                rel_path = os.path.relpath(abs_path, os.getcwd())
                 
-                if rel_path in self.path_to_item: continue # Already exists
+                try:
+                    rel_path = os.path.relpath(abs_path, os.getcwd())
+                except ValueError: # Path is on a different drive on Windows
+                    logging.warning(f"Skipping {abs_path}: not on current drive.")
+                    continue
+                
+                # If an item for this relative path already exists in the dictionary, skip
+                # This can happen if some subdirectories were part of the initial 'files' list
+                if rel_path in self.path_to_item:
+                    continue
 
                 new_item = QtWidgets.QTreeWidgetItem(item, [name])
                 new_item.setData(0, QtCore.Qt.UserRole, abs_path)
@@ -550,17 +669,25 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 
                 if os.path.isdir(abs_path):
                     new_item.setIcon(0, self.folder_icon)
+                    # For newly loaded directories, inherit check state from parent if not excluded
+                    if is_excluded:
+                        new_item.setCheckState(0, QtCore.Qt.Unchecked)
+                    else:
+                        new_item.setCheckState(0, item.checkState(0)) # Inherit from parent
                 else: # File
                     new_item.setIcon(0, self.file_icon)
-                    # Don't block binary files, just leave them unchecked
+                    # Treat binary files as implicitly excluded
                     if smart_logic.is_binary_file(abs_path):
                         is_excluded = True
 
-                # Set check state based on parent, unless it's excluded
-                if is_excluded:
-                    new_item.setCheckState(0, QtCore.Qt.Unchecked)
-                else:
-                    new_item.setCheckState(0, item.checkState(0))
+                    # Set check state based on parent, unless it's excluded or was specifically unchecked in prefs
+                    if is_excluded:
+                        new_item.setCheckState(0, QtCore.Qt.Unchecked)
+                    elif self.prefs_loaded and rel_path in self.checked_files_from_prefs:
+                        new_item.setCheckState(0, QtCore.Qt.Checked)
+                    else:
+                        # Inherit from parent if not specifically in prefs and not excluded
+                        new_item.setCheckState(0, item.checkState(0))
 
         except OSError as e:
             logging.error(f"Error scanning directory {dir_path}: {e}")
@@ -570,14 +697,55 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.tree_widget.blockSignals(True)
             try:
                 new_state = item.checkState(0)
+                # Apply check state to children
                 def apply_to_children(parent_item, state):
                     for i in range(parent_item.childCount()):
                         child = parent_item.child(i)
                         if child.flags() & QtCore.Qt.ItemIsUserCheckable and child.flags() & QtCore.Qt.ItemIsEnabled:
-                            child.setCheckState(0, state)
-                            if child.childCount() > 0:
+                            abs_path = child.data(0, QtCore.Qt.UserRole)
+                            
+                            # Prevent checking excluded binary files if state is QtCore.Qt.Checked
+                            if state == QtCore.Qt.Checked and abs_path and os.path.isfile(abs_path) and smart_logic.is_binary_file(abs_path):
+                                child.setCheckState(0, QtCore.Qt.Unchecked)
+                            else:
+                                child.setCheckState(0, state)
+                            
+                            # Recursively apply to children of directories
+                            if os.path.isdir(abs_path):
                                 apply_to_children(child, state)
+                                
                 apply_to_children(item, new_state)
+
+                # Update parent state based on children (if all children are checked/unchecked)
+                parent = item.parent()
+                while parent:
+                    all_children_checked = True
+                    all_children_unchecked = True
+                    has_checkable_children = False
+                    
+                    for i in range(parent.childCount()):
+                        child = parent.child(i)
+                        if child.flags() & QtCore.Qt.ItemIsUserCheckable and child.flags() & QtCore.Qt.ItemIsEnabled:
+                            has_checkable_children = True
+                            if child.checkState(0) == QtCore.Qt.Checked:
+                                all_children_unchecked = False
+                            elif child.checkState(0) == QtCore.Qt.Unchecked:
+                                all_children_checked = False
+                            else: # Partially checked
+                                all_children_checked = False
+                                all_children_unchecked = False
+                    
+                    if has_checkable_children:
+                        if all_children_checked:
+                            parent.setCheckState(0, QtCore.Qt.Checked)
+                        elif all_children_unchecked:
+                            parent.setCheckState(0, QtCore.Qt.Unchecked)
+                        else:
+                            parent.setCheckState(0, QtCore.Qt.PartiallyChecked)
+                    else: # No checkable children, or directory that has no files/folders to check
+                        parent.setCheckState(0, QtCore.Qt.Unchecked) # Explicitly set to unchecked
+                    parent = parent.parent()
+
             finally:
                 self.tree_widget.blockSignals(False)
 
@@ -589,7 +757,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     QtCore.QTimer.singleShot(0, lambda: self.expand_parents_of_item(item))
 
             self.update_token_counter()
-            # Only save preferences when explicitly requested by the user.
+            # Only save preferences when explicitly requested by the user, or on window close.
 
     def expand_parents_of_item(self, item):
         """Expand all parent folders of the given item."""
@@ -605,30 +773,34 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self._add_preset_button(label, text, from_global=True)
         except Exception as e: 
             logging.error(f"Failed to load global presets: {e}")
+            
     def _add_preset_button(self, label: str, text: str, from_local=False, from_global=False):
         btn = QtWidgets.QPushButton(label)
         btn.setFixedHeight(22)
         btn.clicked.connect(lambda _=None, t=text: self._apply_preset(t))
         
-        # The new delete button provides a clearer UX than a context menu.
-        # btn.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        # btn.customContextMenuRequested.connect(lambda pos, l=label, b=btn, fg=from_global: self._show_preset_context_menu(pos, l, b, fg))
-
         if from_global:
             btn.setToolTip(f"Global preset: {label}")
         else:
             btn.setToolTip(f"Preset: {label}")
             
-        # Insert before the stretch and control buttons
-        insert_index = self.preset_strip.count() - 2 # there is a stretch after the buttons
+        # Insert before the stretch. The add/delete buttons are at the start.
+        # Layout: [add_btn, delete_btn, ..., stretch]
+        # We want to insert before 'stretch'.
+        insert_index = self.preset_strip.count() - 1 
         self.preset_strip.insertWidget(insert_index, btn)
 
     def _delete_preset(self, label, button, from_global):
         reply = QtWidgets.QMessageBox.question(self, "Delete Preset", f"Are you sure you want to delete the preset '{label}'?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         if reply == QtWidgets.QMessageBox.Yes:
             if from_global:
-                if not global_preset_manager.delete_preset(label): QtWidgets.QMessageBox.warning(self, "Error", f"Failed to delete global preset '{label}'"); return
-            else: self.presets = [(l, t) for l, t in self.presets if l != label]; self.save_prefs()
+                if not global_preset_manager.delete_preset(label): 
+                    QtWidgets.QMessageBox.warning(self, "Error", f"Failed to delete global preset '{label}'")
+                    return
+            else: 
+                # This branch for 'local' presets is currently not used, as all presets are global.
+                # It's kept for logical completeness but would require a local preset saving mechanism.
+                self.presets = [(l, t) for l, t in self.presets if l != label]
             self.preset_strip.removeWidget(button)
             button.deleteLater()
             logging.info(f"Deleted preset: {label}")
@@ -675,6 +847,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         txt = text_edit.toPlainText().strip()
         if txt and global_preset_manager.add_preset(lbl.strip(), txt): self._add_preset_button(lbl.strip(), txt, from_global=True)
         else: QtWidgets.QMessageBox.warning(self, "Error", "Failed to save preset.")
+        
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls() and event.mimeData().urls()[0].isLocalFile() and os.path.isdir(event.mimeData().urls()[0].toLocalFile()):
             event.acceptProposedAction()
@@ -682,28 +855,61 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         folder_path = event.mimeData().urls()[0].toLocalFile()
         os.chdir(folder_path); from aicodeprep_gui.smart_logic import collect_all_files
         self.new_gui = FileSelectionGUI(collect_all_files()); self.new_gui.show(); self.close()
+        
     def select_all(self):
         def check_all(item):
-            if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.flags() & QtCore.Qt.ItemIsEnabled: item.setCheckState(0, QtCore.Qt.Checked)
-            for i in range(item.childCount()): check_all(item.child(i))
-        for i in range(self.tree_widget.topLevelItemCount()): check_all(self.tree_widget.topLevelItem(i))
+            # Only check if it's a file or a non-excluded folder
+            abs_path = item.data(0, QtCore.Qt.UserRole)
+            rel_path = os.path.relpath(abs_path, os.getcwd()) if abs_path else None
+            is_excluded = False
+            if rel_path:
+                is_excluded = smart_logic.exclude_spec.match_file(rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
+                if os.path.isfile(abs_path) and smart_logic.is_binary_file(abs_path):
+                    is_excluded = True # Treat binary files as implicitly excluded from 'select all'
+            
+            if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.flags() & QtCore.Qt.ItemIsEnabled and not is_excluded:
+                item.setCheckState(0, QtCore.Qt.Checked)
+            else: # If it's excluded, uncheck it or keep unchecked
+                 item.setCheckState(0, QtCore.Qt.Unchecked)
+
+            for i in range(item.childCount()): 
+                # Ensure children are loaded before processing, if it's a directory
+                if os.path.isdir(abs_path):
+                    self.on_item_expanded(item) # Ensures children are present for checking
+                check_all(item.child(i))
+        
+        # Block signals temporarily to prevent recursive updates during mass selection
+        self.tree_widget.blockSignals(True)
+        try:
+            for i in range(self.tree_widget.topLevelItemCount()): 
+                check_all(self.tree_widget.topLevelItem(i))
+        finally:
+            self.tree_widget.blockSignals(False)
         self.update_token_counter()
+        
     def deselect_all(self):
         iterator = QtWidgets.QTreeWidgetItemIterator(self.tree_widget)
-        while iterator.value():
-            item = iterator.value()
-            if item.flags() & QtCore.Qt.ItemIsUserCheckable: item.setCheckState(0, QtCore.Qt.Unchecked)
-            iterator += 1
+        self.tree_widget.blockSignals(True) # Block signals during mass deselect
+        try:
+            while iterator.value():
+                item = iterator.value()
+                if item.flags() & QtCore.Qt.ItemIsUserCheckable: item.setCheckState(0, QtCore.Qt.Unchecked)
+                iterator += 1
+        finally:
+            self.tree_widget.blockSignals(False)
         self.update_token_counter()
+
     def get_selected_files(self):
         selected = []; iterator = QtWidgets.QTreeWidgetItemIterator(self.tree_widget)
         while iterator.value():
             item = iterator.value()
-            if item.checkState(0) == QtCore.Qt.Checked:
-                file_path = item.data(0, QtCore.Qt.UserRole)
-                if file_path and os.path.isfile(file_path): selected.append(file_path)
+            # Only consider files that are checked and not directories
+            file_path = item.data(0, QtCore.Qt.UserRole)
+            if file_path and os.path.isfile(file_path) and item.checkState(0) == QtCore.Qt.Checked:
+                selected.append(file_path)
             iterator += 1
         return selected
+
     def process_selected(self):
         self.action = 'process'
         selected_files = self.get_selected_files()
@@ -732,7 +938,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             QtCore.QTimer.singleShot(1500, self.close)
         else:
             self.close()
+            
     def quit_without_processing(self): self.action = 'quit'; self.close()
+    
     def update_token_counter(self):
         total_tokens = 0
         for file_path in self.get_selected_files():
@@ -743,6 +951,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 except Exception: self.file_token_counts[file_path] = 0
             total_tokens += self.file_token_counts[file_path]
         self.total_tokens = total_tokens; self.token_label.setText(f"Estimated tokens: {total_tokens:,}")
+        
     def _expand_folders_for_paths(self, checked_paths: set):
         """Auto-expand folders that contain files from the given paths."""
         folders_to_expand = set()
@@ -751,17 +960,24 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         for checked_path in checked_paths:
             # Get all parent directories of checked files
             path_parts = checked_path.split(os.sep)
-            for i in range(1, len(path_parts)):
-                folder_path = os.sep.join(path_parts[:i])
-                if folder_path and folder_path in self.path_to_item:
-                    folders_to_expand.add(self.path_to_item[folder_path])
+            # Iterate up the path hierarchy to find parent directories
+            current_path = ""
+            for i, part in enumerate(path_parts):
+                if i == 0:
+                    current_path = part
+                else:
+                    current_path = os.path.join(current_path, part)
+                
+                # If it's a directory (and not the file itself)
+                if current_path in self.path_to_item and os.path.isdir(self.path_to_item[current_path].data(0, QtCore.Qt.UserRole)):
+                    folders_to_expand.add(self.path_to_item[current_path])
         
         # Expand the folders
         for item in folders_to_expand:
             self.tree_widget.expandItem(item)
 
     def auto_expand_common_folders(self):
-        """Auto-expand common project folders on first load."""
+        """Auto-expand common project folders on first load. (Currently not called from __init__)"""
         common_folders = ['src', 'lib', 'app', 'components', 'utils', 'helpers', 'models', 'views', 'controllers']
         
         for folder_name in common_folders:
@@ -772,41 +988,65 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     def load_from_prefs_button_clicked(self):
         prefs_path = _prefs_path()
         if os.path.exists(prefs_path):
-            self.load_prefs_if_exists()
+            self.load_prefs_if_exists() # This re-populates self.checked_files_from_prefs etc.
             self.tree_widget.blockSignals(True)
             try:
-                self.deselect_all()
-                for rel_path, item in self.path_to_item.items():
-                    if rel_path in self.checked_files_from_prefs:
-                        item.setCheckState(0, QtCore.Qt.Checked)
+                # First, deselect all files to provide a clean slate.
+                # Directory states will be updated by handle_item_changed based on their children.
+                iterator = QtWidgets.QTreeWidgetItemIterator(self.tree_widget)
+                while iterator.value():
+                    item = iterator.value()
+                    # Only affect files here directly, directories will update based on children
+                    if item.flags() & QtCore.Qt.ItemIsUserCheckable and os.path.isfile(item.data(0, QtCore.Qt.UserRole)):
+                        item.setCheckState(0, QtCore.Qt.Unchecked) # Deselect all files first
+                    iterator += 1
+
+                # Then, check files based on preferences
+                for rel_path in self.checked_files_from_prefs:
+                    if rel_path in self.path_to_item:
+                        item = self.path_to_item[rel_path]
+                        if os.path.isfile(item.data(0, QtCore.Qt.UserRole)): # Only check files here
+                            item.setCheckState(0, QtCore.Qt.Checked)
+                            # Manually trigger parent updates for checked files, if not handled by setCheckState
+                            parent = item.parent()
+                            while parent:
+                                if parent.checkState(0) != QtCore.Qt.PartiallyChecked and parent.checkState(0) != QtCore.Qt.Checked:
+                                    # Set to partially checked if it was unchecked. Full check requires all children to be checked.
+                                    parent.setCheckState(0, QtCore.Qt.PartiallyChecked) 
+                                parent = parent.parent()
+
             finally:
                 self.tree_widget.blockSignals(False)
             # Auto-expand folders after loading preferences
             self._expand_folders_for_paths(self.checked_files_from_prefs)
-            file_type = ".auicp" if prefs_path.endswith(".auicp") else ".aicodeprep"
+            file_type = ".auicp" if prefs_path.endswith(".auicp") else ".aicodeprep-gui"
             self.text_label.setText(f"Loaded selection from {file_type}")
             self.update_token_counter()
         else: 
             self.text_label.setText("No preferences file found (.aicodeprep-gui)")
 
     def closeEvent(self, event):
+        if self.remember_checkbox and self.remember_checkbox.isChecked():
+            self.save_prefs() # Save prefs only if 'remember' is checked
         if self.action != 'process': self.action = 'quit'
         super(FileSelectionGUI, self).closeEvent(event)
 
     def load_prefs_if_exists(self):
-        if os.path.exists(_prefs_path()):
-            checked, window_size, splitter_state, presets = _read_prefs_file()
-            self.checked_files_from_prefs = checked
-            self.window_size_from_prefs = window_size
-            self.splitter_state_from_prefs = splitter_state
-            self.prefs_loaded = True
-            self.loaded_presets = presets # This will be None based on _read_prefs_file
+        checked, window_size, splitter_state = _read_prefs_file()
+        self.checked_files_from_prefs = checked
+        self.window_size_from_prefs = window_size
+        self.splitter_state_from_prefs = splitter_state
+        self.prefs_loaded = True
 
     def save_prefs(self):
         checked_relpaths = []
+        # Iterate through path_to_item to get only the checked files (not directories)
         for rel_path, item in self.path_to_item.items():
             if item.checkState(0) == QtCore.Qt.Checked:
-                checked_relpaths.append(rel_path)
+                file_path_abs = item.data(0, QtCore.Qt.UserRole)
+                if file_path_abs and os.path.isfile(file_path_abs): # Only save files, not directories
+                    checked_relpaths.append(rel_path)
+        
         size = self.size()
         splitter_state = self.splitter.saveState()
         _write_prefs_file(checked_relpaths, window_size=(size.width(), size.height()), splitter_state=splitter_state)
@@ -844,10 +1084,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         """
         checkbox_style = get_checkbox_style_dark() if self.is_dark_mode else get_checkbox_style_light()
         self.tree_widget.setStyleSheet(base_style + checkbox_style)
+        
         # Update theme-aware styles for other widgets
         self.vibe_label.setStyleSheet(
-            f"background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
-            f"color: {'white' if self.is_dark_mode else 'black'}; padding: 0px 0px 0px 0px; border-radius: 8px;"
+            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
+            "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
         )
         # Find preset_explanation and text_label by attribute
         for child in self.findChildren(QtWidgets.QLabel):
@@ -882,7 +1123,7 @@ def _prefs_path():
     else:
         return new_path
 
-def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, presets=None):
+def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None):
     """Write preferences to .aicodeprep-gui file"""
     new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
     try:
@@ -890,7 +1131,7 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, p
             f.write(f"# aicodeprep-gui preferences file version {AICODEPREP_GUI_VERSION}\nversion={AICODEPREP_GUI_VERSION}\n\n")
             if window_size: 
                 f.write(f"[window]\nwidth={window_size[0]}\nheight={window_size[1]}\n")
-                if splitter_state:
+                if splitter_state is not None:
                     # Convert QByteArray to base64 string for storage
                     import base64
                     splitter_data = base64.b64encode(splitter_state).decode('utf-8')
@@ -900,9 +1141,10 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, p
         logging.info(f"Saved preferences to {new_path}")
     except Exception as e: 
         logging.warning(f"Could not write .aicodeprep-gui: {e}")
+
 def _read_prefs_file():
     """Read preferences file with backwards compatibility for legacy .auicp files (migrates to .aicodeprep-gui)"""
-    checked, window_size, presets, splitter_state = set(), None, None, None
+    checked, window_size, splitter_state = set(), None, None
     width_val, height_val = None, None 
 
     legacy_path = os.path.join(os.getcwd(), ".auicp")
@@ -944,7 +1186,7 @@ def _read_prefs_file():
             logging.info("Migrating preferences from .auicp to .aicodeprep-gui")
             try:
                 # Write the data to the new .aicodeprep-gui file
-                _write_prefs_file(list(checked), window_size)
+                _write_prefs_file(list(checked), window_size, splitter_state) 
                 logging.info("Successfully migrated preferences to .aicodeprep-gui")
             except Exception as e:
                 logging.error(f"Failed to migrate preferences: {e}")
@@ -955,4 +1197,4 @@ def _read_prefs_file():
     except Exception as e:
         logging.error(f"Error reading preferences file: {e}")
 
-    return checked, window_size, splitter_state, presets
+    return checked, window_size, splitter_state

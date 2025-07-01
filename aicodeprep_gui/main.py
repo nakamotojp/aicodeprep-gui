@@ -1,5 +1,7 @@
 import os
 import sys
+import platform
+import ctypes
 from PySide6.QtCore import QSettings
 
 # Handle --delset command-line option to delete user settings and exit
@@ -45,7 +47,38 @@ def main():
     parser.add_argument("directory", nargs="?", default=".",
                         help="Directory to process (default: current directory)")
 
+    # --- ADD THESE NEW ARGUMENTS ---
+    if platform.system() == "Windows":
+        parser.add_argument("--install-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
+        parser.add_argument("--remove-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
+    # --- END OF NEW ARGUMENTS ---
+
     args = parser.parse_args()
+
+    # Set Windows AppUserModelID for proper taskbar icon
+    if platform.system() == "Windows":
+        myappid = 'wuu73.aicodeprep-gui.1.0.0'  # arbitrary unique string
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        except AttributeError:
+            # Fails on older Windows versions, but that's acceptable.
+            logging.warning("Could not set AppUserModelID. Taskbar icon may not be correct on older Windows.")
+
+    # --- ADD THIS NEW LOGIC BLOCK ---
+    if platform.system() == "Windows":
+        try:
+            from aicodeprep_gui import windows_registry
+        except ImportError:
+            windows_registry = None
+        if args.install_context_menu_privileged and windows_registry:
+            print("Running privileged action: Install context menu...")
+            windows_registry.install_context_menu()
+            sys.exit(0)
+        if args.remove_context_menu_privileged and windows_registry:
+            print("Running privileged action: Remove context menu...")
+            windows_registry.remove_context_menu()
+            sys.exit(0)
+    # --- END OF NEW LOGIC BLOCK ---
 
     # Ensure Fusion style for QSS consistency
     from PySide6 import QtWidgets
@@ -53,6 +86,12 @@ def main():
     if app is None:
         app = QtWidgets.QApplication(sys.argv)
     app.setStyle("Fusion")
+
+    # Set application icon from package favicon.ico
+    from PySide6.QtGui import QIcon
+    from importlib import resources
+    with resources.as_file(resources.files('aicodeprep_gui.images').joinpath('favicon.ico')) as icon_path:
+        app.setWindowIcon(QIcon(str(icon_path)))
 
     if args.debug:
         logger.setLevel(logging.DEBUG)
