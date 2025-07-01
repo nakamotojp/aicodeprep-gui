@@ -18,7 +18,7 @@ def _write_one_file_xml(outfile, rel_path, abs_path, skip_binfiles=None):
         outfile.write(".. contents skipped (read error) ..")
     outfile.write("\n</code>\n\n")
 
-from aigui.smart_logic import is_binary_file
+from aicodeprep_gui.smart_logic import is_binary_file
 
 def _write_one_file_md(outfile, rel_path, abs_path, skip_binfiles=None):
     if is_binary_file(abs_path):

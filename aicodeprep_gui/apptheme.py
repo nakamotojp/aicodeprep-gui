@@ -141,10 +141,10 @@ def _checkbox_style(dark: bool) -> str:
     
     # --- THIS IS THE NEW, PACKAGE-SAFE WAY TO FIND FILES ---
     try:
-        # 'aigui.images' corresponds to the aigui/images folder
-        with resources.as_file(resources.files('aigui.images').joinpath(unchecked_filename)) as p:
+        # 'aicodeprep_gui.images' corresponds to the aicodeprep_gui/images folder
+        with resources.as_file(resources.files('aicodeprep_gui.images').joinpath(unchecked_filename)) as p:
             unchecked_path = str(p)
-        with resources.as_file(resources.files('aigui.images').joinpath(checked_filename)) as p:
+        with resources.as_file(resources.files('aicodeprep_gui.images').joinpath(checked_filename)) as p:
             checked_path = str(p)
     except Exception as e:
         # Fallback or error logging if resources can't be found

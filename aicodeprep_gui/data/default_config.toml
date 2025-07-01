@@ -1,6 +1,6 @@
-# aigui - Default Configuration File
+# aicodeprep-gui - Default Configuration File
 # This file provides the baseline settings for file filtering.
-# You can override these settings by creating an `aigui.toml` file
+# You can override these settings by creating an `aicodeprep-gui.toml` file
 # in your project's root directory.
 #
 # This file uses the TOML format.

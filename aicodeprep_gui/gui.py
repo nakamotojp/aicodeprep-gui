@@ -3,11 +3,11 @@ import sys
 import platform
 import logging
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
-from aigui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
+from aicodeprep_gui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
 from typing import List, Tuple
-from aigui import smart_logic
-from aigui.file_processor import process_files
-from aigui import __version__
+from aicodeprep_gui import smart_logic
+from aicodeprep_gui.file_processor import process_files
+from aicodeprep_gui import __version__
 
 class FlowLayout(QtWidgets.QLayout):
     def __init__(self, parent=None, margin=-1, hspacing=-1, vspacing=-1):
@@ -120,13 +120,13 @@ class FlowLayout(QtWidgets.QLayout):
         else:
             return parent.spacing()
 
-# Version for .aigui file format
-AIGUI_VERSION = "1.0"
+# Version for .aicodeprep-gui file format
+AICODEPREP_GUI_VERSION = "1.0"
 
 class GlobalPresetManager:
     def __init__(self):
         try:
-            self.settings = QtCore.QSettings("aigui", "ButtonPresets")
+            self.settings = QtCore.QSettings("aicodeprep-gui", "ButtonPresets")
             self._ensure_default_presets()
         except Exception as e:
             logging.error(f"Failed to initialize global preset manager: {e}")
@@ -147,7 +147,8 @@ class GlobalPresetManager:
                     ("Debug", "Can you help me debug this code?"),
                     ("Security check", "Can you analyze this code for any security issues?"),
                     ("Best Practices", "Please analyze this code: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic."),
-                    ("Please review for", "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Any security concerns, Suggest improvements and explain your reasoning for each suggestion")
+                    ("Please review for", "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Any security concerns, Suggest improvements and explain your reasoning for each suggestion"),
+                    ("Cline Prompt", "Write a detailed enough prompt for Cline or a similar coding agent, to make the necessary changes.")
                 ]
                 
                 self.settings.beginGroup("presets")
@@ -197,6 +198,18 @@ class GlobalPresetManager:
 global_preset_manager = GlobalPresetManager()
 
 class FileSelectionGUI(QtWidgets.QMainWindow):
+    def open_settings_folder(self):
+        """Open the folder containing the .aicodeprep-gui settings file in the system file explorer."""
+        folder_path = os.getcwd()
+        if sys.platform.startswith("win"):
+            os.startfile(folder_path)
+        elif sys.platform.startswith("darwin"):
+            import subprocess
+            subprocess.Popen(["open", folder_path])
+        else:
+            import subprocess
+            subprocess.Popen(["xdg-open", folder_path])
+
     def __init__(self, files):
         super().__init__()
         self.presets = []
@@ -210,12 +223,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/loads.html?t={time_str}"))
         self.network_manager.get(request)
 
-        self.setWindowTitle("aigui - File Selection")
+        self.setWindowTitle("aicodeprep-gui - File Selection")
         self.app = QtWidgets.QApplication.instance()
-        if self.app is None: self.app = QtWidgets.QApplication([])
+        if self.app is None:
+            self.app = QtWidgets.QApplication([])
         self.action = 'quit'
 
-        self.prefs_filename = ".aigui"
+        self.prefs_filename = ".aicodeprep-gui"
         self.remember_checkbox = None
         self.checked_files_from_prefs = set()
         self.prefs_loaded = False
@@ -256,6 +270,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         quit_act = QtGui.QAction("&Quit", self); quit_act.triggered.connect(self.quit_without_processing); file_menu.addAction(quit_act)
         edit_menu = mb.addMenu("&Edit")
         new_preset_act = QtGui.QAction("&New Preset…", self); new_preset_act.triggered.connect(self.add_new_preset_dialog); edit_menu.addAction(new_preset_act)
+        open_settings_folder_act = QtGui.QAction("Open Settings Folder…", self)
+        open_settings_folder_act.triggered.connect(self.open_settings_folder)
+        edit_menu.addAction(open_settings_folder_act)
 
         title_bar_layout = QtWidgets.QHBoxLayout()
         self.format_combo = QtWidgets.QComboBox(); self.format_combo.addItems(["XML <code>", "Markdown ###"]); self.format_combo.setFixedWidth(130)
@@ -269,12 +286,21 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(self.token_label)
         main_layout.addSpacing(8)
 
-        self.vibe_label = QtWidgets.QLabel(f"aigui {__version__}")
-        vibe_font = QtGui.QFont(self.default_font); vibe_font.setBold(True); vibe_font.setPointSize(self.default_font.pointSize() + 8)
-        self.vibe_label.setFont(vibe_font); self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-        self.vibe_label.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); color: white; padding: 0px 0px 0px 0px; border-radius: 8px;")
+        self.vibe_label = QtWidgets.QLabel(f"aicodeprep-gui {__version__}")
+        vibe_font = QtGui.QFont(self.default_font)
+        vibe_font.setBold(True)
+        vibe_font.setPointSize(self.default_font.pointSize() + 8)
+        self.vibe_label.setFont(vibe_font)
+        self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        self.vibe_label.setStyleSheet(
+            f"background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
+            f"color: {'white' if self.is_dark_mode else 'black'}; padding: 0px 0px 0px 0px; border-radius: 8px;"
+        )
         self.vibe_label.setFixedHeight(44)
-        banner_wrap = QtWidgets.QWidget(); banner_layout = QtWidgets.QHBoxLayout(banner_wrap); banner_layout.setContentsMargins(14, 0, 14, 0); banner_layout.addWidget(self.vibe_label)
+        banner_wrap = QtWidgets.QWidget()
+        banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
+        banner_layout.setContentsMargins(14, 0, 14, 0)
+        banner_layout.addWidget(self.vibe_label)
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
         self.info_label = QtWidgets.QLabel("likely code files are already checked, adjust as needed")
@@ -324,7 +350,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         
         # Add explanation text below presets
         preset_explanation = QtWidgets.QLabel("Presets help you save more time and will be saved for later use")
-        preset_explanation.setStyleSheet("font-size: 10px; color: gray;")
+        preset_explanation.setObjectName("preset_explanation")
+        preset_explanation.setStyleSheet(
+            f"font-size: 10px; color: {'#bbbbbb' if self.is_dark_mode else '#444444'};"
+        )
         main_layout.addWidget(preset_explanation)
         
         main_layout.addSpacing(8)
@@ -346,8 +375,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.splitter.addWidget(self.tree_widget)
         prompt_widget = QtWidgets.QWidget(); prompt_layout = QtWidgets.QVBoxLayout(prompt_widget); prompt_layout.setContentsMargins(0,0,0,0)
         prompt_layout.addWidget(QtWidgets.QLabel("Optional prompt/question for LLM (will be appended to the end):")); prompt_layout.addSpacing(8)
-        self.prompt_textbox = QtWidgets.QPlainTextEdit(); self.prompt_textbox.setPlaceholderText("Type your question or prompt here (optional)…")
+        self.prompt_textbox = QtWidgets.QPlainTextEdit()
+        self.prompt_textbox.setPlaceholderText("Type your question or prompt here (optional)…")
         prompt_layout.addWidget(self.prompt_textbox)
+
+        # Add Clear button below the prompt box
+        self.clear_prompt_btn = QtWidgets.QPushButton("Clear")
+        self.clear_prompt_btn.setToolTip("Clear the prompt box")
+        self.clear_prompt_btn.clicked.connect(self.prompt_textbox.clear)
+        prompt_layout.addWidget(self.clear_prompt_btn)
         self.splitter.addWidget(prompt_widget)
         self.splitter.setStretchFactor(0, 4); self.splitter.setStretchFactor(1, 1)
         main_layout.addWidget(self.splitter)
@@ -415,7 +451,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         
         prefs_checkbox_layout = QtWidgets.QVBoxLayout()
         # --- Remember checked files checkbox with tooltip and ? icon ---
-        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aigui), window size, and splitter position")
+        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep-gui), window size, and splitter position")
         self.remember_checkbox.setChecked(True)
         self.remember_checkbox.setToolTip("Saves which files are included in the context for this folder, so you don't have to keep doing it over and over")
         remember_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
@@ -465,7 +501,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         
         button_layout1 = QtWidgets.QHBoxLayout(); button_layout2 = QtWidgets.QHBoxLayout()
         main_layout.addLayout(button_layout1); main_layout.addLayout(button_layout2)
-        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aigui\">aigui @ wuu73.org</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
+        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicodeprep-gui\">aicodeprep-gui @ wuu73.org</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
         button_layout1.addStretch()
         process_button = QtWidgets.QPushButton("Process Selected"); process_button.clicked.connect(self.process_selected); button_layout1.addWidget(process_button)
         select_all_button = QtWidgets.QPushButton("Select All"); select_all_button.clicked.connect(self.select_all); button_layout1.addWidget(select_all_button)
@@ -644,7 +680,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             event.acceptProposedAction()
     def dropEvent(self, event):
         folder_path = event.mimeData().urls()[0].toLocalFile()
-        os.chdir(folder_path); from aigui.smart_logic import collect_all_files
+        os.chdir(folder_path); from aicodeprep_gui.smart_logic import collect_all_files
         self.new_gui = FileSelectionGUI(collect_all_files()); self.new_gui.show(); self.close()
     def select_all(self):
         def check_all(item):
@@ -683,14 +719,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             prompt_to_bottom=self.prompt_bottom_checkbox.isChecked()
         ) > 0:
             output_path = os.path.join(os.getcwd(), "fullcode.txt")
-            
             # Now, just read the final content for the clipboard
             with open(output_path, "r", encoding="utf-8") as f:
                 content = f.read()
-
             QtWidgets.QApplication.clipboard().setText(content)
             logging.info(f"Copied {len(content)} chars to clipboard.")
-            self.text_label.setStyleSheet("font-size: 20px; color: #00c3ff; font-weight: bold;")
+            self.text_label.setStyleSheet(
+                f"font-size: 20px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
+            )
             self.text_label.setText("Copied to clipboard and fullcode.txt")
             self.save_prefs()
             QtCore.QTimer.singleShot(1500, self.close)
@@ -747,11 +783,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.tree_widget.blockSignals(False)
             # Auto-expand folders after loading preferences
             self._expand_folders_for_paths(self.checked_files_from_prefs)
-            file_type = ".aigui" if prefs_path.endswith(".aigui") else ".aicodeprep"
+            file_type = ".auicp" if prefs_path.endswith(".auicp") else ".aicodeprep"
             self.text_label.setText(f"Loaded selection from {file_type}")
             self.update_token_counter()
         else: 
-            self.text_label.setText("No preferences file found (.aigui or .aicodeprep)")
+            self.text_label.setText("No preferences file found (.aicodeprep-gui)")
 
     def closeEvent(self, event):
         if self.action != 'process': self.action = 'quit'
@@ -778,31 +814,52 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def _load_prompt_options(self):
         """Load global prompt/question placement options from QSettings."""
-        settings = QtCore.QSettings("aigui", "PromptOptions")
+        settings = QtCore.QSettings("aicodeprep-gui", "PromptOptions")
         self.prompt_top_checkbox.setChecked(settings.value("prompt_to_top", False, type=bool))
         self.prompt_bottom_checkbox.setChecked(settings.value("prompt_to_bottom", True, type=bool))
 
     def _save_prompt_options(self):
         """Save global prompt/question placement options to QSettings."""
-        settings = QtCore.QSettings("aigui", "PromptOptions")
+        settings = QtCore.QSettings("aicodeprep-gui", "PromptOptions")
         settings.setValue("prompt_to_top", self.prompt_top_checkbox.isChecked())
         settings.setValue("prompt_to_bottom", self.prompt_bottom_checkbox.isChecked())
 
     def toggle_dark_mode(self, state):
         self.is_dark_mode = bool(state)
+        # 1. Apply the correct palette for the entire application
+        if self.is_dark_mode:
+            apply_dark_palette(self.app)
+        else:
+            apply_light_palette(self.app)
+
+        # 2. Re-apply the main window's font stylesheet to force style refresh
+        font_stack = '"Segoe UI", "Ubuntu", "Helvetica Neue", Arial, sans-serif'
+        self.setStyleSheet(f"font-family: {font_stack};")
+
+        # 3. Now, apply the more specific widget styles as before
         base_style = """
             QTreeView, QTreeWidget {
                 outline: 2; /* Remove focus rectangle */
             }
         """
-        if self.is_dark_mode:
-            apply_dark_palette(self.app)
-            checkbox_style = get_checkbox_style_dark()
-        else:
-            apply_light_palette(self.app)
-            checkbox_style = get_checkbox_style_light()
-        
+        checkbox_style = get_checkbox_style_dark() if self.is_dark_mode else get_checkbox_style_light()
         self.tree_widget.setStyleSheet(base_style + checkbox_style)
+        # Update theme-aware styles for other widgets
+        self.vibe_label.setStyleSheet(
+            f"background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
+            f"color: {'white' if self.is_dark_mode else 'black'}; padding: 0px 0px 0px 0px; border-radius: 8px;"
+        )
+        # Find preset_explanation and text_label by attribute
+        for child in self.findChildren(QtWidgets.QLabel):
+            if getattr(child, "objectName", lambda: "")() == "preset_explanation":
+                child.setStyleSheet(
+                    f"font-size: 10px; color: {'#bbbbbb' if self.is_dark_mode else '#444444'};"
+                )
+        # Update the status label's style if it has text
+        if self.text_label.text():
+            self.text_label.setStyleSheet(
+                f"font-size: 20px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
+            )
 
 def show_file_selection_gui(files):
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
@@ -811,27 +868,26 @@ def show_file_selection_gui(files):
     app.exec()
     return gui.action, gui.get_selected_files()
 
-def _prefs_path(): 
-    """Get the path to the preferences file, preferring .aigui over .aicodeprep"""
-    aigui_path = os.path.join(os.getcwd(), ".aigui")
-    aicodeprep_path = os.path.join(os.getcwd(), ".aicodeprep")
-    
-    # If .aigui exists, use it
-    if os.path.exists(aigui_path):
-        return aigui_path
-    # If only .aicodeprep exists, we'll migrate it later
-    elif os.path.exists(aicodeprep_path):
-        return aicodeprep_path
-    # Default to .aigui for new files
+def _prefs_path():
+    """Get the path to the preferences file, preferring .aicodeprep-gui, with .auicp as legacy for migration"""
+    new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
+    legacy_path = os.path.join(os.getcwd(), ".auicp")
+    # Prefer new file
+    if os.path.exists(new_path):
+        return new_path
+    # Fallback to legacy for migration
+    elif os.path.exists(legacy_path):
+        return legacy_path
+    # Default to new file for new saves
     else:
-        return aigui_path
+        return new_path
 
 def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, presets=None):
-    """Write preferences to .aigui file"""
-    aigui_path = os.path.join(os.getcwd(), ".aigui")
+    """Write preferences to .aicodeprep-gui file"""
+    new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
     try:
-        with open(aigui_path, "w", encoding="utf-8") as f:
-            f.write(f"# AI GUI preferences file version {AIGUI_VERSION}\nversion={AIGUI_VERSION}\n\n")
+        with open(new_path, "w", encoding="utf-8") as f:
+            f.write(f"# aicodeprep-gui preferences file version {AICODEPREP_GUI_VERSION}\nversion={AICODEPREP_GUI_VERSION}\n\n")
             if window_size: 
                 f.write(f"[window]\nwidth={window_size[0]}\nheight={window_size[1]}\n")
                 if splitter_state:
@@ -841,19 +897,19 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, p
                     f.write(f"splitter_state={splitter_data}\n")
                 f.write("\n")
             if checked_relpaths: f.write("[files]\n" + "\n".join(checked_relpaths) + "\n")
-        logging.info(f"Saved preferences to {aigui_path}")
+        logging.info(f"Saved preferences to {new_path}")
     except Exception as e: 
-        logging.warning(f"Could not write .aigui: {e}")
+        logging.warning(f"Could not write .aicodeprep-gui: {e}")
 def _read_prefs_file():
-    """Read preferences file with backwards compatibility for .aicodeprep files"""
+    """Read preferences file with backwards compatibility for legacy .auicp files (migrates to .aicodeprep-gui)"""
     checked, window_size, presets, splitter_state = set(), None, None, None
     width_val, height_val = None, None 
-    
-    aigui_path = os.path.join(os.getcwd(), ".aigui")
-    aicodeprep_path = os.path.join(os.getcwd(), ".aicodeprep")
-    
+
+    legacy_path = os.path.join(os.getcwd(), ".auicp")
+    new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
+
     prefs_path = _prefs_path()
-    
+
     try:
         with open(prefs_path, "r", encoding="utf-8") as f:
             section = None
@@ -879,24 +935,24 @@ def _read_prefs_file():
                             splitter_state = base64.b64decode(splitter_data.encode('utf-8'))
                         except Exception as e:
                             logging.warning(f"Failed to decode splitter state: {e}")
-            
+
             if width_val is not None and height_val is not None:
                 window_size = (width_val, height_val)
-        
-        # Migration logic: if we read from .aicodeprep, migrate to .aigui
-        if prefs_path == aicodeprep_path and not os.path.exists(aigui_path):
-            logging.info("Migrating preferences from .aicodeprep to .aigui")
+
+        # Migration logic: if we read from .auicp, migrate to .aicodeprep-gui
+        if prefs_path == legacy_path and not os.path.exists(new_path):
+            logging.info("Migrating preferences from .auicp to .aicodeprep-gui")
             try:
-                # Write the data to the new .aigui file
+                # Write the data to the new .aicodeprep-gui file
                 _write_prefs_file(list(checked), window_size)
-                logging.info("Successfully migrated preferences to .aigui")
+                logging.info("Successfully migrated preferences to .aicodeprep-gui")
             except Exception as e:
                 logging.error(f"Failed to migrate preferences: {e}")
-                
+
     except FileNotFoundError:
-        file_type = ".aigui" if prefs_path.endswith(".aigui") else ".aicodeprep"
+        file_type = ".auicp" if prefs_path.endswith(".auicp") else ".aicodeprep-gui"
         logging.info(f"{file_type} file not found, will create on save.")
     except Exception as e:
         logging.error(f"Error reading preferences file: {e}")
-    
+
     return checked, window_size, splitter_state, presets

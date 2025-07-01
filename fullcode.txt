@@ -1,10 +1,14 @@
-Can you help me debug this code?
+can you figure out how to do these things, and then write a prompt for Cline, my AI coding agent, to make the changes?  
 
-aigui\data\default_config.toml:
+1. can you check to see if the name changes from aigui or auicp to aicodeprep-gui (the original name, i was trying to make it shorter but decided old name was fine so changed it back) went through fully, did i forget to change it anywhere in the readme or code etc?if there is nothing more to do that's fine we can skip this one.
+
+2. can you look at the regmenu scripts to see how to add a new menu option that can open up a 2nd window, where it can let the user click a button to install (on windows) a right click menu option, to run aicodeprep-gui in a folder location if they want? instead of typing that in a cli in the directory, they can right click 'aicodeprep-gui' - this definitely works i just am trying to change the way it is installed so i don't need to use pyinstaller. Help brainstorm or think of how to add this or go ahead and figure out how to add it to the File menu as "Install right click menu" (add it to your cline prompt).
+
+aicodeprep_gui\data\default_config.toml:
 <code>
-# aigui - Default Configuration File
+# aicodeprep-gui - Default Configuration File
 # This file provides the baseline settings for file filtering.
-# You can override these settings by creating an `aigui.toml` file
+# You can override these settings by creating an `aicodeprep-gui.toml` file
 # in your project's root directory.
 #
 # This file uses the TOML format.
@@ -235,12 +239,12 @@ exclude_patterns = [
 
 </code>
 
-aigui\images\__init__.py:
+aicodeprep_gui\images\__init__.py:
 <code>
 
 </code>
 
-aigui\apptheme.py:
+aicodeprep_gui\apptheme.py:
 <code>
 from PySide6 import QtCore, QtGui, QtWidgets
 import platform
@@ -385,10 +389,10 @@ def _checkbox_style(dark: bool) -> str:
     
     # --- THIS IS THE NEW, PACKAGE-SAFE WAY TO FIND FILES ---
     try:
-        # 'aigui.images' corresponds to the aigui/images folder
-        with resources.as_file(resources.files('aigui.images').joinpath(unchecked_filename)) as p:
+        # 'aicodeprep_gui.images' corresponds to the aicodeprep_gui/images folder
+        with resources.as_file(resources.files('aicodeprep_gui.images').joinpath(unchecked_filename)) as p:
             unchecked_path = str(p)
-        with resources.as_file(resources.files('aigui.images').joinpath(checked_filename)) as p:
+        with resources.as_file(resources.files('aicodeprep_gui.images').joinpath(checked_filename)) as p:
             checked_path = str(p)
     except Exception as e:
         # Fallback or error logging if resources can't be found
@@ -440,7 +444,7 @@ def get_checkbox_style_light() -> str:
 
 </code>
 
-aigui\file_processor.py:
+aicodeprep_gui\file_processor.py:
 <code>
 import os
 import sys
@@ -462,7 +466,7 @@ def _write_one_file_xml(outfile, rel_path, abs_path, skip_binfiles=None):
         outfile.write(".. contents skipped (read error) ..")
     outfile.write("\n</code>\n\n")
 
-from aigui.smart_logic import is_binary_file
+from aicodeprep_gui.smart_logic import is_binary_file
 
 def _write_one_file_md(outfile, rel_path, abs_path, skip_binfiles=None):
     if is_binary_file(abs_path):
@@ -529,18 +533,18 @@ def process_files(
 
 </code>
 
-aigui\gui.py:
+aicodeprep_gui\gui.py:
 <code>
 import os
 import sys
 import platform
 import logging
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
-from aigui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
+from aicodeprep_gui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
 from typing import List, Tuple
-from aigui import smart_logic
-from aigui.file_processor import process_files
-from aigui import __version__
+from aicodeprep_gui import smart_logic
+from aicodeprep_gui.file_processor import process_files
+from aicodeprep_gui import __version__
 
 class FlowLayout(QtWidgets.QLayout):
     def __init__(self, parent=None, margin=-1, hspacing=-1, vspacing=-1):
@@ -653,13 +657,13 @@ class FlowLayout(QtWidgets.QLayout):
         else:
             return parent.spacing()
 
-# Version for .aigui file format
-AIGUI_VERSION = "1.0"
+# Version for .aicodeprep-gui file format
+AICODEPREP_GUI_VERSION = "1.0"
 
 class GlobalPresetManager:
     def __init__(self):
         try:
-            self.settings = QtCore.QSettings("aigui", "ButtonPresets")
+            self.settings = QtCore.QSettings("aicodeprep-gui", "ButtonPresets")
             self._ensure_default_presets()
         except Exception as e:
             logging.error(f"Failed to initialize global preset manager: {e}")
@@ -680,7 +684,8 @@ class GlobalPresetManager:
                     ("Debug", "Can you help me debug this code?"),
                     ("Security check", "Can you analyze this code for any security issues?"),
                     ("Best Practices", "Please analyze this code: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic."),
-                    ("Please review for", "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Any security concerns, Suggest improvements and explain your reasoning for each suggestion")
+                    ("Please review for", "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Any security concerns, Suggest improvements and explain your reasoning for each suggestion"),
+                    ("Cline Prompt", "Write a detailed enough prompt for Cline or a similar coding agent, to make the necessary changes.")
                 ]
                 
                 self.settings.beginGroup("presets")
@@ -730,6 +735,18 @@ class GlobalPresetManager:
 global_preset_manager = GlobalPresetManager()
 
 class FileSelectionGUI(QtWidgets.QMainWindow):
+    def open_settings_folder(self):
+        """Open the folder containing the .auicp settings file in the system file explorer."""
+        folder_path = os.getcwd()
+        if sys.platform.startswith("win"):
+            os.startfile(folder_path)
+        elif sys.platform.startswith("darwin"):
+            import subprocess
+            subprocess.Popen(["open", folder_path])
+        else:
+            import subprocess
+            subprocess.Popen(["xdg-open", folder_path])
+
     def __init__(self, files):
         super().__init__()
         self.presets = []
@@ -743,12 +760,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/loads.html?t={time_str}"))
         self.network_manager.get(request)
 
-        self.setWindowTitle("aigui - File Selection")
+        self.setWindowTitle("aicodeprep-gui - File Selection")
         self.app = QtWidgets.QApplication.instance()
-        if self.app is None: self.app = QtWidgets.QApplication([])
+        if self.app is None:
+            self.app = QtWidgets.QApplication([])
         self.action = 'quit'
 
-        self.prefs_filename = ".aigui"
+        self.prefs_filename = ".aicodeprep-gui"
         self.remember_checkbox = None
         self.checked_files_from_prefs = set()
         self.prefs_loaded = False
@@ -789,6 +807,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         quit_act = QtGui.QAction("&Quit", self); quit_act.triggered.connect(self.quit_without_processing); file_menu.addAction(quit_act)
         edit_menu = mb.addMenu("&Edit")
         new_preset_act = QtGui.QAction("&New Preset…", self); new_preset_act.triggered.connect(self.add_new_preset_dialog); edit_menu.addAction(new_preset_act)
+        open_settings_folder_act = QtGui.QAction("Open Settings Folder…", self)
+        open_settings_folder_act.triggered.connect(self.open_settings_folder)
+        edit_menu.addAction(open_settings_folder_act)
 
         title_bar_layout = QtWidgets.QHBoxLayout()
         self.format_combo = QtWidgets.QComboBox(); self.format_combo.addItems(["XML <code>", "Markdown ###"]); self.format_combo.setFixedWidth(130)
@@ -802,12 +823,21 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(self.token_label)
         main_layout.addSpacing(8)
 
-        self.vibe_label = QtWidgets.QLabel(f"aigui {__version__}")
-        vibe_font = QtGui.QFont(self.default_font); vibe_font.setBold(True); vibe_font.setPointSize(self.default_font.pointSize() + 8)
-        self.vibe_label.setFont(vibe_font); self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-        self.vibe_label.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); color: white; padding: 0px 0px 0px 0px; border-radius: 8px;")
+        self.vibe_label = QtWidgets.QLabel(f"aicodeprep-gui {__version__}")
+        vibe_font = QtGui.QFont(self.default_font)
+        vibe_font.setBold(True)
+        vibe_font.setPointSize(self.default_font.pointSize() + 8)
+        self.vibe_label.setFont(vibe_font)
+        self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        self.vibe_label.setStyleSheet(
+            f"background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
+            f"color: {'white' if self.is_dark_mode else 'black'}; padding: 0px 0px 0px 0px; border-radius: 8px;"
+        )
         self.vibe_label.setFixedHeight(44)
-        banner_wrap = QtWidgets.QWidget(); banner_layout = QtWidgets.QHBoxLayout(banner_wrap); banner_layout.setContentsMargins(14, 0, 14, 0); banner_layout.addWidget(self.vibe_label)
+        banner_wrap = QtWidgets.QWidget()
+        banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
+        banner_layout.setContentsMargins(14, 0, 14, 0)
+        banner_layout.addWidget(self.vibe_label)
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
         self.info_label = QtWidgets.QLabel("likely code files are already checked, adjust as needed")
@@ -857,7 +887,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         
         # Add explanation text below presets
         preset_explanation = QtWidgets.QLabel("Presets help you save more time and will be saved for later use")
-        preset_explanation.setStyleSheet("font-size: 10px; color: gray;")
+        preset_explanation.setObjectName("preset_explanation")
+        preset_explanation.setStyleSheet(
+            f"font-size: 10px; color: {'#bbbbbb' if self.is_dark_mode else '#444444'};"
+        )
         main_layout.addWidget(preset_explanation)
         
         main_layout.addSpacing(8)
@@ -879,8 +912,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.splitter.addWidget(self.tree_widget)
         prompt_widget = QtWidgets.QWidget(); prompt_layout = QtWidgets.QVBoxLayout(prompt_widget); prompt_layout.setContentsMargins(0,0,0,0)
         prompt_layout.addWidget(QtWidgets.QLabel("Optional prompt/question for LLM (will be appended to the end):")); prompt_layout.addSpacing(8)
-        self.prompt_textbox = QtWidgets.QPlainTextEdit(); self.prompt_textbox.setPlaceholderText("Type your question or prompt here (optional)…")
+        self.prompt_textbox = QtWidgets.QPlainTextEdit()
+        self.prompt_textbox.setPlaceholderText("Type your question or prompt here (optional)…")
         prompt_layout.addWidget(self.prompt_textbox)
+
+        # Add Clear button below the prompt box
+        self.clear_prompt_btn = QtWidgets.QPushButton("Clear")
+        self.clear_prompt_btn.setToolTip("Clear the prompt box")
+        self.clear_prompt_btn.clicked.connect(self.prompt_textbox.clear)
+        prompt_layout.addWidget(self.clear_prompt_btn)
         self.splitter.addWidget(prompt_widget)
         self.splitter.setStretchFactor(0, 4); self.splitter.setStretchFactor(1, 1)
         main_layout.addWidget(self.splitter)
@@ -947,15 +987,45 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self._expand_folders_for_paths(initial_checked_paths)
         
         prefs_checkbox_layout = QtWidgets.QVBoxLayout()
-        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aigui), window size, and splitter position")
+        # --- Remember checked files checkbox with tooltip and ? icon ---
+        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder (.aicodeprep-gui), window size, and splitter position")
         self.remember_checkbox.setChecked(True)
-        prefs_checkbox_layout.addWidget(self.remember_checkbox)
+        self.remember_checkbox.setToolTip("Saves which files are included in the context for this folder, so you don't have to keep doing it over and over")
+        remember_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        remember_help.setToolTip("Saves which files are included in the context for this folder, so you don't have to keep doing it over and over")
+        remember_help.setAlignment(QtCore.Qt.AlignVCenter)
+        remember_layout = QtWidgets.QHBoxLayout()
+        remember_layout.setContentsMargins(0,0,0,0)
+        remember_layout.addWidget(self.remember_checkbox)
+        remember_layout.addWidget(remember_help)
+        remember_layout.addStretch()
+        prefs_checkbox_layout.addLayout(remember_layout)
 
-        # Add prompt/question placement checkboxes, each on its own line
+        # --- Prompt/question to top checkbox with tooltip and ? icon ---
         self.prompt_top_checkbox = QtWidgets.QCheckBox("Add prompt/question to top")
+        self.prompt_top_checkbox.setToolTip("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_top_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        prompt_top_help.setToolTip("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_top_help.setAlignment(QtCore.Qt.AlignVCenter)
+        prompt_top_layout = QtWidgets.QHBoxLayout()
+        prompt_top_layout.setContentsMargins(0,0,0,0)
+        prompt_top_layout.addWidget(self.prompt_top_checkbox)
+        prompt_top_layout.addWidget(prompt_top_help)
+        prompt_top_layout.addStretch()
+        prefs_checkbox_layout.addLayout(prompt_top_layout)
+
+        # --- Prompt/question to bottom checkbox with tooltip and ? icon ---
         self.prompt_bottom_checkbox = QtWidgets.QCheckBox("Add prompt/question to bottom")
-        prefs_checkbox_layout.addWidget(self.prompt_top_checkbox)
-        prefs_checkbox_layout.addWidget(self.prompt_bottom_checkbox)
+        self.prompt_bottom_checkbox.setToolTip("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_bottom_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        prompt_bottom_help.setToolTip("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_bottom_help.setAlignment(QtCore.Qt.AlignVCenter)
+        prompt_bottom_layout = QtWidgets.QHBoxLayout()
+        prompt_bottom_layout.setContentsMargins(0,0,0,0)
+        prompt_bottom_layout.addWidget(self.prompt_bottom_checkbox)
+        prompt_bottom_layout.addWidget(prompt_bottom_help)
+        prompt_bottom_layout.addStretch()
+        prefs_checkbox_layout.addLayout(prompt_bottom_layout)
 
         # Load global prompt option settings
         self._load_prompt_options()
@@ -968,7 +1038,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         
         button_layout1 = QtWidgets.QHBoxLayout(); button_layout2 = QtWidgets.QHBoxLayout()
         main_layout.addLayout(button_layout1); main_layout.addLayout(button_layout2)
-        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aigui\">aigui @ wuu73.org</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
+        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicodeprep-gui\">aicodeprep-gui @ wuu73.org</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
         button_layout1.addStretch()
         process_button = QtWidgets.QPushButton("Process Selected"); process_button.clicked.connect(self.process_selected); button_layout1.addWidget(process_button)
         select_all_button = QtWidgets.QPushButton("Select All"); select_all_button.clicked.connect(self.select_all); button_layout1.addWidget(select_all_button)
@@ -1147,7 +1217,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             event.acceptProposedAction()
     def dropEvent(self, event):
         folder_path = event.mimeData().urls()[0].toLocalFile()
-        os.chdir(folder_path); from aigui.smart_logic import collect_all_files
+        os.chdir(folder_path); from aicodeprep_gui.smart_logic import collect_all_files
         self.new_gui = FileSelectionGUI(collect_all_files()); self.new_gui.show(); self.close()
     def select_all(self):
         def check_all(item):
@@ -1186,14 +1256,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             prompt_to_bottom=self.prompt_bottom_checkbox.isChecked()
         ) > 0:
             output_path = os.path.join(os.getcwd(), "fullcode.txt")
-            
             # Now, just read the final content for the clipboard
             with open(output_path, "r", encoding="utf-8") as f:
                 content = f.read()
-
             QtWidgets.QApplication.clipboard().setText(content)
             logging.info(f"Copied {len(content)} chars to clipboard.")
-            self.text_label.setStyleSheet("font-size: 20px; color: #00c3ff; font-weight: bold;")
+            self.text_label.setStyleSheet(
+                f"font-size: 20px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
+            )
             self.text_label.setText("Copied to clipboard and fullcode.txt")
             self.save_prefs()
             QtCore.QTimer.singleShot(1500, self.close)
@@ -1250,11 +1320,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.tree_widget.blockSignals(False)
             # Auto-expand folders after loading preferences
             self._expand_folders_for_paths(self.checked_files_from_prefs)
-            file_type = ".aigui" if prefs_path.endswith(".aigui") else ".aicodeprep"
+            file_type = ".auicp" if prefs_path.endswith(".auicp") else ".aicodeprep"
             self.text_label.setText(f"Loaded selection from {file_type}")
             self.update_token_counter()
         else: 
-            self.text_label.setText("No preferences file found (.aigui or .aicodeprep)")
+            self.text_label.setText("No preferences file found (.auicp or .aicodeprep)")
 
     def closeEvent(self, event):
         if self.action != 'process': self.action = 'quit'
@@ -1281,31 +1351,52 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def _load_prompt_options(self):
         """Load global prompt/question placement options from QSettings."""
-        settings = QtCore.QSettings("aigui", "PromptOptions")
+        settings = QtCore.QSettings("aicodeprep-gui", "PromptOptions")
         self.prompt_top_checkbox.setChecked(settings.value("prompt_to_top", False, type=bool))
         self.prompt_bottom_checkbox.setChecked(settings.value("prompt_to_bottom", True, type=bool))
 
     def _save_prompt_options(self):
         """Save global prompt/question placement options to QSettings."""
-        settings = QtCore.QSettings("aigui", "PromptOptions")
+        settings = QtCore.QSettings("aicodeprep-gui", "PromptOptions")
         settings.setValue("prompt_to_top", self.prompt_top_checkbox.isChecked())
         settings.setValue("prompt_to_bottom", self.prompt_bottom_checkbox.isChecked())
 
     def toggle_dark_mode(self, state):
         self.is_dark_mode = bool(state)
+        # 1. Apply the correct palette for the entire application
+        if self.is_dark_mode:
+            apply_dark_palette(self.app)
+        else:
+            apply_light_palette(self.app)
+
+        # 2. Re-apply the main window's font stylesheet to force style refresh
+        font_stack = '"Segoe UI", "Ubuntu", "Helvetica Neue", Arial, sans-serif'
+        self.setStyleSheet(f"font-family: {font_stack};")
+
+        # 3. Now, apply the more specific widget styles as before
         base_style = """
             QTreeView, QTreeWidget {
                 outline: 2; /* Remove focus rectangle */
             }
         """
-        if self.is_dark_mode:
-            apply_dark_palette(self.app)
-            checkbox_style = get_checkbox_style_dark()
-        else:
-            apply_light_palette(self.app)
-            checkbox_style = get_checkbox_style_light()
-        
+        checkbox_style = get_checkbox_style_dark() if self.is_dark_mode else get_checkbox_style_light()
         self.tree_widget.setStyleSheet(base_style + checkbox_style)
+        # Update theme-aware styles for other widgets
+        self.vibe_label.setStyleSheet(
+            f"background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
+            f"color: {'white' if self.is_dark_mode else 'black'}; padding: 0px 0px 0px 0px; border-radius: 8px;"
+        )
+        # Find preset_explanation and text_label by attribute
+        for child in self.findChildren(QtWidgets.QLabel):
+            if getattr(child, "objectName", lambda: "")() == "preset_explanation":
+                child.setStyleSheet(
+                    f"font-size: 10px; color: {'#bbbbbb' if self.is_dark_mode else '#444444'};"
+                )
+        # Update the status label's style if it has text
+        if self.text_label.text():
+            self.text_label.setStyleSheet(
+                f"font-size: 20px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
+            )
 
 def show_file_selection_gui(files):
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
@@ -1314,27 +1405,26 @@ def show_file_selection_gui(files):
     app.exec()
     return gui.action, gui.get_selected_files()
 
-def _prefs_path(): 
-    """Get the path to the preferences file, preferring .aigui over .aicodeprep"""
-    aigui_path = os.path.join(os.getcwd(), ".aigui")
-    aicodeprep_path = os.path.join(os.getcwd(), ".aicodeprep")
-    
-    # If .aigui exists, use it
-    if os.path.exists(aigui_path):
-        return aigui_path
-    # If only .aicodeprep exists, we'll migrate it later
-    elif os.path.exists(aicodeprep_path):
-        return aicodeprep_path
-    # Default to .aigui for new files
+def _prefs_path():
+    """Get the path to the preferences file, preferring .aicodeprep-gui, with .auicp as legacy for migration"""
+    new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
+    legacy_path = os.path.join(os.getcwd(), ".auicp")
+    # Prefer new file
+    if os.path.exists(new_path):
+        return new_path
+    # Fallback to legacy for migration
+    elif os.path.exists(legacy_path):
+        return legacy_path
+    # Default to new file for new saves
     else:
-        return aigui_path
+        return new_path
 
 def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, presets=None):
-    """Write preferences to .aigui file"""
-    aigui_path = os.path.join(os.getcwd(), ".aigui")
+    """Write preferences to .aicodeprep-gui file"""
+    new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
     try:
-        with open(aigui_path, "w", encoding="utf-8") as f:
-            f.write(f"# AI GUI preferences file version {AIGUI_VERSION}\nversion={AIGUI_VERSION}\n\n")
+        with open(new_path, "w", encoding="utf-8") as f:
+            f.write(f"# aicodeprep-gui preferences file version {AICODEPREP_GUI_VERSION}\nversion={AICODEPREP_GUI_VERSION}\n\n")
             if window_size: 
                 f.write(f"[window]\nwidth={window_size[0]}\nheight={window_size[1]}\n")
                 if splitter_state:
@@ -1344,19 +1434,19 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, p
                     f.write(f"splitter_state={splitter_data}\n")
                 f.write("\n")
             if checked_relpaths: f.write("[files]\n" + "\n".join(checked_relpaths) + "\n")
-        logging.info(f"Saved preferences to {aigui_path}")
+        logging.info(f"Saved preferences to {new_path}")
     except Exception as e: 
-        logging.warning(f"Could not write .aigui: {e}")
+        logging.warning(f"Could not write .aicodeprep-gui: {e}")
 def _read_prefs_file():
-    """Read preferences file with backwards compatibility for .aicodeprep files"""
+    """Read preferences file with backwards compatibility for legacy .auicp files (migrates to .aicodeprep-gui)"""
     checked, window_size, presets, splitter_state = set(), None, None, None
     width_val, height_val = None, None 
-    
-    aigui_path = os.path.join(os.getcwd(), ".aigui")
-    aicodeprep_path = os.path.join(os.getcwd(), ".aicodeprep")
-    
+
+    legacy_path = os.path.join(os.getcwd(), ".auicp")
+    new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
+
     prefs_path = _prefs_path()
-    
+
     try:
         with open(prefs_path, "r", encoding="utf-8") as f:
             section = None
@@ -1382,39 +1472,49 @@ def _read_prefs_file():
                             splitter_state = base64.b64decode(splitter_data.encode('utf-8'))
                         except Exception as e:
                             logging.warning(f"Failed to decode splitter state: {e}")
-            
+
             if width_val is not None and height_val is not None:
                 window_size = (width_val, height_val)
-        
-        # Migration logic: if we read from .aicodeprep, migrate to .aigui
-        if prefs_path == aicodeprep_path and not os.path.exists(aigui_path):
-            logging.info("Migrating preferences from .aicodeprep to .aigui")
+
+        # Migration logic: if we read from .auicp, migrate to .aicodeprep-gui
+        if prefs_path == legacy_path and not os.path.exists(new_path):
+            logging.info("Migrating preferences from .auicp to .aicodeprep-gui")
             try:
-                # Write the data to the new .aigui file
+                # Write the data to the new .aicodeprep-gui file
                 _write_prefs_file(list(checked), window_size)
-                logging.info("Successfully migrated preferences to .aigui")
+                logging.info("Successfully migrated preferences to .aicodeprep-gui")
             except Exception as e:
                 logging.error(f"Failed to migrate preferences: {e}")
-                
+
     except FileNotFoundError:
-        file_type = ".aigui" if prefs_path.endswith(".aigui") else ".aicodeprep"
+        file_type = ".auicp" if prefs_path.endswith(".auicp") else ".aicodeprep-gui"
         logging.info(f"{file_type} file not found, will create on save.")
     except Exception as e:
         logging.error(f"Error reading preferences file: {e}")
-    
+
     return checked, window_size, splitter_state, presets
 
 </code>
 
-aigui\main.py:
+aicodeprep_gui\main.py:
 <code>
 import os
 import sys
+from PySide6.QtCore import QSettings
+
+# Handle --delset command-line option to delete user settings and exit
+if "--delset" in sys.argv:
+    # Delete ButtonPresets
+    QSettings("aicodeprep-gui", "ButtonPresets").clear()
+    # Delete PromptOptions
+    QSettings("aicodeprep-gui", "PromptOptions").clear()
+    print("All aicodeprep-gui user settings deleted.")
+    sys.exit(0)
 import argparse
 import logging
 from typing import List
-from aigui.smart_logic import collect_all_files
-from aigui.gui import show_file_selection_gui
+from aicodeprep_gui.smart_logic import collect_all_files
+from aicodeprep_gui.gui import show_file_selection_gui
 
 # Configure logging with explicit console handler only
 logger = logging.getLogger()
@@ -1435,7 +1535,7 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 def main():
-    parser = argparse.ArgumentParser(description="aigui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
+    parser = argparse.ArgumentParser(description="aicodeprep-gui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
     parser.add_argument("-n", "--no-copy", action="store_true",
                         help="Do NOT copy output to clipboard (default: copy to clipboard)")
     parser.add_argument("-o", "--output", default="fullcode.txt",
@@ -1491,7 +1591,7 @@ if __name__ == "__main__":
 
 </code>
 
-aigui\smart_logic.py:
+aicodeprep_gui\smart_logic.py:
 <code>
 from importlib import resources
 import os
@@ -1509,10 +1609,10 @@ def get_config_path():
     """Get the path to the default configuration file."""
     if getattr(sys, 'frozen', False):
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aigui', 'data', 'default_config.toml')
+        config_path = os.path.join(base_path, 'aicodeprep_gui', 'data', 'default_config.toml')
     else:
         try:
-            with resources.path('aigui.data', 'default_config.toml') as config_file:
+            with resources.path('aicodeprep_gui.data', 'default_config.toml') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
             config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.toml')
@@ -1536,7 +1636,7 @@ def load_configurations() -> dict:
     if not config:
         logging.critical("Failed to load default configuration. Exiting.")
         sys.exit("Could not load the default configuration file.")
-    user_config_path = os.path.join(os.getcwd(), 'aigui.toml')
+    user_config_path = os.path.join(os.getcwd(), 'aicodeprep-gui.toml')
     user_config = load_config_from_path(user_config_path)
     if user_config:
         logging.info(f"Found user configuration at {user_config_path}. Merging settings.")
@@ -1631,36 +1731,556 @@ def matches_pattern(filename: str, pattern: str) -> bool:
 
 </code>
 
-aigui\__init__.py:
+aicodeprep_gui\__init__.py:
 <code>
 # Package initialization
 __version__ = "1.0.0"
 
 </code>
 
-.aigui:
+old_random_scripts\regmenu-win.py:
 <code>
-# AI GUI preferences file version 1.0
-version=1.0
+import winreg
+import os
+import sys
+import subprocess
+import argparse
 
-[window]
-width=600
-height=1181
-splitter_state=AAAA/wAAAAEAAAACAAAB4wAAAHIB/////wEAAAACAA==
 
-[files]
-images
-.aigui
-pyproject.toml
-aigui\images
-aigui\apptheme.py
-aigui\file_processor.py
-aigui\gui.py
-aigui\main.py
-aigui\smart_logic.py
-aigui\__init__.py
-aigui\data\default_config.toml
-aigui\images\__init__.py
+def add_classic_right_click_menu():
+    try:
+        # Define the registry path
+        key_path = r"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+
+        # Check if the key exists
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_READ):
+                print("Classic right-click menu registry entry already exists.")
+                return True
+        except FileNotFoundError:
+            # Key does not exist, so we proceed to create it
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+                winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "")
+                print("Classic right-click menu enabled successfully.")
+                return True
+
+    except Exception as e:
+        print(f"An error occurred while adding classic right-click menu: {e}")
+        return False
+
+
+def remove_classic_right_click_menu():
+    try:
+        key_path = r"Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+
+        try:
+            winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key_path)
+            print("Classic right-click menu disabled successfully.")
+            return True
+        except FileNotFoundError:
+            print("Classic right-click menu registry entry not found.")
+            return False
+
+    except Exception as e:
+        print(f"An error occurred while removing classic right-click menu: {e}")
+        return False
+
+
+def restart_explorer():
+    # Restart Windows Explorer to apply changes
+    os.system("taskkill /f /im explorer.exe")
+    os.system("start explorer.exe")
+
+
+def add_to_context_menu():
+    # Get the path to the aicodeprep executable
+    try:
+        result = subprocess.run(['where', 'aicodeprep-gui-c'], capture_output=True, text=True)
+        if result.returncode != 0:
+            print("Error: aicodeprep-gui-c not found. Please install the package first.")
+            return False
+        script_path = result.stdout.strip().split('\n')[0]
+    except Exception as e:
+        print(f"Error finding aicodeprep-gui: {e}")
+        return False
+
+    # Create command string that handles spaces in paths
+    python_path = sys.executable
+    # Wrap paths in quotes and escape existing quotes if necessary
+    command = f'cmd /k "\"{python_path}\" \"{script_path}\" \"%V\""'
+
+    try:
+        # Create context menu for directories
+        key_path = r'Directory\Background\shell\aicodeprep-gui-c'
+        key = winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, key_path)
+        winreg.SetValue(key, '', winreg.REG_SZ, 'AI Code Prep GUI')
+
+        command_key = winreg.CreateKey(key, 'command')
+        winreg.SetValue(command_key, '', winreg.REG_SZ, command)
+
+        print("Context menu entry added successfully!")
+        return True
+
+    except Exception as e:
+        print(f"Error adding context menu: {str(e)}")
+        return False
+
+
+def remove_from_context_menu():
+    try:
+        key_path = r'Directory\Background\shell\aicodeprep-gui-c'
+        winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, f"{key_path}\\command")
+        winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, key_path)
+        print("Context menu entry removed successfully!")
+        return True
+    except Exception as e:
+        print(f"Error removing context menu: {str(e)}")
+        return False
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Manage Windows Context Menus')
+
+    # Create mutually exclusive group for classic right-click menu
+    classic_group = parser.add_mutually_exclusive_group()
+    classic_group.add_argument('--enable-classic', action='store_true',
+                               help='Enable classic right-click menu')
+    classic_group.add_argument('--disable-classic', action='store_true',
+                               help='Disable classic right-click menu')
+
+    # Create mutually exclusive group for context menu
+    context_group = parser.add_mutually_exclusive_group()
+    context_group.add_argument('--add-context', action='store_true',
+                               help='Add AI Code Prep to context menu')
+    context_group.add_argument('--remove-context', action='store_true',
+                               help='Remove AI Code Prep from context menu')
+
+    args = parser.parse_args()
+
+    # Track if any changes were made to trigger explorer restart
+    changes_made = False
+
+    # Handle classic right-click menu
+    if args.enable_classic:
+        if add_classic_right_click_menu():
+            changes_made = True
+    elif args.disable_classic:
+        if remove_classic_right_click_menu():
+            changes_made = True
+
+    # Handle context menu
+    if args.add_context:
+        if add_to_context_menu():
+            changes_made = True
+    elif args.remove_context:
+        if remove_from_context_menu():
+            changes_made = True
+
+    # Restart explorer if changes were made
+    if changes_made:
+        restart_explorer()
+
+
+if __name__ == '__main__':
+    main()
+
+</code>
+
+old_random_scripts\regmenu_gui.py:
+<code>
+import sys
+import subprocess
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
+    QPushButton, QLabel, QMessageBox
+)
+from PyQt5.QtCore import Qt
+
+class RegMenuGUI(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+        
+    def initUI(self):
+        # Main layout
+        main_layout = QVBoxLayout()
+        
+        # Context Menu Section
+        context_label = QLabel("Context Menu:")
+        context_label.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(context_label)
+        
+        context_buttons = QHBoxLayout()
+        self.add_context_btn = QPushButton("Add to Context Menu")
+        self.remove_context_btn = QPushButton("Remove from Context Menu")
+        context_buttons.addWidget(self.add_context_btn)
+        context_buttons.addWidget(self.remove_context_btn)
+        main_layout.addLayout(context_buttons)
+        
+        # Classic Menu Section
+        classic_label = QLabel("Classic Right-Click Menu:")
+        classic_label.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(classic_label)
+        
+        classic_buttons = QHBoxLayout()
+        self.enable_classic_btn = QPushButton("Enable Classic Menu")
+        self.disable_classic_btn = QPushButton("Disable Classic Menu")
+        classic_buttons.addWidget(self.enable_classic_btn)
+        classic_buttons.addWidget(self.disable_classic_btn)
+        main_layout.addLayout(classic_buttons)
+        
+        # Status Section
+        self.status_label = QLabel("Status: Ready")
+        self.status_label.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(self.status_label)
+        
+        # Connect buttons
+        self.add_context_btn.clicked.connect(self.add_context)
+        self.remove_context_btn.clicked.connect(self.remove_context)
+        self.enable_classic_btn.clicked.connect(self.enable_classic)
+        self.disable_classic_btn.clicked.connect(self.disable_classic)
+        
+        # Window settings
+        self.setLayout(main_layout)
+        self.setWindowTitle("AI Code Prep GUI - Menu Manager")
+        self.setFixedSize(400, 250)
+        
+    def run_command(self, args):
+        """Run command in new cmd window that stays open"""
+        try:
+            # Create command string
+            command = f'cmd /k "python aicodeprep_gui_c/regmenu-win.py {args}"'
+            subprocess.Popen(command, shell=True)
+            self.status_label.setText(f"Status: Executed {args}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to execute command: {str(e)}")
+            self.status_label.setText("Status: Error")
+        
+    def add_context(self):
+        self.run_command("--add-context")
+        
+    def remove_context(self):
+        self.run_command("--remove-context")
+        
+    def enable_classic(self):
+        self.run_command("--enable-classic")
+        
+    def disable_classic(self):
+        self.run_command("--disable-classic")
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = RegMenuGUI()
+    window.show()
+    sys.exit(app.exec_())
+
+</code>
+
+CHANGELOG.md:
+<code>
+# 📦 Changelog
+
+---
+
+## [1.0.0] - 2025-06-20
+
+### 🎉 Major Release - Production Ready
+
+#### ✨ New Features
+
+- **Enhanced Global Preset System:**
+
+  - Global preset management using QSettings for cross-project persistence
+  - Default presets: "Debug", "Security check", "Best Practices", "Please review for"
+  - New ✚ and 🗑️ buttons for easy preset creation and deletion
+  - Presets automatically available across all project folders
+  - Improved preset UI with scrollable horizontal layout
+
+- **Improved File Tree Experience:**
+
+  - Enhanced tree building logic with better performance
+  - Smart auto-expansion of folders containing checked files
+  - Better visual feedback with hover effects on checkboxes
+  - Cleaner, more intuitive folder navigation
+  - Improved checkbox styling using permanent image files
+
+- **Enhanced Output Options:**
+
+  - Choose between XML `<code>` tags or Markdown `###` formatting via dropdown
+  - Optional prompt/question text appended to output
+  - Intelligent file processing with better error handling
+  - Support for custom prompts with preset integration
+
+- **Robust Configuration System:**
+  - Mature TOML configuration with comprehensive default settings
+  - User overrides via `aicodeprep-gui.toml` in project directories
+  - `.gitignore`-style pattern matching using pathspec library
+  - Extensive default exclusion patterns for common build artifacts
+
+#### 🔄 Changed
+
+- **Performance Improvements:**
+
+  - Optimized file tree population with lazy loading
+  - Faster initial startup times
+  - Reduced memory usage during file scanning
+  - More responsive UI interactions
+
+- **User Experience Enhancements:**
+
+  - Improved menu bar with File and Edit menus
+  - Better error messages and descriptive logging
+  - Enhanced drag-and-drop folder support
+  - Cleaner visual design with better spacing and fonts
+
+- **File Handling:**
+  - Better binary file detection and exclusion
+  - Improved relative path handling
+  - Enhanced file size limits and validation
+  - More robust error handling for file operations
+
+#### 🛠️ Technical Improvements
+
+- **Code Architecture:**
+
+  - Comprehensive refactoring for maintainability
+  - Better separation of concerns between modules
+  - Improved error handling throughout the application
+  - Enhanced logging with descriptive error messages
+
+- **Dependencies:**
+  - Streamlined dependency list: PySide6, toml, pathspec
+  - Removed unused dependencies for cleaner installation
+  - Better cross-platform compatibility
+
+---
+
+## [0.9.8] - 2025-06-18
+
+### 🚀 Major Refactoring: TOML Configuration & Lazy Loading
+
+#### ✨ New Features
+
+- **TOML Configuration System:**
+
+  - Replaced custom Markdown configuration with industry-standard TOML format
+  - New `default_config.toml` file with comprehensive configuration options
+  - Support for user-specific configuration via `aicodeprep-gui.toml` in working directory
+  - `.gitignore`-style pattern matching using `pathspec` library for robust file exclusion
+
+- **Lazy Loading File Tree:**
+
+  - Implemented lazy loading for excluded directories (like `node_modules`, `venv`, etc.)
+  - Extremely fast initial startup by avoiding scanning large excluded directories
+  - On-demand expansion of any directory for fine-grained file selection
+  - Users can now manually expand and select specific files from previously excluded directories
+
+- **Enhanced Pattern Matching:**
+  - All file and directory exclusion now uses `.gitignore`-style patterns
+  - More powerful and standardized exclusion rules
+  - Unified inclusion/exclusion lists for better organization
+
+#### 🔄 Changed
+
+- **Dependencies:**
+
+  - Added `toml` for configuration parsing
+  - Added `pathspec` for `.gitignore`-style pattern matching
+  - Removed `tiktoken` dependency (no longer used)
+
+- **Configuration Format:**
+
+  - Migrated from `config.md` to `default_config.toml`
+  - More structured and maintainable configuration system
+  - Better support for complex exclusion patterns
+
+- **Performance Improvements:**
+  - Significantly faster startup times due to lazy loading
+  - Reduced memory usage during initial file scanning
+  - More responsive UI when working with large codebases
+
+#### 🛠️ Technical Improvements
+
+- **Code Architecture:**
+
+  - Complete rewrite of `smart_logic.py` for better performance and maintainability
+  - Improved GUI tree building logic with lazy loading support
+  - Enhanced checkbox styling using Unicode characters instead of temporary files
+  - Better error handling and descriptive error messages for debugging
+
+- **File Processing:**
+  - More efficient directory traversal with intelligent pruning
+  - Better binary file detection and handling
+  - Improved pathspec-based filtering throughout the application
+
+---
+
+## [0.9.7] - 2025-04-28
+
+### ✨ New Features
+
+- **Output Format Selection:**
+
+  - Added dropdown menu to select output format for `fullcode.txt`
+  - Options: "XML <code>" (uses `<code>...</code>` tags) or "Markdown ###" (uses `### File Path` ... `### END File Path`)
+
+- **Prompt Presets:**
+
+  - Users can create, save, and quickly apply preset text snippets to the LLM prompt box
+  - Added "Edit" → "New Preset..." menu option and "✚" button for easy creation
+  - Presets saved per-folder in `.aicodeprep` preferences file
+
+- **Enhanced Configuration System:**
+
+  - Default configuration loaded from `aicodeprep_gui_c/data/config.md`
+  - User-specific overrides via `aicodeprep_config.md` file in working directory
+
+- **UI & UX Improvements:**
+
+  - Native QMainWindow menu bar ("File" → "Quit", "Edit" → "New Preset...")
+  - Binary files automatically detected, greyed out, and made unselectable
+  - Improved checkbox styling with programmatically generated checkmark images
+  - Vertical splitter state now saved and restored via `.aicodeprep` file
+  - Application style set to "Fusion" for consistent rendering
+
+- **File & Directory Handling:**
+  - Enhanced logic to skip excluded directories during initial file collection
+  - Files and folders starting with dots (e.g., `.vscode`, `.idea`) skipped by default
+  - Glob-style pattern matching for exclusions via `fnmatch`
+
+### 🔄 Changed
+
+- **Token Counting:**
+
+  - Simplified character-based approximation (`total_chars / 4`)
+  - Removed direct runtime dependency on `tiktoken` for GUI token counting
+
+- **Preferences File:**
+  - `.aicodeprep` now stores splitter state and prompt presets
+  - Enhanced preference management system
+
+### 🐛 Fixed
+
+- Binary files can no longer be accidentally selected
+- More robust directory exclusion logic
+
+---
+
+## [0.9.6] - 2025-05-27
+
+### ✨ New Features
+
+- **Dark Mode Support:**
+  - Automatic theme detection based on system preferences
+  - Manual dark/light mode toggle in top-right corner
+  - Carefully designed dark theme palette for optimal readability
+
+### 🔄 Changed
+
+- **PySide6 Migration:**
+  - Upgraded from PyQt5 to PySide6 for improved performance
+  - Better Qt6 features and future-proofing
+  - Simplified dependencies
+
+---
+
+## [0.9.5] - 2025-01-24
+
+### 🎉 Added
+
+- **macOS Support:**
+  - Native macOS app bundle
+  - Finder workflow integration for right-click Quick Actions
+  - Tested on macOS Ventura 13.4+ (M1+)
+
+---
+
+## [0.5.0] - 2024-11-14
+
+### 🎉 Added
+
+- **Windows GUI Version:**
+  - Cross-platform Qt-based GUI application
+  - Right-click context menu integration for Windows Explorer
+  - Enhanced file selection with granular inclusion/exclusion
+  - DPI awareness for high-resolution displays
+
+### ✨ New Features
+
+- Interactive file selection before code preparation
+- Checkbox-based file inclusion/exclusion
+- Scalable UI with multiple theme options
+- Windows Explorer context menu integration
+
+### 🔄 Changed
+
+- Enhanced configuration options
+- Improved logging and error handling
+
+---
+
+## [0.2.2] - 2024-11-02
+
+### 🛠️ Improvements
+
+- Minor tweaks and bug fixes
+- Performance optimizations
+
+---
+
+## [0.2.0] - 2024-02-11
+
+### 🔧 Configuration Overhaul
+
+- Moved all hard-coded options to `default_config.yaml` file
+
+### 🎉 Added
+
+- **New Configuration Options:**
+  - `exclude_extensions` for global file type exclusion
+  - `exclude_patterns` for pattern-based exclusions (e.g., `.min.js`)
+  - `include_dirs` for explicit directory inclusion
+  - Enhanced priority system for inclusion/exclusion rules
+  - Better support for user configuration overrides
+
+### 🔄 Changed
+
+- **Improved Processing Logic:**
+  - Clear priority rules for file inclusion/exclusion:
+    1. Explicitly included files (highest priority)
+    2. Explicitly excluded files
+    3. Excluded extensions
+    4. Code extensions (lowest priority)
+  - Enhanced directory processing with priority-based logic
+  - Updated exclusion patterns based on real-world usage
+
+---
+
+</code>
+
+LICENSE:
+<code>
+MIT License
+
+Copyright (c) 2025 [Your Name or Organization]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 </code>
 
@@ -1671,55 +2291,295 @@ requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aigui"
+# CRITICAL: Changed name to match your new package name
+name = "aicodeprep-gui" 
 version = "1.0.0"
 description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
 license = { file = "LICENSE" }
 classifiers = [
-    "License :: Proprietary",
+    # NOTE: You might want to change "Proprietary" to an open-source license like "MIT"
+    # if you intend for others to use and contribute.
+    "License :: OSI Approved :: MIT License", 
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development",
+    "Environment :: X11 Applications :: Qt",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: MacOS X",
 ]
-keywords = ["ai", "code", "preparation", "chatbot"]
+keywords = ["ai", "code", "preparation", "llm", "gui", "pyside6"]
 dependencies = [
-    "altgraph>=0.17.4",
-    "certifi>=2025.4.26",
-    "charset-normalizer>=3.4.1",
-    "idna>=3.10",
-    "packaging>=25.0",
-    "pefile>=2023.2.7",
-    "pyinstaller>=6.13.0",
-    "pyinstaller-hooks-contrib>=2025.3",
-    "pyperclip>=1.8.2",
-    "PySide6>=6.8.1",
-    "PySide6_Addons>=6.8.1",
-    "PySide6_Essentials>=6.8.1",
-    "pywin32-ctypes>=0.2.3",
-    "regex>=2024.11.6",
-    "requests>=2.32.3",
-    "shiboken6>=6.8.1",
-    "urllib3>=2.4.0",
+    # These are the RUNTIME dependencies. Users who pip install your package need these.
+    "PySide6>=6.7.0", # Simplified dependency, Essentials and Addons are included
     "toml",
-    "pathspec"
+    "pathspec",
+    "requests" # for your network check
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.8" # PySide6 requires Python 3.8+
 
 [project.scripts]
-aigui = "aigui.main:main"
+# CRITICAL: Changed script name and entry point module
+aicodeprep-gui = "aicodeprep_gui.main:main"
 
 [project.urls]
-Homepage = "https://github.com/detroittommy879/aigui"
+# SUGGESTION: Update this once you rename the GitHub repo
+Homepage = "https://github.com/detroittommy879/aicodeprep-gui" 
 
 [tool.setuptools.packages.find]
-where = ["."]
+# This is correct and will find your `aicodeprep_gui` package
+where = ["."] 
 
 [tool.setuptools.package-data]
-aigui = ["data/default_config.toml", "images/*.png"]
+# CRITICAL: Changed key to match your actual package name `aicodeprep_gui`
+aicodeprep_gui = ["data/default_config.toml", "images/*.png"]
+
+# SUGGESTION: Create optional dependencies for developers/builders
+[project.optional-dependencies]
+build = [
+    "pyinstaller>=6.0.0",
+    "pyinstaller-hooks-contrib",
+    "setuptools",
+    "wheel"
+]
+</code>
+
+README.md:
+<code>
+# aicodeprep-gui - AI Code Preparation GUI
+
+_Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
+
+[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep/stargazers)
+
+**Latest Version: 1.0.0 (June 20, 2025)**
+
+---
+
+## What is aicodeprep-gui?
+
+aicodeprep-gui is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files, this tool automatically collects relevant code files into a single text file, copies it to your clipboard, and formats it with AI-friendly tags.
+
+It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-click integration.
+
+---
+
+## ✨ New Features in v1.0.0
+
+- **Modern TOML Configuration System:**
+
+  - Industry-standard TOML configuration replacing custom formats
+  - User-customizable settings via `aicodeprep-gui.toml` in project directories
+  - Comprehensive default configuration with smart file filtering
+  - `.gitignore`-style pattern matching for robust exclusion rules
+
+- **Lazy Loading Performance:**
+
+  - Lightning-fast startup by avoiding scanning of large excluded directories
+  - On-demand expansion of folders like `node_modules`, `venv`, etc.
+  - Dramatically improved performance for large codebases
+  - Users can still manually expand any directory for fine-grained selection
+
+- **Enhanced Global Preset System:**
+
+  - Create and manage reusable prompt presets globally across projects
+  - Presets are automatically saved and synced across all project folders
+  - Quick preset buttons with ✚ and 🗑️ controls for easy management
+  - Default presets include "Debug", "Security check", "Best Practices", etc.
+
+- **Improved File Tree Experience:**
+
+  - Smart auto-expansion of folders containing checked files
+  - Better visual feedback with hover effects on checkboxes
+  - Binary file detection and automatic exclusion
+  - Cleaner, more intuitive folder navigation
+
+- **Enhanced Output Options:**
+  - Choose between XML `<code>` tags or Markdown `###` formatting
+  - Optional prompt/question text appended to output
+  - Intelligent file processing with better error handling
+
+---
+
+## Previous Features (v0.9.x)
+
+- **Dark Mode Support:**
+
+  - Automatic theme detection based on system preferences
+  - Manual dark/light mode toggle in the top-right corner
+  - Carefully designed dark theme palette for optimal readability
+
+- **PySide6 Migration:**
+
+  - Upgraded to Qt6 via PySide6 for improved performance
+  - Modern Qt features and future-proofing
+  - Better cross-platform compatibility
+
+- **Persistent Preferences:**
+
+  - Automatically saves window size and selected files in `.aicodeprep-gui` file per project
+  - Remembers splitter position and window layout
+  - Optional preference saving (can be disabled)
+
+- **Smart Token Counter:**
+  - Real-time token estimation as you select/deselect files
+  - Helps optimize context size for AI models
+
+---
+
+## Screenshots & Usage
+
+See screenshots and a quick usage guide here:  
+[https://wuu73.org/aicodeprep-gui](https://wuu73.org/aicodeprep-gui)
+
+---
+
+## Installation
+
+### macOS
+
+1. Download and unzip the macOS package from the releases page.
+2. Drag `aicodeprep-gui.app` to your Applications folder.
+3. Install the Finder integration workflow if provided.
+4. To use: Right-click on a project folder → Quick Actions → aicodeprep-gui.
+5. Select/deselect files and folders as needed, then click **Process Selected**.
+6. The tool will create a `fullcode.txt` and copy all selected code to your clipboard.
+
+_Tested on macOS Ventura 13.4 and newer (M1+)._
+
+### Windows
+
+1. Run the Windows installer from the releases page.
+2. Follow the installation wizard.
+3. To use: Right-click in any folder's blank space in Windows File Explorer → `aicodeprep-gui`.
+4. Restart Windows if the context menu does not appear immediately.
+5. Select/deselect files and folders, then click **Process Selected**.
+6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
+
+### Linux
+
+1. Download the Linux package from the releases page.
+2. Follow the installation instructions in the included README.
+3. Use via command line: `aicodeprep-gui [directory]`
+4. File manager context menu integration may be available depending on your desktop environment.
+
+### Python Installation
+
+```bash
+pip install aicodeprep-gui
+aicodeprep-gui  # Run in current directory
+aicodeprep-gui /path/to/project  # Run in specific directory
+```
+
+---
+
+## Features Summary
+
+- **Cross-platform GUI** for easy visual file selection
+- **Smart Preselection** of relevant code files based on configured extensions and exclusions
+- **Dark/Light Theme Support** with system preference detection and manual toggle
+- **Lazy Loading Tree View** with instant startup and on-demand directory expansion
+- **Global Preset Management** for reusable prompt templates across projects
+- **TOML Configuration** with `.gitignore`-style pattern matching
+- **Preferences Saving** via `.aicodeprep-gui` per folder to remember selections and window layout
+- **Token Counter** displays estimated token count in real-time
+- **Context Menu Integration** for quick access from file managers
+- **Clipboard & File Output** for seamless pasting into AI chatbots
+- **Flexible Output Formats** (XML `<code>` tags or Markdown `###` sections)
+- **High-DPI Support** with crisp UI scaling on all displays
+
+---
+
+## Usage
+
+1. **Launch:** Open the tool from your project folder's context menu (right-click) or command line.
+2. **Review Files:** The tool automatically pre-selects relevant code files and expands folders containing them.
+3. **Customize Selection:**
+   - Expand/collapse folders as needed
+   - Check/uncheck files manually
+   - Use **Select All** or **Deselect All** for bulk operations
+4. **Choose Format:** Select XML `<code>` or Markdown `###` output format from the dropdown.
+5. **Add Prompt (Optional):** Use preset buttons or type custom prompts in the text area.
+6. **Process:** Click **Process Selected** to generate output and copy to clipboard.
+7. **Preferences:** Toggle "Remember checked files..." to save your selection for next time.
+
+---
+
+## Configuration
+
+You can customize file extensions, directories, and exclusion patterns via an `aicodeprep-gui.toml` file in your project folder. This will override the default configuration.
+
+Example `aicodeprep-gui.toml`:
+
+```toml
+max_file_size = 2000000
+
+code_extensions = [".py", ".js", ".ts", ".html", ".css"]
+
+exclude_patterns = [
+    "build/",
+    "dist/",
+    "*.log",
+    "temp_*"
+]
+
+default_include_patterns = [
+    "README.md",
+    "main.py"
+]
+```
+
+Refer to `aicodeprep-gui/data/default_config.toml` for all available configuration options.
+
+---
+
+## Command Line Options
+
+```bash
+aicodeprep-gui [directory] [options]
+
+Options:
+  -h, --help          Show help message
+  -n, --no-copy       Don't copy output to clipboard
+  -o, --output FILE   Output filename (default: fullcode.txt)
+  -d, --debug         Enable debug logging
+```
+
+---
+
+## Contributing
+
+Contributions and pull requests are welcome! Please submit bug reports and feature requests via GitHub Issues.
+
+---
+
+## Support & Donations
+
+If you find this tool useful, consider supporting future development:
+
+| Method   | Address / Link                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------- |
+| Bitcoin  | `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`                                                      |
+| Litecoin | `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`                                                     |
+| Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
+| CashApp  | `$lightweb73`                                                                                     |
+| Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
+
+---
 
 </code>
 
 
+aicodeprep_gui\images\checkbox_checked.png binary file skipped..
+aicodeprep_gui\images\checkbox_checked_dark.png binary file skipped..
+aicodeprep_gui\images\checkbox_unchecked.png binary file skipped..
+aicodeprep_gui\images\checkbox_unchecked_dark.png binary file skipped..
 
-Can you help me debug this code?
+
+can you figure out how to do these things, and then write a prompt for Cline, my AI coding agent, to make the changes?  
+
+1. can you check to see if the name changes from aigui or auicp to aicodeprep-gui (the original name, i was trying to make it shorter but decided old name was fine so changed it back) went through fully, did i forget to change it anywhere in the readme or code etc?if there is nothing more to do that's fine we can skip this one.
+
+2. can you look at the regmenu scripts to see how to add a new menu option that can open up a 2nd window, where it can let the user click a button to install (on windows) a right click menu option, to run aicodeprep-gui in a folder location if they want? instead of typing that in a cli in the directory, they can right click 'aicodeprep-gui' - this definitely works i just am trying to change the way it is installed so i don't need to use pyinstaller. Help brainstorm or think of how to add this or go ahead and figure out how to add it to the File menu as "Install right click menu" (add it to your cline prompt).

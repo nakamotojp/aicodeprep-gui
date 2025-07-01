@@ -2,7 +2,7 @@
 make markdown the default instead of xml, and
 lets tweak the format of the xml, markdown the way it formats the output, currently the markdown option shows ### path/to/filename.xyz and then will say ### END path/to/filename.xyz. Lets add a START word to match the END. So like ### START path/to/filename.xyz and then ### END path/to/filename.xyz.
 Add a new feature/option on the UI where it has two checkboxes, top and bottom, for where it puts the prompt (prompt box text). Studies show that you get better
-results putting it on top and bottom (before the code and after all the code files). It should save this to the .aigui file as well. Have a hover
+results putting it on top and bottom (before the code and after all the code files). It should save this to the .auicp file as well. Have a hover
 thing that will tell the user why this is here if they hover over the option checkboxes.
 
 add version number for .aicodeprep file type and make a new file for saving other things like button presets but globally (qsettings?)
@@ -10,6 +10,7 @@ save any preset buttons in this file, and it should try to read the file when ap
 when app starts for first time ever, it should create this file with these preset buttons already programmed (or created): 1. "Debug" which is "Can you help me debug this code?" 2. "Security check" - "Can you analyze this code for any security issues?" 3. "Best Practices" - "Please keep in mind: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic." 4. "Please review for" - "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Any security concerns, Suggest improvements and explain your reasoning for each suggestion"
 
 a way to use a fancy UI to edit a user config file
+add ability to edit name of fullcode.txt
 
 there should be a way to delete any of the presets that were created (or put there by the app's defaults). Error catching is a must.
 

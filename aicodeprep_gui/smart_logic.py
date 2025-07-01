@@ -14,10 +14,10 @@ def get_config_path():
     """Get the path to the default configuration file."""
     if getattr(sys, 'frozen', False):
         base_path = sys._MEIPASS
-        config_path = os.path.join(base_path, 'aigui', 'data', 'default_config.toml')
+        config_path = os.path.join(base_path, 'aicodeprep_gui', 'data', 'default_config.toml')
     else:
         try:
-            with resources.path('aigui.data', 'default_config.toml') as config_file:
+            with resources.path('aicodeprep_gui.data', 'default_config.toml') as config_file:
                 config_path = str(config_file)
         except ModuleNotFoundError:
             config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.toml')
@@ -41,7 +41,7 @@ def load_configurations() -> dict:
     if not config:
         logging.critical("Failed to load default configuration. Exiting.")
         sys.exit("Could not load the default configuration file.")
-    user_config_path = os.path.join(os.getcwd(), 'aigui.toml')
+    user_config_path = os.path.join(os.getcwd(), 'aicodeprep-gui.toml')
     user_config = load_config_from_path(user_config_path)
     if user_config:
         logging.info(f"Found user configuration at {user_config_path}. Merging settings.")

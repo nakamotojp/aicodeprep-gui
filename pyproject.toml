@@ -3,49 +3,56 @@ requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aigui"
+# CRITICAL: Changed name to match your new package name
+name = "aicodeprep-gui" 
 version = "1.0.0"
 description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "wuu73@yahoo.com" }]
 license = { file = "LICENSE" }
 classifiers = [
-    "License :: Proprietary",
+    # NOTE: You might want to change "Proprietary" to an open-source license like "MIT"
+    # if you intend for others to use and contribute.
+    "License :: OSI Approved :: MIT License", 
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development",
+    "Environment :: X11 Applications :: Qt",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: MacOS X",
 ]
-keywords = ["ai", "code", "preparation", "chatbot"]
+keywords = ["ai", "code", "preparation", "llm", "gui", "pyside6"]
 dependencies = [
-    "altgraph>=0.17.4",
-    "certifi>=2025.4.26",
-    "charset-normalizer>=3.4.1",
-    "idna>=3.10",
-    "packaging>=25.0",
-    "pefile>=2023.2.7",
-    "pyinstaller>=6.13.0",
-    "pyinstaller-hooks-contrib>=2025.3",
-    "pyperclip>=1.8.2",
-    "PySide6>=6.8.1",
-    "PySide6_Addons>=6.8.1",
-    "PySide6_Essentials>=6.8.1",
-    "pywin32-ctypes>=0.2.3",
-    "regex>=2024.11.6",
-    "requests>=2.32.3",
-    "shiboken6>=6.8.1",
-    "urllib3>=2.4.0",
+    # These are the RUNTIME dependencies. Users who pip install your package need these.
+    "PySide6>=6.7.0", # Simplified dependency, Essentials and Addons are included
     "toml",
-    "pathspec"
+    "pathspec",
+    "requests" # for your network check
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.8" # PySide6 requires Python 3.8+
 
 [project.scripts]
-aigui = "aigui.main:main"
+# CRITICAL: Changed script name and entry point module
+aicodeprep-gui = "aicodeprep_gui.main:main"
 
 [project.urls]
-Homepage = "https://github.com/detroittommy879/aigui"
+# SUGGESTION: Update this once you rename the GitHub repo
+Homepage = "https://github.com/detroittommy879/aicodeprep-gui" 
 
 [tool.setuptools.packages.find]
-where = ["."]
+# This is correct and will find your `aicodeprep_gui` package
+where = ["."] 
 
 [tool.setuptools.package-data]
-aigui = ["data/default_config.toml", "images/*.png"]
+# CRITICAL: Changed key to match your actual package name `aicodeprep_gui`
+aicodeprep_gui = ["data/default_config.toml", "images/*.png"]
+
+# SUGGESTION: Create optional dependencies for developers/builders
+[project.optional-dependencies]
+build = [
+    "pyinstaller>=6.0.0",
+    "pyinstaller-hooks-contrib",
+    "setuptools",
+    "wheel"
+]

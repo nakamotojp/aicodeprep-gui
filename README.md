@@ -1,16 +1,16 @@
-# aigui - AI Code Preparation GUI
+# aicodeprep-gui - AI Code Preparation GUI
 
 _Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
 
-[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep-gui.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep-gui/stargazers)
 
 **Latest Version: 1.0.0 (June 20, 2025)**
 
 ---
 
-## What is aigui?
+## What is aicodeprep-gui?
 
-aigui is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files, this tool automatically collects relevant code files into a single text file, copies it to your clipboard, and formats it with AI-friendly tags.
+aicodeprep-gui is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files, this tool automatically collects relevant code files into a single text file, copies it to your clipboard, and formats it with AI-friendly tags.
 
 It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-click integration.
 
@@ -21,7 +21,7 @@ It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-
 - **Modern TOML Configuration System:**
 
   - Industry-standard TOML configuration replacing custom formats
-  - User-customizable settings via `aigui.toml` in project directories
+  - User-customizable settings via `aicodeprep-gui.toml` in project directories
   - Comprehensive default configuration with smart file filtering
   - `.gitignore`-style pattern matching for robust exclusion rules
 
@@ -69,7 +69,7 @@ It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-
 
 - **Persistent Preferences:**
 
-  - Automatically saves window size and selected files in `.aigui` file per project
+  - Automatically saves window size and selected files in `.aicodeprep-gui` file per project
   - Remembers splitter position and window layout
   - Optional preference saving (can be disabled)
 
@@ -82,7 +82,7 @@ It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-
 ## Screenshots & Usage
 
 See screenshots and a quick usage guide here:  
-[https://wuu73.org/aigui](https://wuu73.org/aigui)
+[https://wuu73.org/aicodeprep-gui](https://wuu73.org/aicodeprep-gui)
 
 ---
 
@@ -91,9 +91,9 @@ See screenshots and a quick usage guide here:
 ### macOS
 
 1. Download and unzip the macOS package from the releases page.
-2. Drag `aigui.app` to your Applications folder.
+2. Drag `aicodeprep-gui.app` to your Applications folder.
 3. Install the Finder integration workflow if provided.
-4. To use: Right-click on a project folder → Quick Actions → aigui.
+4. To use: Right-click on a project folder → Quick Actions → aicodeprep-gui.
 5. Select/deselect files and folders as needed, then click **Process Selected**.
 6. The tool will create a `fullcode.txt` and copy all selected code to your clipboard.
 
@@ -103,7 +103,7 @@ _Tested on macOS Ventura 13.4 and newer (M1+)._
 
 1. Run the Windows installer from the releases page.
 2. Follow the installation wizard.
-3. To use: Right-click in any folder's blank space in Windows File Explorer → `aigui`.
+3. To use: Right-click in any folder's blank space in Windows File Explorer → `aicodeprep-gui`.
 4. Restart Windows if the context menu does not appear immediately.
 5. Select/deselect files and folders, then click **Process Selected**.
 6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
@@ -112,15 +112,15 @@ _Tested on macOS Ventura 13.4 and newer (M1+)._
 
 1. Download the Linux package from the releases page.
 2. Follow the installation instructions in the included README.
-3. Use via command line: `aigui [directory]`
+3. Use via command line: `aicodeprep-gui [directory]`
 4. File manager context menu integration may be available depending on your desktop environment.
 
 ### Python Installation
 
 ```bash
-pip install aigui
-aigui  # Run in current directory
-aigui /path/to/project  # Run in specific directory
+pip install aicodeprep-gui
+aicodeprep-gui  # Run in current directory
+aicodeprep-gui /path/to/project  # Run in specific directory
 ```
 
 ---
@@ -133,7 +133,7 @@ aigui /path/to/project  # Run in specific directory
 - **Lazy Loading Tree View** with instant startup and on-demand directory expansion
 - **Global Preset Management** for reusable prompt templates across projects
 - **TOML Configuration** with `.gitignore`-style pattern matching
-- **Preferences Saving** via `.aigui` per folder to remember selections and window layout
+- **Preferences Saving** via `.aicodeprep-gui` per folder to remember selections and window layout
 - **Token Counter** displays estimated token count in real-time
 - **Context Menu Integration** for quick access from file managers
 - **Clipboard & File Output** for seamless pasting into AI chatbots
@@ -159,9 +159,9 @@ aigui /path/to/project  # Run in specific directory
 
 ## Configuration
 
-You can customize file extensions, directories, and exclusion patterns via an `aigui.toml` file in your project folder. This will override the default configuration.
+You can customize file extensions, directories, and exclusion patterns via an `aicodeprep-gui.toml` file in your project folder. This will override the default configuration.
 
-Example `aigui.toml`:
+Example `aicodeprep-gui.toml`:
 
 ```toml
 max_file_size = 2000000
@@ -181,14 +181,14 @@ default_include_patterns = [
 ]
 ```
 
-Refer to `aigui/data/default_config.toml` for all available configuration options.
+Refer to `aicodeprep-gui/data/default_config.toml` for all available configuration options.
 
 ---
 
 ## Command Line Options
 
 ```bash
-aigui [directory] [options]
+aicodeprep-gui [directory] [options]
 
 Options:
   -h, --help          Show help message

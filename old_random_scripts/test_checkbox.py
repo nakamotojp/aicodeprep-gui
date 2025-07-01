@@ -5,7 +5,7 @@ Simple test to check if checkboxes work in QTreeWidget
 
 import sys
 from PySide6 import QtWidgets, QtCore
-from aigui.apptheme import get_checkbox_style_dark, get_checkbox_style_light, apply_dark_palette
+from auicp.apptheme import get_checkbox_style_dark, get_checkbox_style_light, apply_dark_palette
 
 def main():
     app = QtWidgets.QApplication(sys.argv)

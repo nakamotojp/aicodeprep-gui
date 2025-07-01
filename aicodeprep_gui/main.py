@@ -1,10 +1,20 @@
 import os
 import sys
+from PySide6.QtCore import QSettings
+
+# Handle --delset command-line option to delete user settings and exit
+if "--delset" in sys.argv:
+    # Delete ButtonPresets
+    QSettings("aicodeprep-gui", "ButtonPresets").clear()
+    # Delete PromptOptions
+    QSettings("aicodeprep-gui", "PromptOptions").clear()
+    print("All aicodeprep-gui user settings deleted.")
+    sys.exit(0)
 import argparse
 import logging
 from typing import List
-from aigui.smart_logic import collect_all_files
-from aigui.gui import show_file_selection_gui
+from aicodeprep_gui.smart_logic import collect_all_files
+from aicodeprep_gui.gui import show_file_selection_gui
 
 # Configure logging with explicit console handler only
 logger = logging.getLogger()
@@ -25,7 +35,7 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 def main():
-    parser = argparse.ArgumentParser(description="aigui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
+    parser = argparse.ArgumentParser(description="aicodeprep-gui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
     parser.add_argument("-n", "--no-copy", action="store_true",
                         help="Do NOT copy output to clipboard (default: copy to clipboard)")
     parser.add_argument("-o", "--output", default="fullcode.txt",

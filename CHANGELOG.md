@@ -33,7 +33,7 @@
 
 - **Robust Configuration System:**
   - Mature TOML configuration with comprehensive default settings
-  - User overrides via `aigui.toml` in project directories
+  - User overrides via `aicodeprep-gui.toml` in project directories
   - `.gitignore`-style pattern matching using pathspec library
   - Extensive default exclusion patterns for common build artifacts
 
@@ -85,7 +85,7 @@
 
   - Replaced custom Markdown configuration with industry-standard TOML format
   - New `default_config.toml` file with comprehensive configuration options
-  - Support for user-specific configuration via `aigui.toml` in working directory
+  - Support for user-specific configuration via `aicodeprep-gui.toml` in working directory
   - `.gitignore`-style pattern matching using `pathspec` library for robust file exclusion
 
 - **Lazy Loading File Tree:**

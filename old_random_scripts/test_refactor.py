@@ -14,28 +14,28 @@ def test_imports():
     print("Testing imports...")
     
     try:
-        from aigui.smart_logic import collect_all_files, is_binary_file
+        from auicp.smart_logic import collect_all_files, is_binary_file
         print("✓ smart_logic imports successful")
     except ImportError as e:
         print(f"✗ smart_logic import failed: {e}")
         return False
     
     try:
-        from aigui.file_processor import process_files
+        from auicp.file_processor import process_files
         print("✓ file_processor imports successful")
     except ImportError as e:
         print(f"✗ file_processor import failed: {e}")
         return False
     
     try:
-        from aigui.gui import show_file_selection_gui
+        from auicp.gui import show_file_selection_gui
         print("✓ gui imports successful")
     except ImportError as e:
         print(f"✗ gui import failed: {e}")
         return False
     
     try:
-        from aigui.main import main
+        from auicp.main import main
         print("✓ main imports successful")
     except ImportError as e:
         print(f"✗ main import failed: {e}")
@@ -48,7 +48,7 @@ def test_config_loading():
     print("\nTesting configuration loading...")
     
     try:
-        from aigui.smart_logic import config, CODE_EXTENSIONS, MAX_FILE_SIZE
+        from auicp.smart_logic import config, CODE_EXTENSIONS, MAX_FILE_SIZE
         print("✓ Configuration loaded successfully")
         print(f"  - Found {len(CODE_EXTENSIONS)} code extensions")
         print(f"  - Max file size: {MAX_FILE_SIZE:,} bytes")
@@ -63,7 +63,7 @@ def test_file_collection():
     print("\nTesting file collection...")
     
     try:
-        from aigui.smart_logic import collect_all_files
+        from auicp.smart_logic import collect_all_files
         files = collect_all_files()
         print(f"✓ File collection successful - found {len(files)} items")
         
