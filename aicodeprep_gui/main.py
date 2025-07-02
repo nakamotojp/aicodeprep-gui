@@ -51,6 +51,7 @@ def main():
     if platform.system() == "Windows":
         parser.add_argument("--install-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
         parser.add_argument("--remove-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
+        parser.add_argument("--menu-text", type=str, help=argparse.SUPPRESS)
     # --- END OF NEW ARGUMENTS ---
 
     args = parser.parse_args()
@@ -72,7 +73,8 @@ def main():
             windows_registry = None
         if args.install_context_menu_privileged and windows_registry:
             print("Running privileged action: Install context menu...")
-            windows_registry.install_context_menu()
+            menu_text = getattr(args, 'menu_text', None)
+            windows_registry.install_context_menu(menu_text)
             sys.exit(0)
         if args.remove_context_menu_privileged and windows_registry:
             print("Running privileged action: Remove context menu...")

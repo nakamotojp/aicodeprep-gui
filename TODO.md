@@ -5,6 +5,15 @@ Add a new feature/option on the UI where it has two checkboxes, top and bottom, 
 results putting it on top and bottom (before the code and after all the code files). It should save this to the .auicp file as well. Have a hover
 thing that will tell the user why this is here if they hover over the option checkboxes.
 
+add link and description to .aicodeprep-gui files
+add START to match END for markdown style
+
+0-------
+python -m aicodeprep_gui.main
+python -m pip install --upgrade build twine
+python -m build
+twine upload --repository testpypi dist/\*
+
 add version number for .aicodeprep file type and make a new file for saving other things like button presets but globally (qsettings?)
 save any preset buttons in this file, and it should try to read the file when app starts up, but not have an error if file doesn't exist yet
 when app starts for first time ever, it should create this file with these preset buttons already programmed (or created): 1. "Debug" which is "Can you help me debug this code?" 2. "Security check" - "Can you analyze this code for any security issues?" 3. "Best Practices" - "Please keep in mind: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic." 4. "Please review for" - "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Any security concerns, Suggest improvements and explain your reasoning for each suggestion"

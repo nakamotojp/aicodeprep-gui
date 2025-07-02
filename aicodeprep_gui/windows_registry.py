@@ -13,10 +13,11 @@ def is_admin():
         logging.error(f"Failed to check admin status: {e}")
         return False
 
-def run_as_admin(action):
+def run_as_admin(action, menu_text=None):
     """
     Re-launches the script with admin rights to perform a specific action.
     'action' can be 'install' or 'remove'.
+    'menu_text' is optional custom text for the context menu (only used with 'install').
     """
     if sys.platform != 'win32' and sys.platform != 'Windows':
         return False, "This feature is only for Windows."
@@ -29,6 +30,10 @@ def run_as_admin(action):
 
     if action == 'install':
         params = f'-m {script_entry_point} --install-context-menu-privileged'
+        if menu_text and menu_text.strip():
+            # Escape quotes and pass the menu text as an argument
+            escaped_text = menu_text.replace('"', '\\"')
+            params += f' --menu-text "{escaped_text}"'
     elif action == 'remove':
         params = f'-m {script_entry_point} --remove-context-menu-privileged'
     else:
@@ -60,7 +65,7 @@ def get_registry_command():
     # The command to be stored in the registry. Explorer replaces %V with the directory path.
     return f'"{pythonw_exe}" "{script_path}" "%V"'
 
-def install_context_menu():
+def install_context_menu(menu_text=None):
     """Adds the context menu item to the Windows Registry. Assumes admin rights."""
     if not is_admin():
         logging.error("Install function called without admin rights.")
@@ -71,16 +76,22 @@ def install_context_menu():
     if not command:
         return False, "'aicodeprep-gui' not found. Is it installed and in your PATH?"
 
+    # Use custom menu text if provided, otherwise use default
+    if menu_text is None or menu_text.strip() == "":
+        menu_text = "Open with aicodeprep-gui"
+    else:
+        menu_text = menu_text.strip()
+
     try:
         key_path = r'Directory\\Background\\shell\\aicodeprep-gui'
         with winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, key_path) as key:
-            winreg.SetValue(key, '', winreg.REG_SZ, 'Open with aicodeprep-gui')
+            winreg.SetValue(key, '', winreg.REG_SZ, menu_text)
             with winreg.CreateKey(key, 'command') as command_key:
                 winreg.SetValue(command_key, '', winreg.REG_SZ, command)
 
-        logging.info("Context menu installed successfully.")
+        logging.info(f"Context menu installed successfully with text: '{menu_text}'")
         restart_explorer()
-        return True, "Context menu installed successfully! Explorer has been restarted."
+        return True, f"Context menu installed successfully with text: '{menu_text}'! Explorer has been restarted."
     except Exception as e:
         logging.error(f"Failed to install context menu: {e}")
         return False, f"An error occurred: {e}"

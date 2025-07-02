@@ -300,7 +300,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 def __init__(self, parent=None):
                     super().__init__(parent)
                     self.setWindowTitle("Windows Context Menu Manager")
-                    self.setMinimumWidth(400)
+                    self.setMinimumWidth(450)
                     
                     self.layout = QtWidgets.QVBoxLayout(self)
                     
@@ -313,6 +313,19 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self.info_label = QtWidgets.QLabel(info_text)
                     self.info_label.setWordWrap(True)
                     self.layout.addWidget(self.info_label)
+
+                    # Add custom menu text input
+                    menu_text_label = QtWidgets.QLabel("Custom menu text:")
+                    self.layout.addWidget(menu_text_label)
+                    
+                    self.menu_text_input = QtWidgets.QLineEdit()
+                    self.menu_text_input.setPlaceholderText("Open with aicodeprep-gui")
+                    self.menu_text_input.setText("Open with aicodeprep-gui")
+                    self.menu_text_input.setToolTip("Enter the text that will appear in the right-click context menu")
+                    self.layout.addWidget(self.menu_text_input)
+                    
+                    # Add some spacing
+                    self.layout.addSpacing(10)
 
                     self.status_label = QtWidgets.QLabel("Ready.")
                     self.status_label.setStyleSheet("font-style: italic;")
@@ -334,7 +347,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     if windows_registry.is_admin():
                         # Already running as admin, just do the action
                         if action_name == 'install':
-                            success, message = windows_registry.install_context_menu()
+                            custom_text = self.menu_text_input.text().strip()
+                            success, message = windows_registry.install_context_menu(custom_text if custom_text else None)
                         else:
                             success, message = windows_registry.remove_context_menu()
                         
@@ -345,7 +359,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                             QtWidgets.QMessageBox.warning(self, "Error", message)
                     else:
                         # Not admin, need to elevate
-                        success, message = windows_registry.run_as_admin(action_name)
+                        if action_name == 'install':
+                            custom_text = self.menu_text_input.text().strip()
+                            success, message = windows_registry.run_as_admin(action_name, custom_text if custom_text else None)
+                        else:
+                            success, message = windows_registry.run_as_admin(action_name)
                         self.status_label.setText(message)
                         if success:
                             # Close the main app window as a new elevated process will take over

@@ -2,9 +2,9 @@
 version=1.0
 
 [window]
-width=600
-height=1195
-splitter_state=AAAA/wAAAAEAAAACAAADAAAAAPwB/////wEAAAACAA==
+width=567
+height=1240
+splitter_state=AAAA/wAAAAEAAAACAAAB9AAAAKsB/////wEAAAACAA==
 
 [files]
 pyproject.toml
