@@ -10,6 +10,8 @@ if "--delset" in sys.argv:
     QSettings("aicodeprep-gui", "ButtonPresets").clear()
     # Delete PromptOptions
     QSettings("aicodeprep-gui", "PromptOptions").clear()
+    # Delete UserIdentity
+    QSettings("aicodeprep-gui", "UserIdentity").clear()
     print("All aicodeprep-gui user settings deleted.")
     sys.exit(0)
 import argparse

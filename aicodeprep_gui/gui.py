@@ -2,6 +2,7 @@ import os
 import sys
 import platform
 import logging
+import uuid
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from importlib import resources
 from aicodeprep_gui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
@@ -236,15 +237,25 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.tray_icon = tray  # keep a reference so it doesn't get garbage‐collected
         except FileNotFoundError:
             logging.warning("Application icon 'favicon.ico' not found in package resources.")
+
         self.presets = [] # This local 'presets' list is not used for global presets, but for local ones (which are not saved to the .aicodeprep-gui file, but managed by global_preset_manager through QSettings)
         self.setAcceptDrops(True)
         self.files = files
+
+        # Get or create anonymous user UUID
+        settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
+        user_uuid = settings.value("user_uuid")
+        if not user_uuid:
+            import uuid
+            user_uuid = str(uuid.uuid4())
+            settings.setValue("user_uuid", user_uuid)
+            logging.info(f"Generated new anonymous user UUID: {user_uuid}")
 
         from datetime import datetime
         self.network_manager = QtNetwork.QNetworkAccessManager(self)
         now = datetime.now()
         time_str = f"{now.strftime('%I').lstrip('0') or '12'}{now.strftime('%M')}{now.strftime('%p').lower()}"
-        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}"))
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={user_uuid}"))
         self.network_manager.get(request)
 
         self.setWindowTitle("aicodeprep-gui - File Selection")

@@ -10,7 +10,22 @@ _Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
 
 ## What is aicodeprep-gui?
 
-aicodeprep-gui is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files, this tool automatically collects relevant code files into a single text file, copies it to your clipboard, and formats it with AI-friendly tags.
+aicodeprep-gui is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files just to ask a question, this tool automatically collects relevant code files into a single 'block' + text file, copies it to your clipboard automatically, and formats it with AI-friendly tags. READY... to paste right into an AI chat, or multiple ones (they are still usually free!).
+
+You can set presets which quickly add on text to what you typed, so you can do things like click the Cline button to tell the AI you want it to reply with a nice prompt you can just paste right into Cline to make fast changes without all the manual copying, pasting, typing over and over..
+
+Basically what this does is get rid of all the little annoying frictions between me asking my question, and giving the AI the code i'm asking about. Without this tool I would have to open each code file, copy, paste it into AI Studio/Gemini/whatever, type the same questions I ask over and over.. I hate the tedious stuff, I want to spend my brain power on better things. That's what this helps with.
+
+ChatGPT, Gemini 2.5 Pro, o3, I have like 15 tabs open of different web chat's like this and most are totally free to use.
+(for more info about the workflow, staying free or cheap yet still good: wuu73.org/blog/guide.html)
+
+This helps you "vibe code" faster. Only need to paste one time. It will automatically guess as to which code files you will want for context, but allow you to fine tune it. This might seem pointless ohhh but its not. All of the available agents in IDEs will make the AI dumber by giving it a bunch of information unrelated to your problem.
+
+Or, it won't give it enough information or context from your project.
+
+When you use web chat interfaces, you don't have the giant hidden prompts telling the AI all about how to be an agent, how to edit files, etc. The more of this that is sent with your prompt, the dumber it will be. If you ask a question or give it a task via the web chat interface its almost always going to be smarter. This app gets rid of most of the friction between you giving the AI your code files and questions/tasks.
+
+There are many other similar tools that are command line only, and don't have smart file checking and prefs saving, saving which files you chose for next time (when you check more files or uncheck certain ones, it will remember, for next time - this is what the .aicodepre-gui file is for). It even saves the window size and where you dragged the bar in the UI, so you won't have to do that again. Saving time and being less annoying, makes me happy, and probably makes you happy too.
 
 It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-click integration.
 

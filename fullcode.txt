@@ -1,6 +1,7 @@
-can you add a extra alternate way to start the app on the command line, by typing aicp? so both aicodeprep-gui and aicp will start it. Also can you add a new option in the options settings section of the UI, which defaults to fullcode.txt for the filename but allows them to edit this? make sure it saves it in the global settings as well. It should allow most file names but have some checks in place to make sure it cant crash the program by typing weird characters or something . Write a prompt for Cline to make the changes, enclose the entire cline prompt in a single code tag.
+can you create a privacy policy file, and make a new info menu next to file, edit... and then Info/Privacy policy will show it in a new window (with just an ok button to close it, or close button)? Analyze the code for any data it collects, which should be just anonymous information like when it tries to fetch the dixels url just to count how many people use the app etc. or what time they use it but nothing identifiyable. Write a prompt for Cline the ai coding agent to make the new file and make the edits for the menu changes, enclose the whole cline prompt in a single code tag.
 
-### START OF FILE aicodeprep_gui\data\default_config.toml ###
+aicodeprep_gui\data\default_config.toml:
+<code>
 # aicodeprep-gui - Default Configuration File
 # This file provides the baseline settings for file filtering.
 # You can override these settings by creating an `aicodeprep-gui.toml` file
@@ -232,13 +233,15 @@ exclude_patterns = [
 
 ]
 
-### END OF FILE aicodeprep_gui\data\default_config.toml ###
+</code>
 
-### START OF FILE aicodeprep_gui\images\__init__.py ###
+aicodeprep_gui\images\__init__.py:
+<code>
 
-### END OF FILE aicodeprep_gui\images\__init__.py ###
+</code>
 
-### START OF FILE aicodeprep_gui\apptheme.py ###
+aicodeprep_gui\apptheme.py:
+<code>
 from PySide6 import QtCore, QtGui, QtWidgets
 import platform
 import os
@@ -435,9 +438,10 @@ def get_checkbox_style_dark()  -> str:
 def get_checkbox_style_light() -> str: 
     return _checkbox_style(False)
 
-### END OF FILE aicodeprep_gui\apptheme.py ###
+</code>
 
-### START OF FILE aicodeprep_gui\file_processor.py ###
+aicodeprep_gui\file_processor.py:
+<code>
 import os
 import sys
 import logging
@@ -523,13 +527,15 @@ def process_files(
         logging.error(f"Error writing output file: {exc}")
         return 0
 
-### END OF FILE aicodeprep_gui\file_processor.py ###
+</code>
 
-### START OF FILE aicodeprep_gui\gui.py ###
+aicodeprep_gui\gui.py:
+<code>
 import os
 import sys
 import platform
 import logging
+import uuid
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from importlib import resources
 from aicodeprep_gui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
@@ -764,15 +770,25 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.tray_icon = tray  # keep a reference so it doesn't get garbage‐collected
         except FileNotFoundError:
             logging.warning("Application icon 'favicon.ico' not found in package resources.")
+
         self.presets = [] # This local 'presets' list is not used for global presets, but for local ones (which are not saved to the .aicodeprep-gui file, but managed by global_preset_manager through QSettings)
         self.setAcceptDrops(True)
         self.files = files
+
+        # Get or create anonymous user UUID
+        settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
+        user_uuid = settings.value("user_uuid")
+        if not user_uuid:
+            import uuid
+            user_uuid = str(uuid.uuid4())
+            settings.setValue("user_uuid", user_uuid)
+            logging.info(f"Generated new anonymous user UUID: {user_uuid}")
 
         from datetime import datetime
         self.network_manager = QtNetwork.QNetworkAccessManager(self)
         now = datetime.now()
         time_str = f"{now.strftime('%I').lstrip('0') or '12'}{now.strftime('%M')}{now.strftime('%p').lower()}"
-        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}"))
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={user_uuid}"))
         self.network_manager.get(request)
 
         self.setWindowTitle("aicodeprep-gui - File Selection")
@@ -1899,9 +1915,10 @@ def _read_prefs_file():
 
     return checked, window_size, splitter_state
 
-### END OF FILE aicodeprep_gui\gui.py ###
+</code>
 
-### START OF FILE aicodeprep_gui\linux_installer.py ###
+aicodeprep_gui\linux_installer.py:
+<code>
 import os
 import shutil
 import logging
@@ -1986,9 +2003,10 @@ def uninstall_nautilus_script():
         msg = "Nautilus script not found (already uninstalled)."
         return True, msg
 
-### END OF FILE aicodeprep_gui\linux_installer.py ###
+</code>
 
-### START OF FILE aicodeprep_gui\macos_installer.py ###
+aicodeprep_gui\macos_installer.py:
+<code>
 import os
 import shutil
 import tempfile
@@ -2215,9 +2233,10 @@ def uninstall_quick_action():
         logging.info(msg)
         return True, msg
 
-### END OF FILE aicodeprep_gui\macos_installer.py ###
+</code>
 
-### START OF FILE aicodeprep_gui\main.py ###
+aicodeprep_gui\main.py:
+<code>
 import os
 import sys
 import platform
@@ -2230,6 +2249,8 @@ if "--delset" in sys.argv:
     QSettings("aicodeprep-gui", "ButtonPresets").clear()
     # Delete PromptOptions
     QSettings("aicodeprep-gui", "PromptOptions").clear()
+    # Delete UserIdentity
+    QSettings("aicodeprep-gui", "UserIdentity").clear()
     print("All aicodeprep-gui user settings deleted.")
     sys.exit(0)
 import argparse
@@ -2350,9 +2371,10 @@ def main():
 if __name__ == "__main__":
     main()
 
-### END OF FILE aicodeprep_gui\main.py ###
+</code>
 
-### START OF FILE aicodeprep_gui\smart_logic.py ###
+aicodeprep_gui\smart_logic.py:
+<code>
 from importlib import resources
 import os
 import sys
@@ -2489,9 +2511,10 @@ def matches_pattern(filename: str, pattern: str) -> bool:
     """Helper used by GUI logic."""
     return fnmatch.fnmatch(filename.lower(), pattern.lower())
 
-### END OF FILE aicodeprep_gui\smart_logic.py ###
+</code>
 
-### START OF FILE aicodeprep_gui\windows_registry.py ###
+aicodeprep_gui\windows_registry.py:
+<code>
 import sys
 import os
 import winreg
@@ -2619,15 +2642,17 @@ def restart_explorer():
     except Exception as e:
         logging.error(f"Failed to restart explorer.exe: {e}")
 
-### END OF FILE aicodeprep_gui\windows_registry.py ###
+</code>
 
-### START OF FILE aicodeprep_gui\__init__.py ###
+aicodeprep_gui\__init__.py:
+<code>
 # Package initialization
 __version__ = "1.0.0"
 
-### END OF FILE aicodeprep_gui\__init__.py ###
+</code>
 
-### START OF FILE pyproject.toml ###
+pyproject.toml:
+<code>
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -2665,6 +2690,7 @@ requires-python = ">=3.8" # PySide6 requires Python 3.8+
 [project.scripts]
 # CRITICAL: Changed script name and entry point module
 aicodeprep-gui = "aicodeprep_gui.main:main"
+aicp = "aicodeprep_gui.main:main"
 
 [project.urls]
 # SUGGESTION: Update this once you rename the GitHub repo
@@ -2687,8 +2713,8 @@ build = [
     "wheel"
 ]
 
-### END OF FILE pyproject.toml ###
+</code>
 
 
 
-can you add a extra alternate way to start the app on the command line, by typing aicp? so both aicodeprep-gui and aicp will start it. Also can you add a new option in the options settings section of the UI, which defaults to fullcode.txt for the filename but allows them to edit this? make sure it saves it in the global settings as well. It should allow most file names but have some checks in place to make sure it cant crash the program by typing weird characters or something . Write a prompt for Cline to make the changes, enclose the entire cline prompt in a single code tag.
+can you create a privacy policy file, and make a new info menu next to file, edit... and then Info/Privacy policy will show it in a new window (with just an ok button to close it, or close button)? Analyze the code for any data it collects, which should be just anonymous information like when it tries to fetch the dixels url just to count how many people use the app etc. or what time they use it but nothing identifiyable. Write a prompt for Cline the ai coding agent to make the new file and make the edits for the menu changes, enclose the whole cline prompt in a single code tag.
