@@ -147,9 +147,9 @@ class GlobalPresetManager:
                 default_presets = [
                     ("Debug", "Can you help me debug this code?"),
                     ("Security check", "Can you analyze this code for any security issues?"),
-                    ("Best Practices", "Please analyze this code: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic."),
-                    ("Please review for", "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Any security concerns, Suggest improvements and explain your reasoning for each suggestion"),
-                    ("Cline Prompt", "Write a detailed enough prompt for Cline or a similar coding agent, to make the necessary changes.")
+                    ("Best Practices", "Please analyze this code for: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic."),
+                    ("Please review for", "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Security concerns. Suggest improvements and explain your reasoning for each suggestion"),
+                    ("Cline, Roo Code Prompt", "Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste.")
                 ]
                 
                 self.settings.beginGroup("presets")
@@ -244,7 +244,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.network_manager = QtNetwork.QNetworkAccessManager(self)
         now = datetime.now()
         time_str = f"{now.strftime('%I').lstrip('0') or '12'}{now.strftime('%M')}{now.strftime('%p').lower()}"
-        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/loads.html?t={time_str}"))
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}"))
         self.network_manager.get(request)
 
         self.setWindowTitle("aicodeprep-gui - File Selection")
@@ -383,6 +383,150 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             install_menu_act.triggered.connect(lambda: open_registry_manager(self))
             file_menu.addAction(install_menu_act)
             file_menu.addSeparator() # Optional, for visual separation
+
+        # Add macOS-only menu item
+        if platform.system() == "Darwin":
+            from aicodeprep_gui import macos_installer
+
+            class MacInstallerDialog(QtWidgets.QDialog):
+                def __init__(self, parent=None):
+                    super().__init__(parent)
+                    self.setWindowTitle("macOS Quick Action Manager")
+                    self.setMinimumWidth(450)
+                    self.layout = QtWidgets.QVBoxLayout(self)
+
+                    info_text = (
+                        "This tool installs or removes a <b>Quick Action</b> to open `aicodeprep-gui` "
+                        "from the right-click menu in Finder (under Quick Actions or Services).<br><br>"
+                        "The action is installed in your user's Library folder, so no administrator "
+                        "privileges are required."
+                    )
+                    self.info_label = QtWidgets.QLabel(info_text)
+                    self.info_label.setWordWrap(True)
+                    self.layout.addWidget(self.info_label)
+                    self.layout.addSpacing(10)
+
+                    self.install_button = QtWidgets.QPushButton("Install Quick Action")
+                    self.install_button.clicked.connect(self.run_install)
+                    
+                    self.uninstall_button = QtWidgets.QPushButton("Uninstall Quick Action")
+                    self.uninstall_button.clicked.connect(self.run_uninstall)
+
+                    button_layout = QtWidgets.QHBoxLayout()
+                    button_layout.addWidget(self.install_button)
+                    button_layout.addWidget(self.uninstall_button)
+                    self.layout.addLayout(button_layout)
+
+                def run_install(self):
+                    success, message = macos_installer.install_quick_action()
+                    if success:
+                        QtWidgets.QMessageBox.information(self, "Success", message)
+                    else:
+                        QtWidgets.QMessageBox.warning(self, "Error", message)
+
+                def run_uninstall(self):
+                    success, message = macos_installer.uninstall_quick_action()
+                    if success:
+                        QtWidgets.QMessageBox.information(self, "Success", message)
+                    else:
+                        QtWidgets.QMessageBox.warning(self, "Error", message)
+
+            def open_mac_installer(self):
+                dialog = MacInstallerDialog(self)
+                dialog.exec()
+
+            install_menu_act = QtGui.QAction("Install Finder Quick Action...", self)
+            install_menu_act.triggered.connect(lambda: open_mac_installer(self))
+            file_menu.addAction(install_menu_act)
+            file_menu.addSeparator()
+
+        # Add Linux-only menu item
+        if platform.system() == "Linux":
+            from aicodeprep_gui import linux_installer
+
+            class LinuxInstallerDialog(QtWidgets.QDialog):
+                def __init__(self, parent=None):
+                    super().__init__(parent)
+                    self.setWindowTitle("Linux File Manager Integration")
+                    self.setMinimumWidth(500)
+                    self.layout = QtWidgets.QVBoxLayout(self)
+
+                    self.tabs = QtWidgets.QTabWidget()
+                    
+                    # Automated Installer Tab
+                    automated_tab = QtWidgets.QWidget()
+                    automated_layout = QtWidgets.QVBoxLayout(automated_tab)
+                    self.tabs.addTab(automated_tab, "Automated Setup")
+
+                    info_text = QtWidgets.QLabel(
+                        "This tool can attempt to install a context menu script for your file manager."
+                    )
+                    info_text.setWordWrap(True)
+                    automated_layout.addWidget(info_text)
+                    automated_layout.addSpacing(10)
+
+                    self.nautilus_group = QtWidgets.QGroupBox("Nautilus (GNOME, Cinnamon, etc.)")
+                    nautilus_layout = QtWidgets.QVBoxLayout(self.nautilus_group)
+                    
+                    self.install_nautilus_btn = QtWidgets.QPushButton("Install Nautilus Script")
+                    self.install_nautilus_btn.clicked.connect(self.run_install_nautilus)
+                    self.uninstall_nautilus_btn = QtWidgets.QPushButton("Uninstall Nautilus Script")
+                    self.uninstall_nautilus_btn.clicked.connect(self.run_uninstall_nautilus)
+                    
+                    nautilus_layout.addWidget(self.install_nautilus_btn)
+                    nautilus_layout.addWidget(self.uninstall_nautilus_btn)
+                    
+                    automated_layout.addWidget(self.nautilus_group)
+                    automated_layout.addStretch()
+
+                    # Disable if Nautilus is not detected
+                    if not linux_installer.is_nautilus_installed():
+                        self.nautilus_group.setDisabled(True)
+                        self.nautilus_group.setToolTip("Nautilus file manager not detected in your system's PATH.")
+
+                    # Manual Instructions Tab
+                    manual_tab = QtWidgets.QWidget()
+                    manual_layout = QtWidgets.QVBoxLayout(manual_tab)
+                    self.tabs.addTab(manual_tab, "Manual Instructions")
+                    
+                    manual_text = QtWidgets.QLabel(
+                        "If your file manager is not listed above, you can likely add a custom action manually. "
+                        "Create a new executable script with the content below and add it to your file manager's "
+                        "scripting or custom actions feature. The selected folder path will be passed as the first argument ($1)."
+                    )
+                    manual_text.setWordWrap(True)
+                    manual_layout.addWidget(manual_text)
+
+                    script_box = QtWidgets.QPlainTextEdit()
+                    script_box.setPlainText(linux_installer.NAUTILUS_SCRIPT_CONTENT)
+                    script_box.setReadOnly(True)
+                    script_box.setFont(QtGui.QFont("Monospace"))
+                    manual_layout.addWidget(script_box)
+                    
+                    self.layout.addWidget(self.tabs)
+
+                def run_install_nautilus(self):
+                    success, message = linux_installer.install_nautilus_script()
+                    if success:
+                        QtWidgets.QMessageBox.information(self, "Success", message)
+                    else:
+                        QtWidgets.QMessageBox.warning(self, "Error", message)
+
+                def run_uninstall_nautilus(self):
+                    success, message = linux_installer.uninstall_nautilus_script()
+                    if success:
+                        QtWidgets.QMessageBox.information(self, "Success", message)
+                    else:
+                        QtWidgets.QMessageBox.warning(self, "Error", message)
+
+            def open_linux_installer(self):
+                dialog = LinuxInstallerDialog(self)
+                dialog.exec()
+
+            install_menu_act = QtGui.QAction("Install File Manager Action...", self)
+            install_menu_act.triggered.connect(lambda: open_linux_installer(self))
+            file_menu.addAction(install_menu_act)
+            file_menu.addSeparator()
 
         quit_act = QtGui.QAction("&Quit", self); quit_act.triggered.connect(self.quit_without_processing); file_menu.addAction(quit_act)
         edit_menu = mb.addMenu("&Edit")
@@ -635,7 +779,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         
         button_layout1 = QtWidgets.QHBoxLayout(); button_layout2 = QtWidgets.QHBoxLayout()
         main_layout.addLayout(button_layout1); main_layout.addLayout(button_layout2)
-        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicodeprep-gui\">aicodeprep-gui @ wuu73.org</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
+        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">aicodeprep-gui @ wuu73.org</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
         button_layout1.addStretch()
         process_button = QtWidgets.QPushButton("Process Selected"); process_button.clicked.connect(self.process_selected); button_layout1.addWidget(process_button)
         select_all_button = QtWidgets.QPushButton("Select All"); select_all_button.clicked.connect(self.select_all); button_layout1.addWidget(select_all_button)
@@ -1073,7 +1217,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     def _load_prompt_options(self):
         """Load global prompt/question placement options from QSettings."""
         settings = QtCore.QSettings("aicodeprep-gui", "PromptOptions")
-        self.prompt_top_checkbox.setChecked(settings.value("prompt_to_top", False, type=bool))
+        self.prompt_top_checkbox.setChecked(settings.value("prompt_to_top", True, type=bool))
         self.prompt_bottom_checkbox.setChecked(settings.value("prompt_to_bottom", True, type=bool))
 
     def _save_prompt_options(self):
@@ -1146,8 +1290,18 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None):
     new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
     try:
         with open(new_path, "w", encoding="utf-8") as f:
-            f.write(f"# aicodeprep-gui preferences file version {AICODEPREP_GUI_VERSION}\nversion={AICODEPREP_GUI_VERSION}\n\n")
-            if window_size: 
+            header = (
+                f"# .aicodeprep-gui LLM/AI context helper settings file\n"
+                f"# This file stores your preferences (checked code files, window size) for this folder.\n"
+                f"# Generated by aicodeprep-gui.\n"
+                f"# Homepage: https://wuu73.org/aicp\n"
+                f"# GitHub: https://github.com/detroittommy879/aicodeprep-gui\n"
+                f"# ----------------------------------------------------------\n"
+                f"# aicodeprep-gui preferences file version {AICODEPREP_GUI_VERSION}\n"
+            )
+            f.write(header)
+            f.write(f"version={AICODEPREP_GUI_VERSION}\n\n")
+            if window_size:
                 f.write(f"[window]\nwidth={window_size[0]}\nheight={window_size[1]}\n")
                 if splitter_state is not None:
                     # Convert QByteArray to base64 string for storage

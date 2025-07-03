@@ -25,13 +25,13 @@ def _write_one_file_md(outfile, rel_path, abs_path, skip_binfiles=None):
         if skip_binfiles is not None:
             skip_binfiles.append(rel_path)
         return
-    outfile.write(f"### {rel_path}\n")
+    outfile.write(f"### START OF FILE {rel_path} ###\n")
     try:
         with open(abs_path, "r", encoding="utf-8", errors="ignore") as infile:
             outfile.write(infile.read())
     except Exception:
         outfile.write(".. contents skipped (read error) ..\n")
-    outfile.write(f"\n### END {rel_path}\n\n")
+    outfile.write(f"\n### END OF FILE {rel_path} ###\n\n")
 
 def process_files(
     selected_files: List[str],

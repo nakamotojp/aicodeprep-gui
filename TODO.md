@@ -13,6 +13,10 @@ python -m aicodeprep_gui.main
 python -m pip install --upgrade build twine
 python -m build
 twine upload --repository testpypi dist/\*
+---------0
+
+make fullcode.txt name editable in ui
+add aicp command
 
 add version number for .aicodeprep file type and make a new file for saving other things like button presets but globally (qsettings?)
 save any preset buttons in this file, and it should try to read the file when app starts up, but not have an error if file doesn't exist yet
