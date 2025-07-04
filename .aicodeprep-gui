@@ -8,20 +8,16 @@
 version=1.0
 
 [window]
-width=711
-height=1240
+width=644
+height=1234
 splitter_state=AAAA/wAAAAEAAAACAAAB9AAAAKsB/////wEAAAACAA==
 
 [files]
-.aicodeprep-gui
-LICENSE
 pyproject.toml
 README.md
-TODO.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui.py
-aicodeprep_gui\help.py
 aicodeprep_gui\linux_installer.py
 aicodeprep_gui\macos_installer.py
 aicodeprep_gui\main.py

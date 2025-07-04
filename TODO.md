@@ -1,12 +1,20 @@
 -- secretlint
-make markdown the default instead of xml, and
-lets tweak the format of the xml, markdown the way it formats the output, currently the markdown option shows ### path/to/filename.xyz and then will say ### END path/to/filename.xyz. Lets add a START word to match the END. So like ### START path/to/filename.xyz and then ### END path/to/filename.xyz.
-Add a new feature/option on the UI where it has two checkboxes, top and bottom, for where it puts the prompt (prompt box text). Studies show that you get better
-results putting it on top and bottom (before the code and after all the code files). It should save this to the .auicp file as well. Have a hover
-thing that will tell the user why this is here if they hover over the option checkboxes.
 
-add link and description to .aicodeprep-gui files
-add START to match END for markdown style
+free:
+quick how to on how to use it, on first start and put in menu
+
+premium:
+gate the preset buttons, no nag screens, maybe right click menu?
+offer updated information about saving money, access to free APIs for Cline/etc, access to info
+$19.99 up to 10 machines or unlimited
+future access to planned features like automatic cut/paste to all the different web chat's,
+automatic 'brain' where it sends prompt to several api's, compares answers
+info screen in paid, how to use it with Cline with the free api's, how to plan in web chats, create cline prompt, execute with free api's.
+web / electron version added as an extra
+VS Code extension / right click
+
+all:
+add complaint button
 
 0-------
 python -m aicodeprep_gui.main

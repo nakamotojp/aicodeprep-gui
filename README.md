@@ -88,7 +88,7 @@ It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-
   - Remembers splitter position and window layout
   - Optional preference saving (can be disabled)
 
-- **Smart Token Counter:**
+- **Token Counter:**
   - Real-time token estimation as you select/deselect files
   - Helps optimize context size for AI models
 
@@ -96,8 +96,11 @@ It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-
 
 ## Screenshots & Usage
 
-See screenshots and a quick usage guide here:  
-[https://wuu73.org/aicodeprep-gui](https://wuu73.org/aicodeprep-gui)
+Update coming soon - but you can look at the older version and get an idea for how it is used at these links:
+
+[https://wuu73.org/aicp - the old homepage for the app with old screenshots](https://wuu73.org/aicp)
+
+[Guide on how to code free/cheap, workflow info, etc](https://wuu73.org/blog/guide.html)
 
 ---
 
@@ -105,16 +108,26 @@ See screenshots and a quick usage guide here:
 
 ### macOS
 
-1. Download and unzip the macOS package from the releases page.
-2. Drag `aicodeprep-gui.app` to your Applications folder.
-3. Install the Finder integration workflow if provided.
-4. To use: Right-click on a project folder → Quick Actions → aicodeprep-gui.
-5. Select/deselect files and folders as needed, then click **Process Selected**.
-6. The tool will create a `fullcode.txt` and copy all selected code to your clipboard.
-
-_Tested on macOS Ventura 13.4 and newer (M1+)._
+Currently glitchy with pipx, but you can just throw the whole codebase into AI and ask how to get it up and running.
+Should work on any Mac (before was limited to M series)
 
 ### Windows
+
+py -m pip install --user pipx
+py -m pipx ensurepath
+
+close that terminal window, and open a fresh new one
+
+pipx install --pip-args="--extra-index-url https://test.pypi.org/simple/" aicodeprep-gui==1.0.1
+
+It should say success or something similar or done.
+
+Now that it is installed, you can type 'aicp' + enter in a terminal to run it or aicp path/to/folder/
+also aicodeprep-gui works instead of aicp. aicp is shorter, that's why its included.
+
+#### Install right-click context menu (optional)
+
+There should be a thing in the File menu for this
 
 1. Run the Windows installer from the releases page.
 2. Follow the installation wizard.
@@ -124,6 +137,34 @@ _Tested on macOS Ventura 13.4 and newer (M1+)._
 6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
 
 ### Linux
+
+Version 1.0.0+:
+
+#### Update package lists and upgrade existing packages
+
+sudo apt update && sudo apt upgrade -y
+
+#### Install pip for Python 3
+
+sudo apt install python3-pip -y
+
+#### Install and Configure pipx
+
+Now, use pip to install pipx. It's best to install it in your user space to avoid needing sudo for Python packages.
+
+# Install pipx
+
+pip3 install --user pipx
+
+# Add the pipx bin directory to your system's PATH
+
+# This command injects the necessary line into your shell's startup file (.bashrc)
+
+pipx ensurepath
+
+#### IMPORTANT: After running pipx ensurepath, you must close and reopen your terminal for the PATH changes to take effect.
+
+Older version:
 
 1. Download the Linux package from the releases page.
 2. Follow the installation instructions in the included README.

@@ -577,7 +577,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         banner_layout.addWidget(self.vibe_label)
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
-        self.info_label = QtWidgets.QLabel("likely code files are already checked, adjust as needed")
+
+        self.info_label = QtWidgets.QLabel("The files with checkmarks will be added to the LLM Context Block along with your prompt, ready to paste")
+        self.info_label.setWordWrap(True)  # Add this line to enable word wrapping
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
         main_layout.addWidget(self.info_label)
 
