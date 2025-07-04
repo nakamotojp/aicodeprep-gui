@@ -54,6 +54,7 @@ def main():
         parser.add_argument("--install-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
         parser.add_argument("--remove-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
         parser.add_argument("--menu-text", type=str, help=argparse.SUPPRESS)
+        parser.add_argument("--disable-classic-menu", action="store_true", help=argparse.SUPPRESS)
     # --- END OF NEW ARGUMENTS ---
 
     args = parser.parse_args()
@@ -76,7 +77,8 @@ def main():
         if args.install_context_menu_privileged and windows_registry:
             print("Running privileged action: Install context menu...")
             menu_text = getattr(args, 'menu_text', None)
-            windows_registry.install_context_menu(menu_text)
+            enable_classic = not getattr(args, 'disable_classic_menu', False)
+            windows_registry.install_context_menu(menu_text, enable_classic_menu=enable_classic)
             sys.exit(0)
         if args.remove_context_menu_privileged and windows_registry:
             print("Running privileged action: Remove context menu...")

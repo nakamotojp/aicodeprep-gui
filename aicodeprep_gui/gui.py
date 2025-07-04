@@ -338,6 +338,19 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     # Add some spacing
                     self.layout.addSpacing(10)
 
+                    # Classic menu checkbox and help icon
+                    self.classic_menu_checkbox = QtWidgets.QCheckBox("Enable Classic Right-Click Menu (for Windows 11)")
+                    self.classic_menu_checkbox.setChecked(True)
+                    classic_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+                    classic_help.setToolTip("Restores the full right-click menu in Windows 11, so you don't have to click 'Show more options' to see this app's menu item.")
+                    classic_help.setAlignment(QtCore.Qt.AlignVCenter)
+                    classic_layout = QtWidgets.QHBoxLayout()
+                    classic_layout.setContentsMargins(0,0,0,0)
+                    classic_layout.addWidget(self.classic_menu_checkbox)
+                    classic_layout.addWidget(classic_help)
+                    classic_layout.addStretch()
+                    self.layout.addLayout(classic_layout)
+
                     self.status_label = QtWidgets.QLabel("Ready.")
                     self.status_label.setStyleSheet("font-style: italic;")
                     
@@ -355,11 +368,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self.layout.addWidget(self.status_label)
 
                 def _run_action(self, action_name):
+                    enable_classic = self.classic_menu_checkbox.isChecked()
                     if windows_registry.is_admin():
                         # Already running as admin, just do the action
                         if action_name == 'install':
                             custom_text = self.menu_text_input.text().strip()
-                            success, message = windows_registry.install_context_menu(custom_text if custom_text else None)
+                            success, message = windows_registry.install_context_menu(
+                                custom_text if custom_text else None,
+                                enable_classic_menu=enable_classic
+                            )
                         else:
                             success, message = windows_registry.remove_context_menu()
                         
@@ -372,7 +389,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                         # Not admin, need to elevate
                         if action_name == 'install':
                             custom_text = self.menu_text_input.text().strip()
-                            success, message = windows_registry.run_as_admin(action_name, custom_text if custom_text else None)
+                            success, message = windows_registry.run_as_admin(
+                                action_name,
+                                custom_text if custom_text else None,
+                                enable_classic_menu=enable_classic
+                            )
                         else:
                             success, message = windows_registry.run_as_admin(action_name)
                         self.status_label.setText(message)

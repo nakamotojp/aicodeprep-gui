@@ -5,6 +5,41 @@ import ctypes
 import shutil
 import logging
 
+def enable_classic_context_menu():
+    """
+    Enables the classic right-click context menu on Windows 11 by creating the required registry key.
+    """
+    try:
+        key_path = r"Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32"
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+            winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "")
+        logging.info("Classic context menu enabled (Windows 11).")
+        return True, "Classic context menu enabled."
+    except Exception as e:
+        logging.error(f"Failed to enable classic context menu: {e}")
+        return False, f"Failed to enable classic context menu: {e}"
+
+def disable_classic_context_menu():
+    """
+    Disables the classic right-click context menu on Windows 11 by deleting the registry key.
+    """
+    try:
+        key_path = r"Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32"
+        winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key_path)
+        # Optionally, try to delete parent key if empty
+        parent_key_path = r"Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"
+        try:
+            winreg.DeleteKey(winreg.HKEY_CURRENT_USER, parent_key_path)
+        except OSError:
+            pass
+        logging.info("Classic context menu disabled (Windows 11).")
+        return True, "Classic context menu disabled."
+    except FileNotFoundError:
+        return True, "Classic context menu key not found (already default)."
+    except Exception as e:
+        logging.error(f"Failed to disable classic context menu: {e}")
+        return False, f"Failed to disable classic context menu: {e}"
+
 def is_admin():
     """Check if the script is running with administrative privileges."""
     try:
@@ -13,11 +48,12 @@ def is_admin():
         logging.error(f"Failed to check admin status: {e}")
         return False
 
-def run_as_admin(action, menu_text=None):
+def run_as_admin(action, menu_text=None, enable_classic_menu=None):
     """
     Re-launches the script with admin rights to perform a specific action.
     'action' can be 'install' or 'remove'.
     'menu_text' is optional custom text for the context menu (only used with 'install').
+    'enable_classic_menu' is an optional boolean to control classic menu (only used with 'install').
     """
     if sys.platform != 'win32' and sys.platform != 'Windows':
         return False, "This feature is only for Windows."
@@ -34,6 +70,8 @@ def run_as_admin(action, menu_text=None):
             # Escape quotes and pass the menu text as an argument
             escaped_text = menu_text.replace('"', '\\"')
             params += f' --menu-text "{escaped_text}"'
+        if enable_classic_menu is False:
+            params += ' --disable-classic-menu'
     elif action == 'remove':
         params = f'-m {script_entry_point} --remove-context-menu-privileged'
     else:
@@ -65,7 +103,7 @@ def get_registry_command():
     # The command to be stored in the registry. Explorer replaces %V with the directory path.
     return f'"{pythonw_exe}" "{script_path}" "%V"'
 
-def install_context_menu(menu_text=None):
+def install_context_menu(menu_text=None, enable_classic_menu=True):
     """Adds the context menu item to the Windows Registry. Assumes admin rights."""
     if not is_admin():
         logging.error("Install function called without admin rights.")
@@ -82,6 +120,14 @@ def install_context_menu(menu_text=None):
     else:
         menu_text = menu_text.strip()
 
+    # Enable or disable classic menu as requested
+    if enable_classic_menu:
+        enable_classic_context_menu()
+        classic_msg = "Classic context menu enabled."
+    else:
+        disable_classic_context_menu()
+        classic_msg = "Classic context menu NOT enabled (Windows 11 default)."
+
     try:
         key_path = r'Directory\\Background\\shell\\aicodeprep-gui'
         with winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, key_path) as key:
@@ -91,7 +137,7 @@ def install_context_menu(menu_text=None):
 
         logging.info(f"Context menu installed successfully with text: '{menu_text}'")
         restart_explorer()
-        return True, f"Context menu installed successfully with text: '{menu_text}'! Explorer has been restarted."
+        return True, f"Context menu installed successfully with text: '{menu_text}'! {classic_msg} Explorer has been restarted."
     except Exception as e:
         logging.error(f"Failed to install context menu: {e}")
         return False, f"An error occurred: {e}"
@@ -103,6 +149,9 @@ def remove_context_menu():
         print("Administrator rights required.")
         return False, "Administrator rights required."
 
+    # Always restore default context menu
+    disable_classic_context_menu()
+
     try:
         key_path = r'Directory\\Background\\shell\\aicodeprep-gui'
         winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, f"{key_path}\\command")
@@ -110,9 +159,9 @@ def remove_context_menu():
 
         logging.info("Context menu removed successfully.")
         restart_explorer()
-        return True, "Context menu removed successfully! Explorer has been restarted."
+        return True, "Context menu removed and classic menu restored! Explorer has been restarted."
     except FileNotFoundError:
-        return True, "Context menu item was not found (already removed)."
+        return True, "Context menu item was not found (already removed). Classic menu restored."
     except Exception as e:
         logging.error(f"Failed to remove context menu: {e}")
         return False, f"An error occurred: {e}"
