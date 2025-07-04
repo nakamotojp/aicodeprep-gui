@@ -23,6 +23,10 @@ python -m build
 twine upload --repository testpypi dist/\*
 ---------0
 
+help diagrams:
+'is Cline, Roo Code acting dumb? yes --> if yes, type aicp + enter in the VS Code terminal to open the app.
+Code files will be already selected. Type your problem into the prompt box, add or subtract any extra files you think it might need, click the Cline/Roo Code prompt preset button (which is "Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste."), Click GENERATE CONTEXT. --> paste into Gemini in AI studio (or, into Deepseek, or o3 on OpenAI Playground, Claude, Grok, etc) --> if it figures out how to solve your problem, cut and paste it back into cline set on GPT 4.1 to save' - add animated dotted lines and keep it a dark mode theme
+
 make fullcode.txt name editable in ui
 add aicp command
 

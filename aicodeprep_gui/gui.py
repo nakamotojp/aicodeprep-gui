@@ -599,7 +599,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
 
-        self.info_label = QtWidgets.QLabel("The files with checkmarks will be added to the LLM Context Block along with your prompt, ready to paste")
+        self.info_label = QtWidgets.QLabel("The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into Gemini in AI studio, Deepseek, ChatGPT, etc.")
         self.info_label.setWordWrap(True)  # Add this line to enable word wrapping
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
         main_layout.addWidget(self.info_label)
@@ -815,7 +815,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addLayout(button_layout1); main_layout.addLayout(button_layout2)
         website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">aicodeprep-gui @ wuu73.org</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
         button_layout1.addStretch()
-        process_button = QtWidgets.QPushButton("Process Selected"); process_button.clicked.connect(self.process_selected); button_layout1.addWidget(process_button)
+        process_button = QtWidgets.QPushButton("GENERATE CONTEXT!"); process_button.clicked.connect(self.process_selected); button_layout1.addWidget(process_button)
         select_all_button = QtWidgets.QPushButton("Select All"); select_all_button.clicked.connect(self.select_all); button_layout1.addWidget(select_all_button)
         deselect_all_button = QtWidgets.QPushButton("Deselect All"); deselect_all_button.clicked.connect(self.deselect_all); button_layout1.addWidget(deselect_all_button)
         button_layout2.addStretch()

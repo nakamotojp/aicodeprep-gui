@@ -1,4 +1,6 @@
-in linux (gnome tested so far) i noticed that the dark mode toggle is not saving between sessions, but the 'add prompt... top/bottom' toggles are saving, can you see if you can figure out why that is and how to fix it? if you figure out a fix, write a prompt for cline, the ai coding agent to make the changes. I forgot if i am testing a older version, but try to see if this version has that issue too. dark mode is working fine on windows it seems like (but i also have the system set to that)
+i am going to make some future features premium for paid users, so right now I wanted to just set up some way to have it store the date of install, when it creates the unique user UUID which should stay the same forever. I want to have a 30 day trial of all features and use the stored date for that. Can you add these and add a new Help menu (after file, edit) and Help/About, in the About window have it show how many days are left for trial (just to test that part). ----have the about window just say x days left of non existent test trial period
+
+if you figure out how to do that, Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste.
 
 aicodeprep_gui\data\default_config.toml:
 <code>
@@ -871,6 +873,19 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     # Add some spacing
                     self.layout.addSpacing(10)
 
+                    # Classic menu checkbox and help icon
+                    self.classic_menu_checkbox = QtWidgets.QCheckBox("Enable Classic Right-Click Menu (for Windows 11)")
+                    self.classic_menu_checkbox.setChecked(True)
+                    classic_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+                    classic_help.setToolTip("Restores the full right-click menu in Windows 11, so you don't have to click 'Show more options' to see this app's menu item.")
+                    classic_help.setAlignment(QtCore.Qt.AlignVCenter)
+                    classic_layout = QtWidgets.QHBoxLayout()
+                    classic_layout.setContentsMargins(0,0,0,0)
+                    classic_layout.addWidget(self.classic_menu_checkbox)
+                    classic_layout.addWidget(classic_help)
+                    classic_layout.addStretch()
+                    self.layout.addLayout(classic_layout)
+
                     self.status_label = QtWidgets.QLabel("Ready.")
                     self.status_label.setStyleSheet("font-style: italic;")
                     
@@ -888,11 +903,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self.layout.addWidget(self.status_label)
 
                 def _run_action(self, action_name):
+                    enable_classic = self.classic_menu_checkbox.isChecked()
                     if windows_registry.is_admin():
                         # Already running as admin, just do the action
                         if action_name == 'install':
                             custom_text = self.menu_text_input.text().strip()
-                            success, message = windows_registry.install_context_menu(custom_text if custom_text else None)
+                            success, message = windows_registry.install_context_menu(
+                                custom_text if custom_text else None,
+                                enable_classic_menu=enable_classic
+                            )
                         else:
                             success, message = windows_registry.remove_context_menu()
                         
@@ -905,7 +924,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                         # Not admin, need to elevate
                         if action_name == 'install':
                             custom_text = self.menu_text_input.text().strip()
-                            success, message = windows_registry.run_as_admin(action_name, custom_text if custom_text else None)
+                            success, message = windows_registry.run_as_admin(
+                                action_name,
+                                custom_text if custom_text else None,
+                                enable_classic_menu=enable_classic
+                            )
                         else:
                             success, message = windows_registry.run_as_admin(action_name)
                         self.status_label.setText(message)
@@ -1111,7 +1134,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
 
-        self.info_label = QtWidgets.QLabel("The files with checkmarks will be added to the LLM Context Block along with your prompt, ready to paste")
+        self.info_label = QtWidgets.QLabel("The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into Gemini in AI studio, Deepseek, ChatGPT, etc.")
         self.info_label.setWordWrap(True)  # Add this line to enable word wrapping
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
         main_layout.addWidget(self.info_label)
@@ -1327,7 +1350,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addLayout(button_layout1); main_layout.addLayout(button_layout2)
         website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">aicodeprep-gui @ wuu73.org</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
         button_layout1.addStretch()
-        process_button = QtWidgets.QPushButton("Process Selected"); process_button.clicked.connect(self.process_selected); button_layout1.addWidget(process_button)
+        process_button = QtWidgets.QPushButton("GENERATE CONTEXT!"); process_button.clicked.connect(self.process_selected); button_layout1.addWidget(process_button)
         select_all_button = QtWidgets.QPushButton("Select All"); select_all_button.clicked.connect(self.select_all); button_layout1.addWidget(select_all_button)
         deselect_all_button = QtWidgets.QPushButton("Deselect All"); deselect_all_button.clicked.connect(self.deselect_all); button_layout1.addWidget(deselect_all_button)
         button_layout2.addStretch()
@@ -2295,6 +2318,7 @@ def main():
         parser.add_argument("--install-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
         parser.add_argument("--remove-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
         parser.add_argument("--menu-text", type=str, help=argparse.SUPPRESS)
+        parser.add_argument("--disable-classic-menu", action="store_true", help=argparse.SUPPRESS)
     # --- END OF NEW ARGUMENTS ---
 
     args = parser.parse_args()
@@ -2317,7 +2341,8 @@ def main():
         if args.install_context_menu_privileged and windows_registry:
             print("Running privileged action: Install context menu...")
             menu_text = getattr(args, 'menu_text', None)
-            windows_registry.install_context_menu(menu_text)
+            enable_classic = not getattr(args, 'disable_classic_menu', False)
+            windows_registry.install_context_menu(menu_text, enable_classic_menu=enable_classic)
             sys.exit(0)
         if args.remove_context_menu_privileged and windows_registry:
             print("Running privileged action: Remove context menu...")
@@ -2524,6 +2549,41 @@ import ctypes
 import shutil
 import logging
 
+def enable_classic_context_menu():
+    """
+    Enables the classic right-click context menu on Windows 11 by creating the required registry key.
+    """
+    try:
+        key_path = r"Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32"
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+            winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "")
+        logging.info("Classic context menu enabled (Windows 11).")
+        return True, "Classic context menu enabled."
+    except Exception as e:
+        logging.error(f"Failed to enable classic context menu: {e}")
+        return False, f"Failed to enable classic context menu: {e}"
+
+def disable_classic_context_menu():
+    """
+    Disables the classic right-click context menu on Windows 11 by deleting the registry key.
+    """
+    try:
+        key_path = r"Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32"
+        winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key_path)
+        # Optionally, try to delete parent key if empty
+        parent_key_path = r"Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"
+        try:
+            winreg.DeleteKey(winreg.HKEY_CURRENT_USER, parent_key_path)
+        except OSError:
+            pass
+        logging.info("Classic context menu disabled (Windows 11).")
+        return True, "Classic context menu disabled."
+    except FileNotFoundError:
+        return True, "Classic context menu key not found (already default)."
+    except Exception as e:
+        logging.error(f"Failed to disable classic context menu: {e}")
+        return False, f"Failed to disable classic context menu: {e}"
+
 def is_admin():
     """Check if the script is running with administrative privileges."""
     try:
@@ -2532,11 +2592,12 @@ def is_admin():
         logging.error(f"Failed to check admin status: {e}")
         return False
 
-def run_as_admin(action, menu_text=None):
+def run_as_admin(action, menu_text=None, enable_classic_menu=None):
     """
     Re-launches the script with admin rights to perform a specific action.
     'action' can be 'install' or 'remove'.
     'menu_text' is optional custom text for the context menu (only used with 'install').
+    'enable_classic_menu' is an optional boolean to control classic menu (only used with 'install').
     """
     if sys.platform != 'win32' and sys.platform != 'Windows':
         return False, "This feature is only for Windows."
@@ -2553,6 +2614,8 @@ def run_as_admin(action, menu_text=None):
             # Escape quotes and pass the menu text as an argument
             escaped_text = menu_text.replace('"', '\\"')
             params += f' --menu-text "{escaped_text}"'
+        if enable_classic_menu is False:
+            params += ' --disable-classic-menu'
     elif action == 'remove':
         params = f'-m {script_entry_point} --remove-context-menu-privileged'
     else:
@@ -2584,7 +2647,7 @@ def get_registry_command():
     # The command to be stored in the registry. Explorer replaces %V with the directory path.
     return f'"{pythonw_exe}" "{script_path}" "%V"'
 
-def install_context_menu(menu_text=None):
+def install_context_menu(menu_text=None, enable_classic_menu=True):
     """Adds the context menu item to the Windows Registry. Assumes admin rights."""
     if not is_admin():
         logging.error("Install function called without admin rights.")
@@ -2601,6 +2664,14 @@ def install_context_menu(menu_text=None):
     else:
         menu_text = menu_text.strip()
 
+    # Enable or disable classic menu as requested
+    if enable_classic_menu:
+        enable_classic_context_menu()
+        classic_msg = "Classic context menu enabled."
+    else:
+        disable_classic_context_menu()
+        classic_msg = "Classic context menu NOT enabled (Windows 11 default)."
+
     try:
         key_path = r'Directory\\Background\\shell\\aicodeprep-gui'
         with winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, key_path) as key:
@@ -2610,7 +2681,7 @@ def install_context_menu(menu_text=None):
 
         logging.info(f"Context menu installed successfully with text: '{menu_text}'")
         restart_explorer()
-        return True, f"Context menu installed successfully with text: '{menu_text}'! Explorer has been restarted."
+        return True, f"Context menu installed successfully with text: '{menu_text}'! {classic_msg} Explorer has been restarted."
     except Exception as e:
         logging.error(f"Failed to install context menu: {e}")
         return False, f"An error occurred: {e}"
@@ -2622,6 +2693,9 @@ def remove_context_menu():
         print("Administrator rights required.")
         return False, "Administrator rights required."
 
+    # Always restore default context menu
+    disable_classic_context_menu()
+
     try:
         key_path = r'Directory\\Background\\shell\\aicodeprep-gui'
         winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, f"{key_path}\\command")
@@ -2629,9 +2703,9 @@ def remove_context_menu():
 
         logging.info("Context menu removed successfully.")
         restart_explorer()
-        return True, "Context menu removed successfully! Explorer has been restarted."
+        return True, "Context menu removed and classic menu restored! Explorer has been restarted."
     except FileNotFoundError:
-        return True, "Context menu item was not found (already removed)."
+        return True, "Context menu item was not found (already removed). Classic menu restored."
     except Exception as e:
         logging.error(f"Failed to remove context menu: {e}")
         return False, f"An error occurred: {e}"
@@ -3000,4 +3074,6 @@ If you find this tool useful, consider supporting future development:
 
 
 
-in linux (gnome tested so far) i noticed that the dark mode toggle is not saving between sessions, but the 'add prompt... top/bottom' toggles are saving, can you see if you can figure out why that is and how to fix it? if you figure out a fix, write a prompt for cline, the ai coding agent to make the changes. I forgot if i am testing a older version, but try to see if this version has that issue too. dark mode is working fine on windows it seems like (but i also have the system set to that)
+i am going to make some future features premium for paid users, so right now I wanted to just set up some way to have it store the date of install, when it creates the unique user UUID which should stay the same forever. I want to have a 30 day trial of all features and use the stored date for that. Can you add these and add a new Help menu (after file, edit) and Help/About, in the About window have it show how many days are left for trial (just to test that part). ----have the about window just say x days left of non existent test trial period
+
+if you figure out how to do that, Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste.
