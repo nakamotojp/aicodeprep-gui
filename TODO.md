@@ -21,6 +21,9 @@ python -m aicodeprep_gui.main
 python -m pip install --upgrade build twine
 python -m build
 twine upload --repository testpypi dist/\*
+
+python -m build
+twine upload dist/\*
 ---------0
 
 help diagrams:

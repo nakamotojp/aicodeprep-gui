@@ -3,6 +3,9 @@ import sys
 import platform
 import logging
 import uuid
+from datetime import datetime, date
+from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
+from aicodeprep_gui import __version__
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from importlib import resources
 from aicodeprep_gui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
@@ -250,6 +253,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             user_uuid = str(uuid.uuid4())
             settings.setValue("user_uuid", user_uuid)
             logging.info(f"Generated new anonymous user UUID: {user_uuid}")
+
+        # --- Store install date if first run ---
+        install_date_str = settings.value("install_date")
+        if not install_date_str:
+            # store ISO date on first launch
+            today_iso = date.today().isoformat()
+            settings.setValue("install_date", today_iso)
+            install_date_str = today_iso
+        logging.debug(f"Stored install_date: {install_date_str}")
 
         from datetime import datetime
         self.network_manager = QtNetwork.QNetworkAccessManager(self)
@@ -566,6 +578,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         open_settings_folder_act = QtGui.QAction("Open Settings Folder…", self)
         open_settings_folder_act.triggered.connect(self.open_settings_folder)
         edit_menu.addAction(open_settings_folder_act)
+
+        # --- New Help / About menu ---
+        help_menu = mb.addMenu("&Help")
+        about_act = QtGui.QAction("&About", self)
+        about_act.triggered.connect(self.open_about_dialog)
+        help_menu.addAction(about_act)
 
         self.format_combo = QtWidgets.QComboBox()
         self.format_combo.addItems(["XML <code>", "Markdown ###"])
@@ -1324,6 +1342,35 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Save the user's dark mode preference
         self._save_dark_mode_setting()
+
+    def open_about_dialog(self):
+        """Show About dialog with version, install age, and links."""
+        # read install_date from user settings
+        settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
+        install_date_str = settings.value("install_date", "")
+        try:
+            dt = datetime.fromisoformat(install_date_str)
+            days_installed = (datetime.now() - dt).days
+        except Exception:
+            days_installed = 0
+
+        # build HTML content
+        version_str = __version__
+        html = (
+            f"<h2>aicodeprep-gui v{version_str}</h2>"
+            f"<p>Installed {days_installed} days ago.</p>"
+            "<p>"
+            '<a href="https://github.com/sponsors/detroittommy879">GitHub Sponsors</a><br>'
+            '<a href="https://wuu73.org/aicp">AI Code Prep Homepage</a>'
+            "</p>"
+        )
+        # show in rich-text message box
+        dlg = QtWidgets.QMessageBox(self)
+        dlg.setWindowTitle("About aicodeprep-gui")
+        dlg.setTextFormat(QtCore.Qt.RichText)
+        dlg.setText(html)
+        dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        dlg.exec()
 
 def show_file_selection_gui(files):
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])

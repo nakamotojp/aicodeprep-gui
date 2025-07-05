@@ -1,269 +1,155 @@
-# aicodeprep-gui - AI Code Preparation GUI
+# aicodeprep-gui: Your Universal Bridge to Any AI Chatbot
 
-_Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
+**Effortlessly prepare and share project code with any AI model, on any OS, from any editor.**
 
 [![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep-gui.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep-gui/stargazers)
+[![PyPI version](https://badge.fury.io/py/aicodeprep-gui.svg)](https://badge.fury.io/py/aicodeprep-gui)
 
-**Latest Version: 1.0.0 (June 20, 2025)**
+Manually copying and pasting files into AI chatbots is slow, error-prone, and kills your workflow. `aicodeprep-gui` solves this with a sleek, powerful, and blazing-fast desktop application that makes preparing code context a one-click process.
 
----
+It is **platform-independent** (Windows, macOS, Linux) and **IDE-independent**. Use it alongside VS Code, Cursor, Windsurf, or any other editor. It doesn't replace your agent; it superpowers your prompts by giving you perfect, user-curated context every time.
 
-## What is aicodeprep-gui?
+<p align="center">
+  <em>(A demo GIF showing the app in action would be perfect here)</em>
+</p>
 
-aicodeprep-gui is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files just to ask a question, this tool automatically collects relevant code files into a single 'block' + text file, copies it to your clipboard automatically, and formats it with AI-friendly tags. READY... to paste right into an AI chat, or multiple ones (they are still usually free!).
+## The aicodeprep-gui Workflow
 
-You can set presets which quickly add on text to what you typed, so you can do things like click the Cline button to tell the AI you want it to reply with a nice prompt you can just paste right into Cline to make fast changes without all the manual copying, pasting, typing over and over..
+The core philosophy is simple: **You know your code best.** Instead of letting a "dumber" IDE agent guess which files are relevant, `aicodeprep-gui` puts you in control with a smart, intuitive UI.
 
-Basically what this does is get rid of all the little annoying frictions between me asking my question, and giving the AI the code i'm asking about. Without this tool I would have to open each code file, copy, paste it into AI Studio/Gemini/whatever, type the same questions I ask over and over.. I hate the tedious stuff, I want to spend my brain power on better things. That's what this helps with.
+1.  **Launch Instantly**:
 
-ChatGPT, Gemini 2.5 Pro, o3, I have like 15 tabs open of different web chat's like this and most are totally free to use.
-(for more info about the workflow, staying free or cheap yet still good: wuu73.org/blog/guide.html)
+    - **Right-click** any folder in your File Explorer, Finder, or Nautilus and select "Open with aicodeprep-gui".
+    - _or_ Pop open a terminal and type `aicp` and press Enter.
 
-This helps you "vibe code" faster. Only need to paste one time. It will automatically guess as to which code files you will want for context, but allow you to fine tune it. This might seem pointless ohhh but its not. All of the available agents in IDEs will make the AI dumber by giving it a bunch of information unrelated to your problem.
+2.  **Review Smart Selection**: The app opens instantly, having already pre-selected the most relevant files based on a `.gitignore`-style configuration.
 
-Or, it won't give it enough information or context from your project.
+3.  **Fine-tune & Prompt**: Quickly check/uncheck files, use powerful **prompt presets** (like one for [Cline](https://github.com/stitionai/cline)), or write a custom question.
 
-When you use web chat interfaces, you don't have the giant hidden prompts telling the AI all about how to be an agent, how to edit files, etc. The more of this that is sent with your prompt, the dumber it will be. If you ask a question or give it a task via the web chat interface its almost always going to be smarter. This app gets rid of most of the friction between you giving the AI your code files and questions/tasks.
+4.  **Generate & Paste**: Click "GENERATE CONTEXT!". The entire code bundle and your prompt are **instantly copied to your clipboard**, ready to be pasted into ChatGPT, Gemini, Claude, or any other AI model.
 
-There are many other similar tools that are command line only, and don't have smart file checking and prefs saving, saving which files you chose for next time (when you check more files or uncheck certain ones, it will remember, for next time - this is what the .aicodepre-gui file is for). It even saves the window size and where you dragged the bar in the UI, so you won't have to do that again. Saving time and being less annoying, makes me happy, and probably makes you happy too.
+## ✨ Key Features
 
-It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-click integration.
-
----
-
-## ✨ New Features in v1.0.0
-
-- **Modern TOML Configuration System:**
-
-  - Industry-standard TOML configuration replacing custom formats
-  - User-customizable settings via `aicodeprep-gui.toml` in project directories
-  - Comprehensive default configuration with smart file filtering
-  - `.gitignore`-style pattern matching for robust exclusion rules
-
-- **Lazy Loading Performance:**
-
-  - Lightning-fast startup by avoiding scanning of large excluded directories
-  - On-demand expansion of folders like `node_modules`, `venv`, etc.
-  - Dramatically improved performance for large codebases
-  - Users can still manually expand any directory for fine-grained selection
-
-- **Enhanced Global Preset System:**
-
-  - Create and manage reusable prompt presets globally across projects
-  - Presets are automatically saved and synced across all project folders
-  - Quick preset buttons with ✚ and 🗑️ controls for easy management
-  - Default presets include "Debug", "Security check", "Best Practices", etc.
-
-- **Improved File Tree Experience:**
-
-  - Smart auto-expansion of folders containing checked files
-  - Better visual feedback with hover effects on checkboxes
-  - Binary file detection and automatic exclusion
-  - Cleaner, more intuitive folder navigation
-
-- **Enhanced Output Options:**
-  - Choose between XML `<code>` tags or Markdown `###` formatting
-  - Optional prompt/question text appended to output
-  - Intelligent file processing with better error handling
-
----
-
-## Previous Features (v0.9.x)
-
-- **Dark Mode Support:**
-
-  - Automatic theme detection based on system preferences
-  - Manual dark/light mode toggle in the top-right corner
-  - Carefully designed dark theme palette for optimal readability
-
-- **PySide6 Migration:**
-
-  - Upgraded to Qt6 via PySide6 for improved performance
-  - Modern Qt features and future-proofing
-  - Better cross-platform compatibility
-
-- **Persistent Preferences:**
-
-  - Automatically saves window size and selected files in `.aicodeprep-gui` file per project
-  - Remembers splitter position and window layout
-  - Optional preference saving (can be disabled)
-
-- **Token Counter:**
-  - Real-time token estimation as you select/deselect files
-  - Helps optimize context size for AI models
-
----
-
-## Screenshots & Usage
-
-Update coming soon - but you can look at the older version and get an idea for how it is used at these links:
-
-[https://wuu73.org/aicp - the old homepage for the app with old screenshots](https://wuu73.org/aicp)
-
-[Guide on how to code free/cheap, workflow info, etc](https://wuu73.org/blog/guide.html)
+- 🚀 **Seamless OS Integration**: The only tool of its kind with optional, native right-click context menu integration for **Windows File Explorer**, **macOS Finder**, and **Linux Nautilus**.
+- 💻 **Truly Cross-Platform**: A single, consistent experience on Windows, macOS (Intel & Apple Silicon), and major Linux distributions.
+- ⌨️ **Simple & Fast Commands**: Launch from anywhere by simply typing `aicp` in your terminal. Pass a directory (`aicp ./my-project`) or run it in the current folder.
+- 🧠 **Intelligent File Scanning**:
+  - Uses a powerful `.gitignore`-style pattern system (`aicodeprep-gui.toml`) to smartly include/exclude files.
+  - Blazing-fast startup thanks to **lazy-loading**, which skips huge directories like `node_modules/` or `venv/` until you need them.
+  - Remembers your file selections, window size, and layout on a per-project basis in a local `.aicodeprep-gui` file.
+- 🎨 **Unique & Polished UI**:
+  - A clean, modern interface built with PySide6.
+  - **Automatic Light/Dark mode** detection that syncs with your OS, plus a manual toggle.
+  - Satisfying, custom-styled UI components, including an intuitive file tree with hover effects.
+  - Real-time **token counter** to help you stay within context limits.
+- 🔧 **Powerful Prompt Engineering**:
+  - Create, save, and manage **global prompt presets** that are available across all your projects.
+  - Comes with useful defaults for debugging, security analysis, or generating prompts for AI agents like **Cline**.
+- 🌐 **IDE & Agent Agnostic**:
+  - This is **not another IDE plugin**. It's a standalone utility that enhances your workflow with _any_ tool.
+  - Perfect for preparing context for agent-based IDEs like **Cursor** or **Windsurf**, or for direct use in web-based chatbots.
 
 ---
 
 ## Installation
 
-### macOS
+The recommended installation method for all platforms is `pipx`. This installs the application and its dependencies in an isolated environment, making it available system-wide without cluttering your global Python installation.
 
-Currently glitchy with pipx, but you can just throw the whole codebase into AI and ask how to get it up and running.
-Should work on any Mac (before was limited to M series)
-
-### Windows
-
-py -m pip install --user pipx
-py -m pipx ensurepath
-
-close that terminal window, and open a fresh new one
-
-pipx install --pip-args="--extra-index-url https://test.pypi.org/simple/" aicodeprep-gui==1.0.1
-
-It should say success or something similar or done.
-
-Now that it is installed, you can type 'aicp' + enter in a terminal to run it or aicp path/to/folder/
-also aicodeprep-gui works instead of aicp. aicp is shorter, that's why its included.
-
-#### Install right-click context menu (optional)
-
-There should be a thing in the File menu for this
-
-1. Run the Windows installer from the releases page.
-2. Follow the installation wizard.
-3. To use: Right-click in any folder's blank space in Windows File Explorer → `aicodeprep-gui`.
-4. Restart Windows if the context menu does not appear immediately.
-5. Select/deselect files and folders, then click **Process Selected**.
-6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
-
-### Linux
-
-Version 1.0.0+:
-
-#### Update package lists and upgrade existing packages
-
-sudo apt update && sudo apt upgrade -y
-
-#### Install pip for Python 3
-
-sudo apt install python3-pip -y
-
-#### Install and Configure pipx
-
-Now, use pip to install pipx. It's best to install it in your user space to avoid needing sudo for Python packages.
-
-# Install pipx
-
-pip3 install --user pipx
-
-# Add the pipx bin directory to your system's PATH
-
-# This command injects the necessary line into your shell's startup file (.bashrc)
-
-pipx ensurepath
-
-#### IMPORTANT: After running pipx ensurepath, you must close and reopen your terminal for the PATH changes to take effect.
-
-Older version:
-
-1. Download the Linux package from the releases page.
-2. Follow the installation instructions in the included README.
-3. Use via command line: `aicodeprep-gui [directory]`
-4. File manager context menu integration may be available depending on your desktop environment.
-
-### Python Installation
+Go here to see how to install pipx:
+https://pipx.pypa.io/stable/installation/
 
 ```bash
-pip install aicodeprep-gui
-aicodeprep-gui  # Run in current directory
-aicodeprep-gui /path/to/project  # Run in specific directory
+# 1. Install pipx
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+
+# 2. IMPORTANT: Close and re-open your terminal for the PATH changes to take effect.
+
+# 3. Install aicodeprep-gui
+pipx install aicodeprep-gui
 ```
 
----
+### File Explorer Integration (Optional, Recommended)
 
-## Features Summary
+For the ultimate workflow, add the right-click menu item after installing:
 
-- **Cross-platform GUI** for easy visual file selection
-- **Smart Preselection** of relevant code files based on configured extensions and exclusions
-- **Dark/Light Theme Support** with system preference detection and manual toggle
-- **Lazy Loading Tree View** with instant startup and on-demand directory expansion
-- **Global Preset Management** for reusable prompt templates across projects
-- **TOML Configuration** with `.gitignore`-style pattern matching
-- **Preferences Saving** via `.aicodeprep-gui` per folder to remember selections and window layout
-- **Token Counter** displays estimated token count in real-time
-- **Context Menu Integration** for quick access from file managers
-- **Clipboard & File Output** for seamless pasting into AI chatbots
-- **Flexible Output Formats** (XML `<code>` tags or Markdown `###` sections)
-- **High-DPI Support** with crisp UI scaling on all displays
+1.  Run the application (`aicp`).
+2.  Go to the **File** menu in the top-left corner.
+3.  Select **"Install Right-Click Menu..."** (or the equivalent for your OS).
+4.  Follow the on-screen instructions. A UAC prompt may appear on Windows, as this requires administrator rights.
 
 ---
 
 ## Usage
 
-1. **Launch:** Open the tool from your project folder's context menu (right-click) or command line.
-2. **Review Files:** The tool automatically pre-selects relevant code files and expands folders containing them.
-3. **Customize Selection:**
-   - Expand/collapse folders as needed
-   - Check/uncheck files manually
-   - Use **Select All** or **Deselect All** for bulk operations
-4. **Choose Format:** Select XML `<code>` or Markdown `###` output format from the dropdown.
-5. **Add Prompt (Optional):** Use preset buttons or type custom prompts in the text area.
-6. **Process:** Click **Process Selected** to generate output and copy to clipboard.
-7. **Preferences:** Toggle "Remember checked files..." to save your selection for next time.
+### The GUI Way
+
+1.  **Launch**: Right-click a project folder or type `aicp` in a terminal inside the folder.
+2.  **Select**: Review the automatically selected files. The app will remember your choices for the next time you open it in this folder.
+3.  **Prompt (Optional)**: Click a preset button or type a question in the prompt box.
+4.  **Generate**: Click **GENERATE CONTEXT!**.
+5.  **Paste**: Your context is now on your clipboard. Paste it into your AI of choice.
+
+### The Command Line
+
+While the GUI is the main feature, you can use these command-line options:
+
+```bash
+# Run in the current directory
+aicp
+
+# Run in a specific directory
+aicodeprep-gui /path/to/your/project
+
+# See all options
+aicp --help
+```
 
 ---
 
 ## Configuration
 
-You can customize file extensions, directories, and exclusion patterns via an `aicodeprep-gui.toml` file in your project folder. This will override the default configuration.
+`aicodeprep-gui` is powerful out of the box, but you can customize its behavior by creating an `aicodeprep-gui.toml` file in your project's root directory. This allows you to override the default filters.
 
-Example `aicodeprep-gui.toml`:
+**Example `aicodeprep-gui.toml`:**
 
 ```toml
+# Set a different max file size in bytes
 max_file_size = 2000000
 
-code_extensions = [".py", ".js", ".ts", ".html", ".css"]
+# Override the default code extensions to check
+code_extensions = [".py", ".js", ".ts", ".html", ".css", ".rs"]
 
+# Add custom exclusion patterns (uses .gitignore syntax)
 exclude_patterns = [
     "build/",
     "dist/",
     "*.log",
-    "temp_*"
+    "temp_*",
+    "cache/"
 ]
 
+# Add custom patterns for files that should always be checked by default
 default_include_patterns = [
     "README.md",
-    "main.py"
+    "main.py",
+    "docs/architecture.md"
 ]
 ```
 
-Refer to `aicodeprep-gui/data/default_config.toml` for all available configuration options.
-
----
-
-## Command Line Options
-
-```bash
-aicodeprep-gui [directory] [options]
-
-Options:
-  -h, --help          Show help message
-  -n, --no-copy       Don't copy output to clipboard
-  -o, --output FILE   Output filename (default: fullcode.txt)
-  -d, --debug         Enable debug logging
-```
+For a full list of default settings, see the [default_config.toml](aicodeprep_gui/data/default_config.toml) in the source code.
 
 ---
 
 ## Contributing
 
-Contributions and pull requests are welcome! Please submit bug reports and feature requests via GitHub Issues.
+Contributions, bug reports, and feature requests are welcome! Please feel free to open an issue or submit a pull request on GitHub.
 
 ---
 
 ## Support & Donations
 
-If you find this tool useful, consider supporting future development:
+If this tool saves you time and makes your life easier, consider supporting its development.
 
 | Method   | Address / Link                                                                                    |
 | -------- | ------------------------------------------------------------------------------------------------- |
@@ -272,5 +158,3 @@ If you find this tool useful, consider supporting future development:
 | Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
 | CashApp  | `$lightweb73`                                                                                     |
 | Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
-
----

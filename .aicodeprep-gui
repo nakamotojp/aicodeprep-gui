@@ -14,7 +14,6 @@ splitter_state=AAAA/wAAAAEAAAACAAAB+wAAALgB/////wEAAAACAA==
 
 [files]
 pyproject.toml
-README.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui.py
