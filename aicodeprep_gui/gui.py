@@ -293,7 +293,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         else:
             self.setGeometry(100, 100, int(600 * scale_factor), int(400 * scale_factor))
 
-        self.is_dark_mode = system_pref_is_dark()
+        self.is_dark_mode = self._load_dark_mode_setting()
         if self.is_dark_mode: apply_dark_palette(self.app)
 
         central = QtWidgets.QWidget()
@@ -1260,6 +1260,30 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         settings.setValue("prompt_to_top", self.prompt_top_checkbox.isChecked())
         settings.setValue("prompt_to_bottom", self.prompt_bottom_checkbox.isChecked())
 
+    def _load_dark_mode_setting(self) -> bool:
+        """Load dark mode preference from QSettings, or use system preference if not set."""
+        try:
+            settings = QtCore.QSettings("aicodeprep-gui", "Appearance")
+            if settings.contains("dark_mode"):
+                return settings.value("dark_mode", type=bool)
+            else:
+                # Use system preference as default, save it for next time
+                dark = system_pref_is_dark()
+                settings.setValue("dark_mode", dark)
+                return dark
+        except Exception as e:
+            logging.error(f"Failed to load dark mode setting: {e}")
+            # Fallback to system preference
+            return system_pref_is_dark()
+
+    def _save_dark_mode_setting(self):
+        """Save current dark mode state to QSettings."""
+        try:
+            settings = QtCore.QSettings("aicodeprep-gui", "Appearance")
+            settings.setValue("dark_mode", self.is_dark_mode)
+        except Exception as e:
+            logging.error(f"Failed to save dark mode setting: {e}")
+
     def toggle_dark_mode(self, state):
         self.is_dark_mode = bool(state)
         # 1. Apply the correct palette for the entire application
@@ -1297,6 +1321,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.text_label.setStyleSheet(
                 f"font-size: 20px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
             )
+
+        # Save the user's dark mode preference
+        self._save_dark_mode_setting()
 
 def show_file_selection_gui(files):
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
