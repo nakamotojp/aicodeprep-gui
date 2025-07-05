@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # CRITICAL: Changed name to match your new package name
 name = "aicodeprep-gui" 
-version = "1.0.2"
+version = "1.0.3"
 description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "tom@wuu73.org" }]
@@ -28,7 +28,8 @@ dependencies = [
     "PySide6>=6.7.0", # Simplified dependency, Essentials and Addons are included
     "toml",
     "pathspec",
-    "requests" # for your network check
+    "requests", # for your network check
+    "packaging"
 ]
 requires-python = ">=3.8" # PySide6 requires Python 3.8+
 

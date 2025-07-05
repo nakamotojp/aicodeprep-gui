@@ -122,7 +122,7 @@ pipx install aicodeprep-gui
 ### macOS
 
 pipx install aicodeprep-gui
-installed package aicodeprep-gui 1.0.2, installed using Python 3.13.5
+installed package aicodeprep-gui 1.0.3, installed using Python 3.13.5
 These apps are now globally available - aicodeprep-gui.exe - aicp.exe
 done! ✨ 🌟 ✨
 

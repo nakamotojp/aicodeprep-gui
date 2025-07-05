@@ -1,5 +1,4 @@
-can you create a readme.md? for github, and pypi. it can install like: pipx install aicodeprep-gui
-they can type aicp (or the longer version aicodeprep-gui) in terminal to run it in that folder, but also they can optionally install the right click context menu.
+just added an update checker thing but can you somehow add info about it to the About menu? so it could say which version it is locally but show the pypi version below it?
 
 aicodeprep_gui\data\default_config.toml:
 <code>
@@ -540,6 +539,7 @@ import uuid
 from datetime import datetime, date
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from aicodeprep_gui import __version__
+from aicodeprep_gui import update_checker
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from importlib import resources
 from aicodeprep_gui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
@@ -751,6 +751,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def __init__(self, files):
         super().__init__()
+        self.initial_show_event = True
         # Set application icon
         try:
             with resources.path('aicodeprep_gui.images', 'favicon.ico') as icon_path:
@@ -803,6 +804,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         time_str = f"{now.strftime('%I').lstrip('0') or '12'}{now.strftime('%M')}{now.strftime('%p').lower()}"
         request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={user_uuid}"))
         self.network_manager.get(request)
+
+        # --- Schedule update checker (non-blocking, after telemetry) ---
+        self.update_thread = None
 
         self.setWindowTitle("aicodeprep-gui - File Selection")
         self.app = QtWidgets.QApplication.instance()
@@ -1774,6 +1778,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.text_label.setText("No preferences file found (.aicodeprep-gui)")
 
     def closeEvent(self, event):
+        # Clean up update thread if it's still running
+        if self.update_thread and self.update_thread.isRunning():
+            print("[gui] Stopping update check thread before closing...")
+            self.update_thread.quit()
+            if not self.update_thread.wait(3000):  # Wait up to 3 seconds
+                print("[gui] Force terminating update check thread...")
+                self.update_thread.terminate()
+                self.update_thread.wait()
+        
         if self.remember_checkbox and self.remember_checkbox.isChecked():
             self.save_prefs() # Save prefs only if 'remember' is checked
         if self.action != 'process': self.action = 'quit'
@@ -1876,6 +1889,83 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Save the user's dark mode preference
         self._save_dark_mode_setting()
+
+    def _start_update_check(self):
+        """Start the update check and store the thread reference."""
+        print("[gui] Starting update check...")
+        self.update_thread = update_checker.check_for_updates(self._on_update_checked, parent=self)
+        if self.update_thread:
+            print("[gui] Update check thread started")
+        else:
+            print("[gui] Update check skipped (already checked recently)")
+
+    def _on_update_checked(self, new_available: bool, latest: str):
+        """Slot called when update check completes."""
+        print(f"[gui] Update check callback received - New available: {new_available}, Latest: {latest}")
+        from PySide6.QtCore import QSettings, QDate, QDateTime, Qt
+        from PySide6.QtWidgets import QMessageBox, QPushButton
+        import subprocess
+
+        ORG = "aicodeprep-gui"
+        GROUP = "UpdateChecker"
+        KEY_LAST_PROMPT = "last_prompt"
+        KEY_PROMPTED_THIS_RUN = "prompted_this_run"
+
+        settings = QSettings(ORG, GROUP)
+        today = QDate.currentDate().toString(Qt.ISODate)
+        prompted_this_run = settings.value(KEY_PROMPTED_THIS_RUN, False, type=bool)
+        last_prompt = settings.value(KEY_LAST_PROMPT, "")
+
+        print(f"[gui] Prompt check - prompted_this_run: {prompted_this_run}, last_prompt: {last_prompt}, today: {today}")
+
+        # Only prompt if new version, not already prompted today, and not this run
+        if not new_available or prompted_this_run or last_prompt == today:
+            print("[gui] Not showing update dialog (conditions not met)")
+            return
+
+        print("[gui] Showing update available dialog")
+
+        # Mark as prompted for this run and today
+        settings.setValue(KEY_PROMPTED_THIS_RUN, True)
+        settings.setValue(KEY_LAST_PROMPT, today)
+
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Update Available")
+        msg.setIcon(QMessageBox.Information)
+        msg.setText(
+            f"A new version of aicodeprep-gui is available: {latest}. You are on {__version__}.\n"
+            "Would you like to upgrade now?"
+        )
+        upgrade_btn = msg.addButton("Upgrade", QMessageBox.AcceptRole)
+        later_btn = msg.addButton("Later", QMessageBox.RejectRole)
+        msg.setStandardButtons(QMessageBox.NoButton)
+        msg.setModal(False)
+        msg.show()
+
+        def on_button_clicked(btn):
+            if btn == upgrade_btn:
+                # Run pipx upgrade in subprocess, show result
+                try:
+                    proc = subprocess.Popen(
+                        ["pipx", "install", "--upgrade", "aicodeprep-gui"],
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                    )
+                    out, err = proc.communicate(timeout=120)
+                    if proc.returncode == 0:
+                        QMessageBox.information(self, "Upgrade Complete", "aicodeprep-gui was upgraded successfully.\nPlease restart the application.")
+                    else:
+                        QMessageBox.warning(self, "Upgrade Failed", f"Upgrade failed:\n{err or out}")
+                except Exception as e:
+                    QMessageBox.critical(self, "Upgrade Error", f"Could not run upgrade:\n{e}")
+            msg.close()
+
+        msg.buttonClicked.connect(on_button_clicked)
+
+    def showEvent(self, event):
+        super(FileSelectionGUI, self).showEvent(event)
+        if getattr(self, "initial_show_event", False):
+            QtCore.QTimer.singleShot(0, self._start_update_check)
+            self.initial_show_event = False
 
     def open_about_dialog(self):
         """Show About dialog with version, install age, and links."""
@@ -2398,7 +2488,7 @@ def main():
 
     # Set Windows AppUserModelID for proper taskbar icon
     if platform.system() == "Windows":
-        myappid = 'wuu73.aicodeprep-gui.1.0.2'  # arbitrary unique string
+        myappid = 'wuu73.aicodeprep-gui.1.0.3'  # arbitrary unique string
         try:
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except AttributeError:
@@ -2613,6 +2703,108 @@ def matches_pattern(filename: str, pattern: str) -> bool:
 
 </code>
 
+aicodeprep_gui\update_checker.py:
+<code>
+import datetime
+import sys
+import traceback
+from typing import Callable, Optional
+
+from PySide6.QtCore import QObject, QThread, Signal, QSettings, QDateTime, Qt
+from packaging.version import parse as parse_version
+
+try:
+    import requests
+except ImportError:
+    requests = None
+
+from . import __version__
+
+PYPI_URL = "https://pypi.org/pypi/aicodeprep-gui/json"
+ORG = "aicodeprep-gui"
+GROUP = "UpdateChecker"
+KEY_LAST_CHECK = "last_check"
+KEY_LAST_PROMPT = "last_prompt"
+KEY_PROMPTED_THIS_RUN = "prompted_this_run"
+
+def get_latest_pypi_version() -> Optional[str]:
+    """Fetch latest version string from PyPI. Returns None on error."""
+    if not requests:
+        return None
+    try:
+        resp = requests.get(PYPI_URL, timeout=5)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["info"]["version"]
+    except Exception as e:
+        print(f"[update_checker] Error fetching PyPI version: {e}", file=sys.stderr)
+        traceback.print_exc()
+        return None
+
+def is_newer_version(current: str, latest: str) -> bool:
+    """Return True if latest > current (semantic version compare)."""
+    try:
+        return parse_version(latest) > parse_version(current)
+    except Exception as e:
+        print(f"[update_checker] Version compare error: {e}", file=sys.stderr)
+        return False
+
+class _UpdateFetchWorker(QObject):
+    finished = Signal(bool, str)
+    def __init__(self, current_version: str):
+        QObject.__init__(self)
+        self.current_version = current_version
+
+    def do_work(self):
+        print(f"[update_checker] Worker running - fetching latest version from PyPI...")
+        latest = get_latest_pypi_version()
+        if latest is None:
+            print(f"[update_checker] Failed to fetch latest version from PyPI")
+            self.finished.emit(False, "")
+            return
+        print(f"[update_checker] Latest version from PyPI: {latest}, Current: {self.current_version}")
+        new_available = is_newer_version(self.current_version, latest)
+        print(f"[update_checker] Version comparison - New available: {new_available}")
+        self.finished.emit(new_available, latest if new_available else "")
+
+def check_for_updates(callback: Callable[[bool, str], None], parent=None) -> Optional[QThread]:
+    """Check for updates, calling callback(new_available, latest_version) when done.
+    Returns the QThread if one is created, None if check is skipped."""
+    print(f"[update_checker] Starting update check for version {__version__}")
+    settings = QSettings(ORG, GROUP)
+    # Reset the prompted flag for new run so we can prompt once per day
+    settings.setValue(KEY_PROMPTED_THIS_RUN, False)
+    print("[update_checker] Reset prompted_this_run flag to False")
+    last_check_str = settings.value(KEY_LAST_CHECK, "")
+    now = QDateTime.currentDateTimeUtc()
+    if last_check_str:
+        try:
+            last_check = QDateTime.fromString(last_check_str, Qt.ISODate)
+            if last_check.isValid() and last_check.secsTo(now) < 86400:
+                print(f"[update_checker] Skipping check - last checked {last_check_str} (< 24h ago)")
+                callback(False, "")
+                return None
+        except Exception as e:
+            print(f"[update_checker] Error parsing last_check: {e}", file=sys.stderr)
+    print("[update_checker] Starting background update check thread")
+    # Run fetch in background thread
+    thread = QThread(parent)
+    worker = _UpdateFetchWorker(__version__)
+    thread.worker = worker
+    worker.moveToThread(thread)
+    def on_finish(new_available, latest):
+        print(f"[update_checker] Check completed - New available: {new_available}, Latest: {latest}")
+        settings.setValue(KEY_LAST_CHECK, now.toString(Qt.ISODate))
+        callback(new_available, latest)
+        thread.quit()
+    worker.finished.connect(on_finish)
+    thread.finished.connect(thread.deleteLater)
+    thread.started.connect(worker.do_work)
+    thread.start()
+    return thread
+
+</code>
+
 aicodeprep_gui\windows_registry.py:
 <code>
 import sys
@@ -2796,7 +2988,7 @@ def restart_explorer():
 aicodeprep_gui\__init__.py:
 <code>
 # Package initialization
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 </code>
 
@@ -2809,7 +3001,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # CRITICAL: Changed name to match your new package name
 name = "aicodeprep-gui" 
-version = "1.0.2"
+version = "1.0.3"
 description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "tom@wuu73.org" }]
@@ -2832,7 +3024,8 @@ dependencies = [
     "PySide6>=6.7.0", # Simplified dependency, Essentials and Addons are included
     "toml",
     "pathspec",
-    "requests" # for your network check
+    "requests", # for your network check
+    "packaging"
 ]
 requires-python = ">=3.8" # PySide6 requires Python 3.8+
 
@@ -2864,7 +3057,173 @@ build = [
 
 </code>
 
+README.md:
+<code>
+# aicodeprep-gui: The fast context maker
+
+**Effortlessly prepare and share project code with any AI model, on any OS, from any editor.**
+
+[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep-gui.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep-gui/stargazers)
+[![PyPI version](https://badge.fury.io/py/aicodeprep-gui.svg)](https://badge.fury.io/py/aicodeprep-gui)
+
+Manually copying and pasting files into AI chatbots is slow, error-prone, and kills your workflow. `aicodeprep-gui` solves this with a sleek, powerful, and blazing-fast desktop application that makes preparing code context a one-click process.
+
+It is **platform-independent** (Windows, macOS, Linux) and **IDE-independent**. Use it alongside VS Code, Cursor, Windsurf, or any other editor. It doesn't replace your agent; it superpowers your prompts by giving you perfect, user-curated context every time.
+
+<p align="center">
+  <em>(A demo GIF showing the app in action would be perfect here)</em>
+</p>
+
+## The aicodeprep-gui Workflow
+
+The core philosophy is simple: **You know your code best.** Instead of letting a "dumber" IDE agent guess which files are relevant, `aicodeprep-gui` puts you in control with a smart, intuitive UI.
+
+1.  **Launch Instantly**:
+
+    - **Right-click** any folder in your File Explorer, Finder, or Nautilus and select "Open with aicodeprep-gui".
+    - _or_ Pop open a terminal and type `aicp` and press Enter.
+
+2.  **Review Smart Selection**: The app opens instantly, having already pre-selected the most relevant files based on a `.gitignore`-style configuration.
+
+3.  **Fine-tune & Prompt**: Quickly check/uncheck files, use powerful **prompt presets** (like one for [Cline](https://github.com/stitionai/cline)), or write a custom question.
+
+4.  **Generate & Paste**: Click "GENERATE CONTEXT!". The entire code bundle and your prompt are **instantly copied to your clipboard**, ready to be pasted into ChatGPT, Gemini, Claude, Openrouter, or any other AI model.
+
+5.  **Smarter AI responses and abilities**: Whenever you rely on IDE extensions or agentic IDEs to do everything, they feed too much crap into the AI which always seems to reduce its intelligence. You end up needing to use Claude for everything even minor bugs, which gets expensive. With this tool, you can use the web chat interfaces for the hard/difficult stuff, bug fixing, planning, and then paste the result back into the agent set to use a cheap unlimited model, to make the actual file changes.
+
+## ✨ Key Features
+
+- 🚀 **Seamless OS Integration**: The only tool of its kind with optional, native right-click context menu integration for **Windows File Explorer**, **macOS Finder**, and **Linux Nautilus**.
+- 💻 **Truly Cross-Platform**: A single, consistent experience on Windows, macOS (Intel & Apple Silicon), and major Linux distributions.
+- ⌨️ **Simple & Fast Commands**: Launch from anywhere by simply typing `aicp` in your terminal. Pass a directory (`aicp ./my-project`) or run it in the current folder.
+- 🧠 **Intelligent File Scanning**:
+  - Uses a powerful `.gitignore`-style pattern system (`aicodeprep-gui.toml`) to smartly include/exclude files.
+  - Blazing-fast startup thanks to **lazy-loading**, which skips huge directories like `node_modules/` or `venv/` until you need them.
+  - Remembers your file selections, window size, and layout on a per-project basis in a local `.aicodeprep-gui` file.
+- 🎨 **Unique & Polished UI**:
+  - A clean, modern interface built with PySide6.
+  - **Automatic Light/Dark mode** detection that syncs with your OS, plus a manual toggle.
+  - Satisfying, custom-styled UI components, including an intuitive file tree with hover effects.
+  - Real-time **token counter** to help you stay within context limits.
+- 🔧 **Powerful Prompt Engineering**:
+  - Create, save, and manage **global prompt presets** that are available across all your projects.
+  - Comes with useful defaults for debugging, security analysis, or generating prompts for AI agents like **Cline**.
+- 🌐 **IDE & Agent Agnostic**:
+  - This is **not another IDE plugin**. It's a standalone utility that enhances your workflow with _any_ tool.
+  - Perfect for preparing context for agent-based IDEs like **Cursor** or **Windsurf**, or for direct use in web-based chatbots.
+
+---
+
+## Installation
+
+The recommended installation method for all platforms is `pipx`. This installs the application and its dependencies in an isolated environment, making it available system-wide without cluttering your global Python installation.
+
+Go here to see how to install pipx:
+https://pipx.pypa.io/stable/installation/
+
+```bash
+# 1. Install pipx
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+
+# 2. IMPORTANT: Close and re-open your terminal for the PATH changes to take effect.
+
+# 3. Install aicodeprep-gui
+pipx install aicodeprep-gui
+```
+
+### File Explorer Integration (Optional, Recommended)
+
+For the ultimate workflow, add the right-click menu item after installing:
+
+1.  Run the application (`aicp`).
+2.  Go to the **File** menu in the top-left corner.
+3.  Select **"Install Right-Click Menu..."** (or the equivalent for your OS).
+4.  Follow the on-screen instructions. A UAC prompt may appear on Windows, as this requires administrator rights.
+
+---
+
+## Usage
+
+### The GUI Way
+
+1.  **Launch**: Right-click a project folder or type `aicp` in a terminal inside the folder.
+2.  **Select**: Review the automatically selected files. The app will remember your choices for the next time you open it in this folder.
+3.  **Prompt (Optional)**: Click a preset button or type a question in the prompt box.
+4.  **Generate**: Click **GENERATE CONTEXT!**.
+5.  **Paste**: Your context is now on your clipboard. Paste it into your AI of choice.
+
+### The Command Line
+
+While the GUI is the main feature, you can use these command-line options:
+
+```bash
+# Run in the current directory
+aicp
+
+# Run in a specific directory
+aicodeprep-gui /path/to/your/project
+
+# See all options
+aicp --help
+```
+
+---
+
+## Configuration
+
+`aicodeprep-gui` is powerful out of the box, but you can customize its behavior by creating an `aicodeprep-gui.toml` file in your project's root directory. This allows you to override the default filters.
+
+**Example `aicodeprep-gui.toml`:**
+
+```toml
+# Set a different max file size in bytes
+max_file_size = 2000000
+
+# Override the default code extensions to check
+code_extensions = [".py", ".js", ".ts", ".html", ".css", ".rs"]
+
+# Add custom exclusion patterns (uses .gitignore syntax)
+exclude_patterns = [
+    "build/",
+    "dist/",
+    "*.log",
+    "temp_*",
+    "cache/"
+]
+
+# Add custom patterns for files that should always be checked by default
+default_include_patterns = [
+    "README.md",
+    "main.py",
+    "docs/architecture.md"
+]
+```
+
+For a full list of default settings, see the [default_config.toml](aicodeprep_gui/data/default_config.toml) in the source code.
+
+---
+
+## Contributing
+
+Contributions, bug reports, and feature requests are welcome! Please feel free to open an issue or submit a pull request on GitHub.
+
+---
+
+## Support & Donations
+
+If this tool saves you time and makes your life easier, consider supporting its development.
+
+| Method   | Address / Link                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------- |
+| Bitcoin  | `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`                                                      |
+| Litecoin | `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`                                                     |
+| Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
+| CashApp  | `$lightweb73`                                                                                     |
+| Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
+
+</code>
 
 
-can you create a readme.md? for github, and pypi. it can install like: pipx install aicodeprep-gui
-they can type aicp (or the longer version aicodeprep-gui) in terminal to run it in that folder, but also they can optionally install the right click context menu.
+
+just added an update checker thing but can you somehow add info about it to the About menu? so it could say which version it is locally but show the pypi version below it?

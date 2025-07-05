@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime, date
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from aicodeprep_gui import __version__
+from aicodeprep_gui import update_checker
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from importlib import resources
 from aicodeprep_gui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
@@ -217,6 +218,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def __init__(self, files):
         super().__init__()
+        self.initial_show_event = True
         # Set application icon
         try:
             with resources.path('aicodeprep_gui.images', 'favicon.ico') as icon_path:
@@ -269,6 +271,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         time_str = f"{now.strftime('%I').lstrip('0') or '12'}{now.strftime('%M')}{now.strftime('%p').lower()}"
         request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={user_uuid}"))
         self.network_manager.get(request)
+
+        # --- Schedule update checker (non-blocking, after telemetry) ---
+        self.update_thread = None
 
         self.setWindowTitle("aicodeprep-gui - File Selection")
         self.app = QtWidgets.QApplication.instance()
@@ -1240,6 +1245,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.text_label.setText("No preferences file found (.aicodeprep-gui)")
 
     def closeEvent(self, event):
+        # Clean up update thread if it's still running
+        if self.update_thread and self.update_thread.isRunning():
+            print("[gui] Stopping update check thread before closing...")
+            self.update_thread.quit()
+            if not self.update_thread.wait(3000):  # Wait up to 3 seconds
+                print("[gui] Force terminating update check thread...")
+                self.update_thread.terminate()
+                self.update_thread.wait()
+        
         if self.remember_checkbox and self.remember_checkbox.isChecked():
             self.save_prefs() # Save prefs only if 'remember' is checked
         if self.action != 'process': self.action = 'quit'
@@ -1342,6 +1356,83 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Save the user's dark mode preference
         self._save_dark_mode_setting()
+
+    def _start_update_check(self):
+        """Start the update check and store the thread reference."""
+        print("[gui] Starting update check...")
+        self.update_thread = update_checker.check_for_updates(self._on_update_checked, parent=self)
+        if self.update_thread:
+            print("[gui] Update check thread started")
+        else:
+            print("[gui] Update check skipped (already checked recently)")
+
+    def _on_update_checked(self, new_available: bool, latest: str):
+        """Slot called when update check completes."""
+        print(f"[gui] Update check callback received - New available: {new_available}, Latest: {latest}")
+        from PySide6.QtCore import QSettings, QDate, QDateTime, Qt
+        from PySide6.QtWidgets import QMessageBox, QPushButton
+        import subprocess
+
+        ORG = "aicodeprep-gui"
+        GROUP = "UpdateChecker"
+        KEY_LAST_PROMPT = "last_prompt"
+        KEY_PROMPTED_THIS_RUN = "prompted_this_run"
+
+        settings = QSettings(ORG, GROUP)
+        today = QDate.currentDate().toString(Qt.ISODate)
+        prompted_this_run = settings.value(KEY_PROMPTED_THIS_RUN, False, type=bool)
+        last_prompt = settings.value(KEY_LAST_PROMPT, "")
+
+        print(f"[gui] Prompt check - prompted_this_run: {prompted_this_run}, last_prompt: {last_prompt}, today: {today}")
+
+        # Only prompt if new version, not already prompted today, and not this run
+        if not new_available or prompted_this_run or last_prompt == today:
+            print("[gui] Not showing update dialog (conditions not met)")
+            return
+
+        print("[gui] Showing update available dialog")
+
+        # Mark as prompted for this run and today
+        settings.setValue(KEY_PROMPTED_THIS_RUN, True)
+        settings.setValue(KEY_LAST_PROMPT, today)
+
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Update Available")
+        msg.setIcon(QMessageBox.Information)
+        msg.setText(
+            f"A new version of aicodeprep-gui is available: {latest}. You are on {__version__}.\n"
+            "Would you like to upgrade now?"
+        )
+        upgrade_btn = msg.addButton("Upgrade", QMessageBox.AcceptRole)
+        later_btn = msg.addButton("Later", QMessageBox.RejectRole)
+        msg.setStandardButtons(QMessageBox.NoButton)
+        msg.setModal(False)
+        msg.show()
+
+        def on_button_clicked(btn):
+            if btn == upgrade_btn:
+                # Run pipx upgrade in subprocess, show result
+                try:
+                    proc = subprocess.Popen(
+                        ["pipx", "install", "--upgrade", "aicodeprep-gui"],
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                    )
+                    out, err = proc.communicate(timeout=120)
+                    if proc.returncode == 0:
+                        QMessageBox.information(self, "Upgrade Complete", "aicodeprep-gui was upgraded successfully.\nPlease restart the application.")
+                    else:
+                        QMessageBox.warning(self, "Upgrade Failed", f"Upgrade failed:\n{err or out}")
+                except Exception as e:
+                    QMessageBox.critical(self, "Upgrade Error", f"Could not run upgrade:\n{e}")
+            msg.close()
+
+        msg.buttonClicked.connect(on_button_clicked)
+
+    def showEvent(self, event):
+        super(FileSelectionGUI, self).showEvent(event)
+        if getattr(self, "initial_show_event", False):
+            QtCore.QTimer.singleShot(0, self._start_update_check)
+            self.initial_show_event = False
 
     def open_about_dialog(self):
         """Show About dialog with version, install age, and links."""

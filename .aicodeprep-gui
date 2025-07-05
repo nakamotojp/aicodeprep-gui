@@ -14,6 +14,7 @@ splitter_state=AAAA/wAAAAEAAAACAAAB+wAAALgB/////wEAAAACAA==
 
 [files]
 pyproject.toml
+README.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui.py
@@ -21,6 +22,7 @@ aicodeprep_gui\linux_installer.py
 aicodeprep_gui\macos_installer.py
 aicodeprep_gui\main.py
 aicodeprep_gui\smart_logic.py
+aicodeprep_gui\update_checker.py
 aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
 aicodeprep_gui\data\default_config.toml
