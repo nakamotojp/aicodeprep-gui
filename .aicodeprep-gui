@@ -13,7 +13,9 @@ height=1231
 splitter_state=AAAA/wAAAAEAAAACAAAB+wAAALgB/////wEAAAACAA==
 
 [files]
+CHANGELOG.md
 pyproject.toml
+README-old1.md
 README.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py

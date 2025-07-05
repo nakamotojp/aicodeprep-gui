@@ -48,6 +48,8 @@ def main():
                         help="Enable debug logging")
     parser.add_argument("directory", nargs="?", default=".",
                         help="Directory to process (default: current directory)")
+    parser.add_argument("--force-update-check", action="store_true",
+                        help="Force update check (ignore 24h limit)")
 
     # --- ADD THESE NEW ARGUMENTS ---
     if platform.system() == "Windows":
@@ -58,6 +60,7 @@ def main():
     # --- END OF NEW ARGUMENTS ---
 
     args = parser.parse_args()
+    force_update = args.force_update_check
 
     # Set Windows AppUserModelID for proper taskbar icon
     if platform.system() == "Windows":
@@ -125,7 +128,7 @@ def main():
         logger.warning("No files found to process!")
         return
 
-    action, _ = show_file_selection_gui(all_files_with_flags)
+    action, _ = show_file_selection_gui(all_files_with_flags, force_update=force_update)
 
     if action != 'quit':
         logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")

@@ -216,8 +216,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             import subprocess
             subprocess.Popen(["xdg-open", folder_path])
 
-    def __init__(self, files):
+    def __init__(self, files, force_update=False):
         super().__init__()
+        self.force_update = force_update
         self.initial_show_event = True
         # Set application icon
         try:
@@ -246,6 +247,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.presets = [] # This local 'presets' list is not used for global presets, but for local ones (which are not saved to the .aicodeprep-gui file, but managed by global_preset_manager through QSettings)
         self.setAcceptDrops(True)
         self.files = files
+        self.latest_pypi_version = None
 
         # Get or create anonymous user UUID
         settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
@@ -1360,7 +1362,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     def _start_update_check(self):
         """Start the update check and store the thread reference."""
         print("[gui] Starting update check...")
-        self.update_thread = update_checker.check_for_updates(self._on_update_checked, parent=self)
+        self.update_thread = update_checker.check_for_updates(self._on_update_checked, parent=self, force=self.force_update)
         if self.update_thread:
             print("[gui] Update check thread started")
         else:
@@ -1368,6 +1370,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def _on_update_checked(self, new_available: bool, latest: str):
         """Slot called when update check completes."""
+        self.latest_pypi_version = latest
         print(f"[gui] Update check callback received - New available: {new_available}, Latest: {latest}")
         from PySide6.QtCore import QSettings, QDate, QDateTime, Qt
         from PySide6.QtWidgets import QMessageBox, QPushButton
@@ -1447,11 +1450,25 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # build HTML content
         version_str = __version__
+
+        pypi_version_info = ""
+        if self.latest_pypi_version:
+            is_newer = update_checker.is_newer_version(__version__, self.latest_pypi_version)
+            if is_newer:
+                status_text = '<span style="color: #28a745; font-weight: bold;">(Update available)</span>'
+            else:
+                status_text = '<span style="color: grey;">(Up to date)</span>'
+            pypi_version_info = f'<p>Latest version: {self.latest_pypi_version} {status_text}</p>'
+        else:
+            pypi_version_info = '<p>Latest version: <span style="color: grey;">Checking PyPI...</span></p>'
+
         html = (
-            f"<h2>aicodeprep-gui v{version_str}</h2>"
+            f"<h2>aicodeprep-gui</h2>"
+            f"<p>Installed version: {version_str}</p>"
+            f"{pypi_version_info}"
             f"<p>Installed {days_installed} days ago.</p>"
             "<p>"
-            '<a href="https://github.com/sponsors/detroittommy879">GitHub Sponsors</a><br>'
+            '<br><a href="https://github.com/sponsors/detroittommy879">GitHub Sponsors</a><br>'
             '<a href="https://wuu73.org/aicp">AI Code Prep Homepage</a>'
             "</p>"
         )
@@ -1463,9 +1480,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         dlg.exec()
 
-def show_file_selection_gui(files):
+def show_file_selection_gui(files, force_update=False):
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-    gui = FileSelectionGUI(files)
+    gui = FileSelectionGUI(files, force_update=force_update)
     gui.show()
     app.exec()
     return gui.action, gui.get_selected_files()

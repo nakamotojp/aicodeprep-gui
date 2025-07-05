@@ -62,3 +62,9 @@ pasteIntoGemini -> solutionBack: {
 }
 ```
 "
+d2-icon-angry = "https://icons.terrastruct.com/emotions%2F001-angry.svg"
+
+d2-icon-smile = "https://icons.terrastruct.com/emotions%2F002-smile.svg"
+
+d2-icon-file ="https://icons.terrastruct.com/essentials%2F257-file.svg"
+

@@ -2,6 +2,34 @@
 
 ---
 
+## [1.0.3] - 2025-06-22
+
+### ✨ New Features
+
+- **Native OS Context Menu Installers:**
+  - Added a `File` menu option to easily install a right-click context menu for your operating system's file manager.
+  - **Windows:** "Install Right-Click Menu" dialog with options for custom menu text and enabling/disabling the classic (full) context menu for Windows 11.
+  - **macOS:** "Install Finder Quick Action" to add an "Open with aicodeprep-gui" action to Finder.
+  - **Linux:** "Install File Manager Action" for automated installation of a Nautilus (GNOME/Cinnamon) script, with manual instructions for other file managers.
+- **Automatic Update Checker:**
+  - The application now non-intrusively checks for new versions on PyPI upon startup.
+  - If an update is available, a dialog will appear offering a one-click upgrade option.
+- **"About" Dialog:**
+  - Added a new "Help" -> "About" menu that displays the current version, update status, and how long the app has been installed.
+
+### 🔄 Changed
+
+- **Improved Documentation:**
+  - Complete overhaul of `README.md` with a more professional tone, clearer installation instructions (recommending `pipx`), and better feature descriptions.
+- **Windows Integration:**
+  - The application now sets a Windows AppUserModelID for a proper, consistent taskbar icon.
+
+### 🛠️ Technical Improvements
+
+- **New Dependencies:** Added `requests` and `packaging` to support the new update checker.
+- **New Modules:** Added `windows_registry.py`, `macos_installer.py`, `linux_installer.py`, and `update_checker.py` to modularize the new installer and update-checking logic.
+- **Anonymous Telemetry:** A basic, one-way anonymous ping is sent on startup to help estimate the number of active users. This sends no personal data or code. See `PRIVACY.md` for details.
+
 ## [1.0.0] - 2025-06-20
 
 ### 🎉 Major Release - Production Ready
@@ -273,5 +301,3 @@
     4. Code extensions (lowest priority)
   - Enhanced directory processing with priority-based logic
   - Updated exclusion patterns based on real-world usage
-
----

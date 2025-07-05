@@ -1,4 +1,4 @@
-just added an update checker thing but can you somehow add info about it to the About menu? so it could say which version it is locally but show the pypi version below it?
+can you update the changelog file? and analyze the code for privacy and anything i should notify the user about? can you write some kind of file just telling what data is collected (i think just basic anonymous info related to how often a user opens it, stuff like that)
 
 aicodeprep_gui\data\default_config.toml:
 <code>
@@ -749,8 +749,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             import subprocess
             subprocess.Popen(["xdg-open", folder_path])
 
-    def __init__(self, files):
+    def __init__(self, files, force_update=False):
         super().__init__()
+        self.force_update = force_update
         self.initial_show_event = True
         # Set application icon
         try:
@@ -779,6 +780,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.presets = [] # This local 'presets' list is not used for global presets, but for local ones (which are not saved to the .aicodeprep-gui file, but managed by global_preset_manager through QSettings)
         self.setAcceptDrops(True)
         self.files = files
+        self.latest_pypi_version = None
 
         # Get or create anonymous user UUID
         settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
@@ -1893,7 +1895,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     def _start_update_check(self):
         """Start the update check and store the thread reference."""
         print("[gui] Starting update check...")
-        self.update_thread = update_checker.check_for_updates(self._on_update_checked, parent=self)
+        self.update_thread = update_checker.check_for_updates(self._on_update_checked, parent=self, force=self.force_update)
         if self.update_thread:
             print("[gui] Update check thread started")
         else:
@@ -1901,6 +1903,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def _on_update_checked(self, new_available: bool, latest: str):
         """Slot called when update check completes."""
+        self.latest_pypi_version = latest
         print(f"[gui] Update check callback received - New available: {new_available}, Latest: {latest}")
         from PySide6.QtCore import QSettings, QDate, QDateTime, Qt
         from PySide6.QtWidgets import QMessageBox, QPushButton
@@ -1980,11 +1983,25 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # build HTML content
         version_str = __version__
+
+        pypi_version_info = ""
+        if self.latest_pypi_version:
+            is_newer = update_checker.is_newer_version(__version__, self.latest_pypi_version)
+            if is_newer:
+                status_text = '<span style="color: #28a745; font-weight: bold;">(Update available)</span>'
+            else:
+                status_text = '<span style="color: grey;">(Up to date)</span>'
+            pypi_version_info = f'<p>Latest version: {self.latest_pypi_version} {status_text}</p>'
+        else:
+            pypi_version_info = '<p>Latest version: <span style="color: grey;">Checking PyPI...</span></p>'
+
         html = (
-            f"<h2>aicodeprep-gui v{version_str}</h2>"
+            f"<h2>aicodeprep-gui</h2>"
+            f"<p>Installed version: {version_str}</p>"
+            f"{pypi_version_info}"
             f"<p>Installed {days_installed} days ago.</p>"
             "<p>"
-            '<a href="https://github.com/sponsors/detroittommy879">GitHub Sponsors</a><br>'
+            '<br><a href="https://github.com/sponsors/detroittommy879">GitHub Sponsors</a><br>'
             '<a href="https://wuu73.org/aicp">AI Code Prep Homepage</a>'
             "</p>"
         )
@@ -1996,9 +2013,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         dlg.exec()
 
-def show_file_selection_gui(files):
+def show_file_selection_gui(files, force_update=False):
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-    gui = FileSelectionGUI(files)
+    gui = FileSelectionGUI(files, force_update=force_update)
     gui.show()
     app.exec()
     return gui.action, gui.get_selected_files()
@@ -2475,6 +2492,8 @@ def main():
                         help="Enable debug logging")
     parser.add_argument("directory", nargs="?", default=".",
                         help="Directory to process (default: current directory)")
+    parser.add_argument("--force-update-check", action="store_true",
+                        help="Force update check (ignore 24h limit)")
 
     # --- ADD THESE NEW ARGUMENTS ---
     if platform.system() == "Windows":
@@ -2485,6 +2504,7 @@ def main():
     # --- END OF NEW ARGUMENTS ---
 
     args = parser.parse_args()
+    force_update = args.force_update_check
 
     # Set Windows AppUserModelID for proper taskbar icon
     if platform.system() == "Windows":
@@ -2552,7 +2572,7 @@ def main():
         logger.warning("No files found to process!")
         return
 
-    action, _ = show_file_selection_gui(all_files_with_flags)
+    action, _ = show_file_selection_gui(all_files_with_flags, force_update=force_update)
 
     if action != 'quit':
         logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")
@@ -2760,14 +2780,14 @@ class _UpdateFetchWorker(QObject):
         latest = get_latest_pypi_version()
         if latest is None:
             print(f"[update_checker] Failed to fetch latest version from PyPI")
-            self.finished.emit(False, "")
+            self.finished.emit(False, latest if latest else "")
             return
         print(f"[update_checker] Latest version from PyPI: {latest}, Current: {self.current_version}")
         new_available = is_newer_version(self.current_version, latest)
         print(f"[update_checker] Version comparison - New available: {new_available}")
-        self.finished.emit(new_available, latest if new_available else "")
+        self.finished.emit(new_available, latest)
 
-def check_for_updates(callback: Callable[[bool, str], None], parent=None) -> Optional[QThread]:
+def check_for_updates(callback: Callable[[bool, str], None], parent=None, force: bool = False) -> Optional[QThread]:
     """Check for updates, calling callback(new_available, latest_version) when done.
     Returns the QThread if one is created, None if check is skipped."""
     print(f"[update_checker] Starting update check for version {__version__}")
@@ -2776,13 +2796,20 @@ def check_for_updates(callback: Callable[[bool, str], None], parent=None) -> Opt
     settings.setValue(KEY_PROMPTED_THIS_RUN, False)
     print("[update_checker] Reset prompted_this_run flag to False")
     last_check_str = settings.value(KEY_LAST_CHECK, "")
+    # NEW: Store and retrieve last known version
+    last_known_version = settings.value("last_known_version", "")
     now = QDateTime.currentDateTimeUtc()
-    if last_check_str:
+    if last_check_str and not force:
         try:
             last_check = QDateTime.fromString(last_check_str, Qt.ISODate)
             if last_check.isValid() and last_check.secsTo(now) < 86400:
                 print(f"[update_checker] Skipping check - last checked {last_check_str} (< 24h ago)")
-                callback(False, "")
+                # Use last known version if available
+                if last_known_version:
+                    is_newer = is_newer_version(__version__, last_known_version)
+                    callback(is_newer, last_known_version)
+                else:
+                    callback(False, "")
                 return None
         except Exception as e:
             print(f"[update_checker] Error parsing last_check: {e}", file=sys.stderr)
@@ -2795,6 +2822,9 @@ def check_for_updates(callback: Callable[[bool, str], None], parent=None) -> Opt
     def on_finish(new_available, latest):
         print(f"[update_checker] Check completed - New available: {new_available}, Latest: {latest}")
         settings.setValue(KEY_LAST_CHECK, now.toString(Qt.ISODate))
+        # NEW: Store the latest version for future use
+        if latest:
+            settings.setValue("last_known_version", latest)
         callback(new_available, latest)
         thread.quit()
     worker.finished.connect(on_finish)
@@ -2992,6 +3022,288 @@ __version__ = "1.0.3"
 
 </code>
 
+CHANGELOG.md:
+<code>
+# 📦 Changelog
+
+---
+
+## [1.0.0] - 2025-06-20
+
+### 🎉 Major Release - Production Ready
+
+#### ✨ New Features
+
+- **Enhanced Global Preset System:**
+
+  - Global preset management using QSettings for cross-project persistence
+  - Default presets: "Debug", "Security check", "Best Practices", "Please review for"
+  - New ✚ and 🗑️ buttons for easy preset creation and deletion
+  - Presets automatically available across all project folders
+  - Improved preset UI with scrollable horizontal layout
+
+- **Improved File Tree Experience:**
+
+  - Enhanced tree building logic with better performance
+  - Smart auto-expansion of folders containing checked files
+  - Better visual feedback with hover effects on checkboxes
+  - Cleaner, more intuitive folder navigation
+  - Improved checkbox styling using permanent image files
+
+- **Enhanced Output Options:**
+
+  - Choose between XML `<code>` tags or Markdown `###` formatting via dropdown
+  - Optional prompt/question text appended to output
+  - Intelligent file processing with better error handling
+  - Support for custom prompts with preset integration
+
+- **Robust Configuration System:**
+  - Mature TOML configuration with comprehensive default settings
+  - User overrides via `aicodeprep-gui.toml` in project directories
+  - `.gitignore`-style pattern matching using pathspec library
+  - Extensive default exclusion patterns for common build artifacts
+
+#### 🔄 Changed
+
+- **Performance Improvements:**
+
+  - Optimized file tree population with lazy loading
+  - Faster initial startup times
+  - Reduced memory usage during file scanning
+  - More responsive UI interactions
+
+- **User Experience Enhancements:**
+
+  - Improved menu bar with File and Edit menus
+  - Better error messages and descriptive logging
+  - Enhanced drag-and-drop folder support
+  - Cleaner visual design with better spacing and fonts
+
+- **File Handling:**
+  - Better binary file detection and exclusion
+  - Improved relative path handling
+  - Enhanced file size limits and validation
+  - More robust error handling for file operations
+
+#### 🛠️ Technical Improvements
+
+- **Code Architecture:**
+
+  - Comprehensive refactoring for maintainability
+  - Better separation of concerns between modules
+  - Improved error handling throughout the application
+  - Enhanced logging with descriptive error messages
+
+- **Dependencies:**
+  - Streamlined dependency list: PySide6, toml, pathspec
+  - Removed unused dependencies for cleaner installation
+  - Better cross-platform compatibility
+
+---
+
+## [0.9.8] - 2025-06-18
+
+### 🚀 Major Refactoring: TOML Configuration & Lazy Loading
+
+#### ✨ New Features
+
+- **TOML Configuration System:**
+
+  - Replaced custom Markdown configuration with industry-standard TOML format
+  - New `default_config.toml` file with comprehensive configuration options
+  - Support for user-specific configuration via `aicodeprep-gui.toml` in working directory
+  - `.gitignore`-style pattern matching using `pathspec` library for robust file exclusion
+
+- **Lazy Loading File Tree:**
+
+  - Implemented lazy loading for excluded directories (like `node_modules`, `venv`, etc.)
+  - Extremely fast initial startup by avoiding scanning large excluded directories
+  - On-demand expansion of any directory for fine-grained file selection
+  - Users can now manually expand and select specific files from previously excluded directories
+
+- **Enhanced Pattern Matching:**
+  - All file and directory exclusion now uses `.gitignore`-style patterns
+  - More powerful and standardized exclusion rules
+  - Unified inclusion/exclusion lists for better organization
+
+#### 🔄 Changed
+
+- **Dependencies:**
+
+  - Added `toml` for configuration parsing
+  - Added `pathspec` for `.gitignore`-style pattern matching
+  - Removed `tiktoken` dependency (no longer used)
+
+- **Configuration Format:**
+
+  - Migrated from `config.md` to `default_config.toml`
+  - More structured and maintainable configuration system
+  - Better support for complex exclusion patterns
+
+- **Performance Improvements:**
+  - Significantly faster startup times due to lazy loading
+  - Reduced memory usage during initial file scanning
+  - More responsive UI when working with large codebases
+
+#### 🛠️ Technical Improvements
+
+- **Code Architecture:**
+
+  - Complete rewrite of `smart_logic.py` for better performance and maintainability
+  - Improved GUI tree building logic with lazy loading support
+  - Enhanced checkbox styling using Unicode characters instead of temporary files
+  - Better error handling and descriptive error messages for debugging
+
+- **File Processing:**
+  - More efficient directory traversal with intelligent pruning
+  - Better binary file detection and handling
+  - Improved pathspec-based filtering throughout the application
+
+---
+
+## [0.9.7] - 2025-04-28
+
+### ✨ New Features
+
+- **Output Format Selection:**
+
+  - Added dropdown menu to select output format for `fullcode.txt`
+  - Options: "XML <code>" (uses `<code>...</code>` tags) or "Markdown ###" (uses `### File Path` ... `### END File Path`)
+
+- **Prompt Presets:**
+
+  - Users can create, save, and quickly apply preset text snippets to the LLM prompt box
+  - Added "Edit" → "New Preset..." menu option and "✚" button for easy creation
+  - Presets saved per-folder in `.aicodeprep` preferences file
+
+- **Enhanced Configuration System:**
+
+  - Default configuration loaded from `aicodeprep_gui_c/data/config.md`
+  - User-specific overrides via `aicodeprep_config.md` file in working directory
+
+- **UI & UX Improvements:**
+
+  - Native QMainWindow menu bar ("File" → "Quit", "Edit" → "New Preset...")
+  - Binary files automatically detected, greyed out, and made unselectable
+  - Improved checkbox styling with programmatically generated checkmark images
+  - Vertical splitter state now saved and restored via `.aicodeprep` file
+  - Application style set to "Fusion" for consistent rendering
+
+- **File & Directory Handling:**
+  - Enhanced logic to skip excluded directories during initial file collection
+  - Files and folders starting with dots (e.g., `.vscode`, `.idea`) skipped by default
+  - Glob-style pattern matching for exclusions via `fnmatch`
+
+### 🔄 Changed
+
+- **Token Counting:**
+
+  - Simplified character-based approximation (`total_chars / 4`)
+  - Removed direct runtime dependency on `tiktoken` for GUI token counting
+
+- **Preferences File:**
+  - `.aicodeprep` now stores splitter state and prompt presets
+  - Enhanced preference management system
+
+### 🐛 Fixed
+
+- Binary files can no longer be accidentally selected
+- More robust directory exclusion logic
+
+---
+
+## [0.9.6] - 2025-05-27
+
+### ✨ New Features
+
+- **Dark Mode Support:**
+  - Automatic theme detection based on system preferences
+  - Manual dark/light mode toggle in top-right corner
+  - Carefully designed dark theme palette for optimal readability
+
+### 🔄 Changed
+
+- **PySide6 Migration:**
+  - Upgraded from PyQt5 to PySide6 for improved performance
+  - Better Qt6 features and future-proofing
+  - Simplified dependencies
+
+---
+
+## [0.9.5] - 2025-01-24
+
+### 🎉 Added
+
+- **macOS Support:**
+  - Native macOS app bundle
+  - Finder workflow integration for right-click Quick Actions
+  - Tested on macOS Ventura 13.4+ (M1+)
+
+---
+
+## [0.5.0] - 2024-11-14
+
+### 🎉 Added
+
+- **Windows GUI Version:**
+  - Cross-platform Qt-based GUI application
+  - Right-click context menu integration for Windows Explorer
+  - Enhanced file selection with granular inclusion/exclusion
+  - DPI awareness for high-resolution displays
+
+### ✨ New Features
+
+- Interactive file selection before code preparation
+- Checkbox-based file inclusion/exclusion
+- Scalable UI with multiple theme options
+- Windows Explorer context menu integration
+
+### 🔄 Changed
+
+- Enhanced configuration options
+- Improved logging and error handling
+
+---
+
+## [0.2.2] - 2024-11-02
+
+### 🛠️ Improvements
+
+- Minor tweaks and bug fixes
+- Performance optimizations
+
+---
+
+## [0.2.0] - 2024-02-11
+
+### 🔧 Configuration Overhaul
+
+- Moved all hard-coded options to `default_config.yaml` file
+
+### 🎉 Added
+
+- **New Configuration Options:**
+  - `exclude_extensions` for global file type exclusion
+  - `exclude_patterns` for pattern-based exclusions (e.g., `.min.js`)
+  - `include_dirs` for explicit directory inclusion
+  - Enhanced priority system for inclusion/exclusion rules
+  - Better support for user configuration overrides
+
+### 🔄 Changed
+
+- **Improved Processing Logic:**
+  - Clear priority rules for file inclusion/exclusion:
+    1. Explicitly included files (highest priority)
+    2. Explicitly excluded files
+    3. Excluded extensions
+    4. Code extensions (lowest priority)
+  - Enhanced directory processing with priority-based logic
+  - Updated exclusion patterns based on real-world usage
+
+---
+
+</code>
+
 pyproject.toml:
 <code>
 [build-system]
@@ -3054,6 +3366,308 @@ build = [
     "setuptools",
     "wheel"
 ]
+
+</code>
+
+README-old1.md:
+<code>
+# aicodeprep-gui - AI Code Preparation GUI
+
+_Streamline code sharing with AI chatbots (macOS & Windows & Linux)_
+
+[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep-gui.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep-gui/stargazers)
+
+**Latest Version: 1.0.0 (June 20, 2025)**
+
+---
+
+## What is aicodeprep-gui?
+
+It is a Code Concatenator, Context Builder, Code Files + questions ---> pasteable prompt.
+Its more than that, but that's the gist of it. Developers run into situations where they need to ask a question about some code or project, but they would have to copy and paste each file. If they let an AI coding agent do it, the AI gets so much unnecessary context about tool usage instructions that it dumbs it down too much.
+
+This tool solves a lot of problems and is designed for speed, designed to remove friction. It automates a lot of annoying repetitive things.
+
+Sure, you can just use a more expensive, super smart model, which sometimes will work, just have Claude 4 do everything... but it gets expensive. All of the AI models work better on their web chat interfaces, without tool use or agent abilities. I have theories about why that is but anyways...
+
+aicodeprep-gui or aicp is a cross-platform desktop application that helps developers quickly gather and share their project code with AI chatbots. Instead of manually copying and pasting multiple files just to ask a question, this tool automatically collects relevant code files into a single 'block' + text file, copies it to your clipboard automatically (also writes it to fullcode.txt), and formats it with AI-friendly tags. READY... to paste right into an AI chat, or multiple ones (they are still usually free! you can paste it into 3 different AI chat's and compare the outputs).
+
+You can set presets which quickly add on text to what you typed, so you can do things like click the Cline button to tell the AI you want it to reply with a nice prompt you can just paste right into Cline to make fast changes without all the manual copying, pasting, typing over and over..
+
+Use the smart expensive AI models for the hard stuff, then let Cline, Cursor or whatever agentic system you use, implement the solution.
+
+Basically what this does is get rid of all the little annoying frictions between me asking my question, and giving the AI the code i'm asking about. Without this tool I would have to open each code file, copy, paste it into AI Studio/Gemini/whatever, type the same questions I ask over and over.. I hate the tedious stuff, I want to spend my brain power on better things. That's what this does.
+
+ChatGPT, Gemini 2.5 Pro, o3, Openrouter, I have like 15 tabs open of different web chat's like this and most are free.
+(for more info about the workflow, staying free or cheap yet still good: wuu73.org/blog/guide.html)
+
+This helps you "vibe code" faster. Only need to paste one time. It will automatically guess as to which code files you will want for context, but allow you to fine tune it. This might seem pointless ohhh but its not. All of the available agents in IDEs will make the AI dumber by giving it a bunch of information unrelated to your problem.
+
+Or, it won't give it enough information or context from your project.
+
+When you use web chat interfaces, you don't have the giant hidden prompts telling the AI all about how to be an agent, how to edit files, how to use 500 tools, etc. The more of this that is sent with your prompt, the dumber it will be. We can't afford to do that for difficult problems, hard to find bugs, complex tasks. If you ask a question or give it a task via the web chat interface its almost always going to be smarter. This app gets rid of most of the friction between you giving the AI your code files and questions/tasks.
+
+There are many other similar tools that are command line only, and don't have smart file checking and prefs saving, saving which files you chose for next time (when you check more files or uncheck certain ones, it will remember, for next time - this is what the .aicodepre-gui file is for). It even saves the window size and where you dragged the bar in the UI, so you won't have to do that again. Saving time and being less annoying, makes me happy, and probably makes you happy too.
+
+It supports **Windows**, **macOS (M1+)**, and **Linux** with context menu/right-click integration, terminal command 'aicp' and 'aicodeprep-gui'.
+
+---
+
+## ✨ New Features in v1.0.0
+
+- **Modern TOML Configuration System:**
+
+  - Industry-standard TOML configuration replacing custom formats
+  - User-customizable settings via `aicodeprep-gui.toml` in project directories
+  - Comprehensive default configuration with smart file filtering
+  - `.gitignore`-style pattern matching for robust exclusion rules
+
+- **Lazy Loading Performance:**
+
+  - Lightning-fast startup by avoiding scanning of large excluded directories
+  - On-demand expansion of folders like `node_modules`, `venv`, etc.
+  - Dramatically improved performance for large codebases
+  - Users can still manually expand any directory for fine-grained selection
+
+- **Enhanced Global Preset System:**
+
+  - Create and manage reusable prompt presets globally across projects
+  - Presets are automatically saved and synced across all project folders
+  - Quick preset buttons with ✚ and 🗑️ controls for easy management
+  - Default presets include "Debug", "Security check", "Best Practices", etc.
+
+- **Improved File Tree Experience:**
+
+  - Smart auto-expansion of folders containing checked files
+  - Better visual feedback with hover effects on checkboxes
+  - Binary file detection and automatic exclusion
+  - Cleaner, more intuitive folder navigation
+
+- **Enhanced Output Options:**
+  - Choose between XML `<code>` tags or Markdown `###` formatting
+  - Optional prompt/question text appended to output
+  - Intelligent file processing with better error handling
+
+---
+
+## Previous Features (v0.9.x)
+
+- **Dark Mode Support:**
+
+  - Automatic theme detection based on system preferences
+  - Manual dark/light mode toggle in the top-right corner
+  - Carefully designed dark theme palette for optimal readability
+
+- **PySide6 Migration:**
+
+  - Upgraded to Qt6 via PySide6 for improved performance
+  - Modern Qt features and future-proofing
+  - Better cross-platform compatibility
+
+- **Persistent Preferences:**
+
+  - Automatically saves window size and selected files in `.aicodeprep-gui` file per project
+  - Remembers splitter position and window layout
+  - Optional preference saving (can be disabled)
+
+- **Token Counter:**
+  - Real-time token estimation as you select/deselect files
+  - Helps optimize context size for AI models
+
+---
+
+## Screenshots & Usage
+
+Update coming soon - but you can look at the older version and get an idea for how it is used at these links:
+
+[https://wuu73.org/aicp - the old homepage for the app with old screenshots](https://wuu73.org/aicp)
+
+[Guide on how to code free/cheap, workflow info, etc](https://wuu73.org/blog/guide.html)
+
+---
+
+## Installation
+
+Make sure python is installed on your system, then install pipx. Just google how to do that or ask AI etc. Then open a fresh terminal/cmd window and type:
+
+pipx install aicodeprep-gui
+
+### macOS
+
+pipx install aicodeprep-gui
+installed package aicodeprep-gui 1.0.3, installed using Python 3.13.5
+These apps are now globally available - aicodeprep-gui.exe - aicp.exe
+done! ✨ 🌟 ✨
+
+### Windows
+
+py -m pip install --user pipx
+py -m pipx ensurepath
+
+close that terminal window, and open a fresh new one
+
+//pipx install --pip-args="--extra-index-url https://test.pypi.org/simple/" aicodeprep-gui==1.0.1
+pipx install aicodeprep-gui
+
+It should say success or something similar or done.
+
+Now that it is installed, you can type 'aicp' + enter in a terminal to run it or aicp path/to/folder/
+also aicodeprep-gui works instead of aicp. aicp is shorter, that's why its included.
+
+#### Install right-click context menu (optional)
+
+There should be a thing in the File menu for this
+
+1. Run the Windows installer from the releases page.
+2. Follow the installation wizard.
+3. To use: Right-click in any folder's blank space in Windows File Explorer → `aicodeprep-gui`.
+4. Restart Windows if the context menu does not appear immediately.
+5. Select/deselect files and folders, then click **Process Selected**.
+6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
+
+### Linux
+
+Version 1.0.0+:
+
+#### Update package lists and upgrade existing packages
+
+sudo apt update && sudo apt upgrade -y
+
+#### Install pip for Python 3
+
+sudo apt install python3-pip -y
+
+#### Install and Configure pipx
+
+Now, use pip to install pipx. It's best to install it in your user space to avoid needing sudo for Python packages.
+
+# Install pipx
+
+pip3 install --user pipx
+
+# Add the pipx bin directory to your system's PATH
+
+# This command injects the necessary line into your shell's startup file (.bashrc)
+
+pipx ensurepath
+
+#### IMPORTANT: After running pipx ensurepath, you must close and reopen your terminal for the PATH changes to take effect.
+
+Older version:
+
+1. Download the Linux package from the releases page.
+2. Follow the installation instructions in the included README.
+3. Use via command line: `aicodeprep-gui [directory]`
+4. File manager context menu integration may be available depending on your desktop environment.
+
+### Python Installation
+
+```older version - sti
+pip install aicodeprep-gui
+aicodeprep-gui  # Run in current directory
+aicodeprep-gui /path/to/project  # Run in specific directory
+
+or:
+
+aicp
+aicp path/to/project/code/etc
+```
+
+---
+
+## Features Summary
+
+- **Cross-platform GUI** for easy visual file selection
+- **Smart Preselection** of relevant code files based on configured extensions and exclusions
+- **Dark/Light Theme Support** with system preference detection and manual toggle
+- **Lazy Loading Tree View** with instant startup and on-demand directory expansion
+- **Global Preset Management** for reusable prompt templates across projects
+- **TOML Configuration** with `.gitignore`-style pattern matching
+- **Preferences Saving** via `.aicodeprep-gui` per folder to remember selections and window layout
+- **Token Counter** displays estimated token count in real-time
+- **Context Menu Integration** for quick access from file managers
+- **Clipboard & File Output** for seamless pasting into AI chatbots
+- **Flexible Output Formats** (XML `<code>` tags or Markdown `###` sections)
+- **High-DPI Support** with crisp UI scaling on all displays
+
+---
+
+## Usage
+
+1. **Launch:** Open the tool from your project folder's context menu (right-click) or command line.
+2. **Review Files:** The tool automatically pre-selects relevant code files and expands folders containing them.
+3. **Customize Selection:**
+   - Expand/collapse folders as needed
+   - Check/uncheck files manually
+   - Use **Select All** or **Deselect All** for bulk operations
+4. **Choose Format:** Select XML `<code>` or Markdown `###` output format from the dropdown.
+5. **Add Prompt (Optional):** Use preset buttons or type custom prompts in the text area.
+6. **Process:** Click **Process Selected** to generate output and copy to clipboard.
+7. **Preferences:** Toggle "Remember checked files..." to save your selection for next time.
+
+---
+
+## Configuration
+
+You can customize file extensions, directories, and exclusion patterns via an `aicodeprep-gui.toml` file in your project folder. This will override the default configuration.
+
+Example `aicodeprep-gui.toml`:
+
+```toml
+max_file_size = 2000000
+
+code_extensions = [".py", ".js", ".ts", ".html", ".css"]
+
+exclude_patterns = [
+    "build/",
+    "dist/",
+    "*.log",
+    "temp_*"
+]
+
+default_include_patterns = [
+    "README.md",
+    "main.py"
+]
+```
+
+Refer to `aicodeprep-gui/data/default_config.toml` for all available configuration options.
+
+---
+
+## Command Line Options
+
+```bash
+aicodeprep-gui [directory] [options]
+
+Options:
+  -h, --help          Show help message
+  -n, --no-copy       Don't copy output to clipboard
+  -o, --output FILE   Output filename (default: fullcode.txt)
+  -d, --debug         Enable debug logging
+```
+
+---
+
+## Contributing
+
+Contributions and pull requests are welcome! Please submit bug reports and feature requests via GitHub Issues.
+
+---
+
+## Support & Donations
+
+If you find this tool useful, consider supporting future development:
+
+| Method   | Address / Link                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------- |
+| Bitcoin  | `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`                                                      |
+| Litecoin | `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`                                                     |
+| Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
+| CashApp  | `$lightweb73`                                                                                     |
+| Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
+
+---
 
 </code>
 
@@ -3226,4 +3840,4 @@ If this tool saves you time and makes your life easier, consider supporting its 
 
 
 
-just added an update checker thing but can you somehow add info about it to the About menu? so it could say which version it is locally but show the pypi version below it?
+can you update the changelog file? and analyze the code for privacy and anything i should notify the user about? can you write some kind of file just telling what data is collected (i think just basic anonymous info related to how often a user opens it, stuff like that)
