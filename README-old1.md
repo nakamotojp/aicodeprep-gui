@@ -119,68 +119,85 @@ Make sure python is installed on your system, then install pipx. Just google how
 
 pipx install aicodeprep-gui
 
-### macOS
+## Mac
 
+```sh
+# Install pipx using Homebrew
+brew install pipx
+
+# Add pipx to your PATH
+pipx ensurepath
+```
+
+#### (then close/open a fresh new terminal window)
+
+```sh
 pipx install aicodeprep-gui
-installed package aicodeprep-gui 1.0.3, installed using Python 3.13.5
-These apps are now globally available - aicodeprep-gui.exe - aicp.exe
-done! ✨ 🌟 ✨
+```
 
-### Windows
+## Windows
 
+Download python from python.org - pick one of the stable versions, 3.11.x is good.
+
+Then try:
+
+```sh
 py -m pip install --user pipx
 py -m pipx ensurepath
+```
 
-close that terminal window, and open a fresh new one
+(if py doesn't work, try 'python' or 'python3')
 
-//pipx install --pip-args="--extra-index-url https://test.pypi.org/simple/" aicodeprep-gui==1.0.1
+Close that terminal window, and open a fresh new one (very important after installing pipx
+
+```sh
 pipx install aicodeprep-gui
+```
 
 It should say success or something similar or done.
 
 Now that it is installed, you can type 'aicp' + enter in a terminal to run it or aicp path/to/folder/
-also aicodeprep-gui works instead of aicp. aicp is shorter, that's why its included.
+also aicodeprep-gui works instead of aicp. aicp is shorter, both do the same thing (open the app window in whichever folder you typed it)
 
-#### Install right-click context menu (optional)
+A common thing would be when you are using VS Code or Cursor, and whichever agent / agentic coder is pissing you off or acting stupid, go to the VS Code terminal and type 'aicp' to open it for the project you are working on.
 
-There should be a thing in the File menu for this
-
-1. Run the Windows installer from the releases page.
-2. Follow the installation wizard.
-3. To use: Right-click in any folder's blank space in Windows File Explorer → `aicodeprep-gui`.
-4. Restart Windows if the context menu does not appear immediately.
-5. Select/deselect files and folders, then click **Process Selected**.
-6. Your selected code will be saved to `fullcode.txt` and copied to the clipboard.
-
-### Linux
-
-Version 1.0.0+:
+## Linux
 
 #### Update package lists and upgrade existing packages
 
+```sh
 sudo apt update && sudo apt upgrade -y
+```
 
 #### Install pip for Python 3
 
+```sh
 sudo apt install python3-pip -y
+```
 
 #### Install and Configure pipx
 
 Now, use pip to install pipx. It's best to install it in your user space to avoid needing sudo for Python packages.
 
-# Install pipx
-
+```sh
 pip3 install --user pipx
+```
 
-# Add the pipx bin directory to your system's PATH
-
-# This command injects the necessary line into your shell's startup file (.bashrc)
-
+```sh
 pipx ensurepath
+```
 
 #### IMPORTANT: After running pipx ensurepath, you must close and reopen your terminal for the PATH changes to take effect.
 
-Older version:
+In a new terminal, type:
+
+```sh
+pipx install aicodeprep-gui
+```
+
+---
+
+Old instructions for versions below 1.0.0:
 
 1. Download the Linux package from the releases page.
 2. Follow the installation instructions in the included README.

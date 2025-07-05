@@ -55,19 +55,84 @@ The core philosophy is simple: **You know your code best.** Instead of letting a
 
 ## Installation
 
-The recommended installation method for all platforms is `pipx`. This installs the application and its dependencies in an isolated environment, making it available system-wide without cluttering your global Python installation.
+The TL;DR version:
+Make sure python is installed on your system, then install pipx. Just google how to do that or ask AI etc. Then open a fresh terminal/cmd window and type:
 
-Go here to see how to install pipx:
-https://pipx.pypa.io/stable/installation/
+pipx install aicodeprep-gui
 
-```bash
-# 1. Install pipx
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
+## Mac
 
-# 2. IMPORTANT: Close and re-open your terminal for the PATH changes to take effect.
+```sh
+# Install pipx using Homebrew
+brew install pipx
 
-# 3. Install aicodeprep-gui
+# Add pipx to your PATH
+pipx ensurepath
+```
+
+#### (then close/open a fresh new terminal window)
+
+```sh
+pipx install aicodeprep-gui
+```
+
+## Windows
+
+Download python from python.org - pick one of the stable versions, 3.13.x is good.
+
+Then try:
+
+```sh
+py -m pip install --user pipx
+py -m pipx ensurepath
+```
+
+(if py doesn't work, try 'python' or 'python3')
+
+Close that terminal window, and open a fresh new one (very important after installing pipx
+
+```sh
+pipx install aicodeprep-gui
+```
+
+It should say success or something similar or done.
+
+Now that it is installed, you can type 'aicp' + enter in a terminal to run it or aicp path/to/folder/
+also aicodeprep-gui works instead of aicp. aicp is shorter, both do the same thing (open the app window in whichever folder you typed it)
+
+A common thing would be when you are using VS Code or Cursor, and whichever agent / agentic coder is pissing you off or acting stupid, go to the VS Code terminal and type 'aicp' to open it for the project you are working on.
+
+## Linux (Debian/Ubuntu instructions here but should work on most distros)
+
+#### Update package lists and upgrade existing packages
+
+```sh
+sudo apt update && sudo apt upgrade -y
+```
+
+#### Install pip for Python 3
+
+```sh
+sudo apt install python3-pip -y
+```
+
+#### Install and Configure pipx
+
+Now, use pip to install pipx. It's best to install it in your user space to avoid needing sudo for Python packages.
+
+```sh
+pip3 install --user pipx
+```
+
+```sh
+pipx ensurepath
+```
+
+#### IMPORTANT: After running pipx ensurepath, you must close and reopen your terminal for the PATH changes to take effect.
+
+In a new terminal, type:
+
+```sh
 pipx install aicodeprep-gui
 ```
 
@@ -145,7 +210,7 @@ For a full list of default settings, see the [default_config.toml](aicodeprep_gu
 
 ## Contributing
 
-Contributions, bug reports, and feature requests are welcome! Please feel free to open an issue or submit a pull request on GitHub.
+Contributions, bug reports, and feature requests are welcome! Please feel free to open an issue or submit a pull request on GitHub. Or just email me your complaints! Happy to hear from you: tom@wuu73.org
 
 ---
 
