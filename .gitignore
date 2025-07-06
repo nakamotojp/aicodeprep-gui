@@ -17,6 +17,10 @@ wheels/
 *.egg
 __pycache__/
 
+# screenshots
+scrs/
+vcrs/
+
 # PyInstaller
 *.manifest
 *.spec

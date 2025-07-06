@@ -1,3 +1,534 @@
+aicodeprep_gui\data\default_config.toml:
+<code>
+# aicodeprep-gui - Default Configuration File
+# This file provides the baseline settings for file filtering.
+# You can override these settings by creating an `aicodeprep-gui.toml` file
+# in your project's root directory.
+#
+# This file uses the TOML format.
+# All exclusion/inclusion patterns use the same syntax as a .gitignore file.
+# - A trailing slash '/' matches a directory (e.g., "build/").
+# - A leading '!' negates a pattern, re-including a file if it was excluded by a previous pattern.
+# - Wildcards like '*' are supported.
+
+max_file_size = 4000000
+
+# File extensions that are considered code and will be checked by default.
+# Grouped by category for easier review.
+code_extensions = [
+    # -- Web & Frontend --
+    ".html", ".css", ".scss", ".sass", ".less", ".js", ".jsx", ".ts", ".tsx",
+    ".vue", ".svelte", ".astro",
+
+    # -- Backend & General Purpose --
+    ".py", ".java", ".c", ".cpp", ".h", ".cs", ".php", ".rb", ".go", ".rs",
+    ".swift", ".kt", ".scala", ".r", ".m", ".pl", ".lua", ".dart", ".erl",
+    ".ex", ".exs", ".clj",
+
+    # -- Scripts & Shell --
+    ".sh", ".bash", ".zsh", ".ps1", ".psm1", ".groovy",
+
+    # -- Data & Markup --
+    ".json", ".xml", ".yaml", ".yml", ".toml", ".ini", ".md", ".sql", ".csv",
+    ".tsv",
+
+    # -- Config & Build --
+    ".conf", ".cfg", ".properties", ".gradle", ".f90", ".f95", ".f03", ".f08",
+    ".editorconfig", "Dockerfile", ".env.example", ".env.sample", "Jenkinsfile",
+    
+    # -- Notebooks & Text --
+    ".ipynb", ".txt",
+
+    # -- Lock files (sometimes useful for context, but often excluded below) --
+    ".lock",
+]
+
+# --- UNIFIED INCLUSION/EXCLUSION LISTS using .gitignore syntax ---
+
+# Patterns for files/dirs to be checked *by default*.
+# These are high-value files that provide critical context about a project.
+default_include_patterns = [
+    # Core project documentation
+    "README.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "CODE_OF_CONDUCT.md",
+
+    # Core project definition files
+    "pyproject.toml",
+    "package.json",
+    "requirements.txt",
+    "pom.xml",
+    "build.gradle",
+    "Gemfile",
+    "go.mod",
+    "Cargo.toml",
+    "composer.json",
+
+    # Environment and containerization
+    "Dockerfile",
+    "docker-compose.yml",
+    ".env.example",
+    ".env.sample",
+
+    # Important configuration or documentation
+    "important.txt",
+    "important_docs/",
+]
+
+# Patterns for files/dirs to be excluded from the GUI list or unchecked by default.
+# Grouped by category for clarity.
+exclude_patterns = [
+    # -- Version Control --
+    ".git/",
+    ".svn/",
+    ".hg/",
+
+    # -- Dependency & Package Manager Directories --
+    "node_modules/",
+    "bower_components/",
+    "vendor/",
+    "deps/", # Elixir
+
+    # -- Python-specific --
+    "venv/",
+    ".venv/",
+    "__pycache__/",
+    "Lib/",
+    "site-packages/",
+    "*.egg-info/",
+    ".tox/",
+
+    # -- IDE & Editor Directories --
+    ".idea/",
+    ".vscode/",
+    ".project",
+    ".classpath",
+    ".settings/",
+    "nbproject/", # Netbeans
+    "*.sublime-project",
+    "*.sublime-workspace",
+
+    # -- Build, Dist & Compilation Output --
+    "build/",
+    "dist/",
+    "dist-ssr/",
+    "bin/",
+    "obj/",
+    "out/",
+    "target/",
+    "_build/", # Elixir, Erlang
+    "*.o",
+    "*.pyc",
+    "*.class",
+    "*.exe",
+    "*.dll",
+    "*.so",
+    "*.dylib",
+    "*.jar",
+    "*.war",
+    "*.ear",
+
+    # -- Framework & Tool Caches/Builds --
+    ".parcel-cache/",
+    ".next/",
+    ".nuxt/",
+    ".svelte-kit/",
+    ".docusaurus/",
+    ".angular/",
+    ".quasar/",
+    ".redwood/",
+    ".fusebox/",
+    ".expo/",
+    ".serverless/",
+    ".vercel/",
+    ".dart_tool/",
+    ".elixir_ls/",
+
+    # -- Test, Coverage & Report Artifacts --
+    "coverage/",
+    "reports/",
+    "test-results/",
+    "test-reports/",
+    "playwright-report/",
+    "junit.xml",
+    "coverage.xml",
+    "*.lcov",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    ".nyc_output/",
+    ".jest/",
+    "*snapshots*/",
+
+    # -- Logs & Temporary Files --
+    "logs/",
+    "tmp/",
+    "temp/",
+    "cache/",
+    ".cache/",
+    "*.log",
+    "*.log.*",
+    "npm-debug.log*",
+    "yarn-error.log",
+    "*.swp",
+    "*.swo",
+    "*.un~",
+    "~$*",
+    "*.temp",
+
+    # -- OS & System Files --
+    ".DS_Store",
+    "Thumbs.db",
+    "desktop.ini",
+
+    # -- Lock files (usually not needed as they are machine-generated) --
+    "package-lock.json",
+    "yarn.lock",
+    "Gemfile.lock",
+    "composer.lock",
+    "pnpm-lock.yaml",
+    "bun.lockb",
+    "cargo.lock",
+    "poetry.lock",
+    "Pipfile.lock",
+
+    # -- Secrets, Keys & Sensitive Environment Files --
+    ".npmrc",
+    ".env",
+    ".env.*",
+    "!.env.example", # Re-include example files if they were excluded by .env.*
+    "!.env.sample",
+    ".flaskenv",
+    ".dockerenv",
+    "env.json",
+    "credentials.yaml",
+    "secret*.json",
+    "*.key",
+    "*.pem",
+    "*.crt",
+    "*.pub",
+    "id_rsa",
+    "id_dsa",
+
+    # -- Terraform State --
+    ".terraform/",
+    ".terraform.lock.hcl",
+    "terraform.tfstate",
+    "terraform.tfstate.backup",
+
+    # -- General Generated & Minified Patterns --
+    "*generated*",
+    "*.min.js",
+    "*.min.css",
+    "*.min.*",
+    "*bundle.js",
+    "*chunk.js",
+    "*.snap", # Jest snapshots
+    "*.test.",
+    ".spec.",
+    ".bench.",
+
+]
+
+</code>
+
+aicodeprep_gui\images\__init__.py:
+<code>
+
+</code>
+
+aicodeprep_gui\apptheme.py:
+<code>
+from PySide6 import QtCore, QtGui, QtWidgets
+import platform
+import os
+import sys
+import ctypes
+import json
+import logging
+from importlib import resources
+
+def system_pref_is_dark() -> bool:
+    """Detect if system is using dark mode."""
+    system = platform.system()
+    
+    if system == "Darwin":  # macOS
+        try:
+            import subprocess
+            cmd = "defaults read -g AppleInterfaceStyle"
+            result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+            return result.stdout.strip() == "Dark"
+        except:
+            pass
+    
+    elif system == "Windows":  # Windows 10+
+        try:
+            import winreg
+            registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+            reg_keypath = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+            key = winreg.OpenKey(registry, reg_keypath)
+            value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+            return value == 0
+        except:
+            pass
+    
+    # Fallback: use palette heuristic
+    return QtWidgets.QApplication.palette().color(QtGui.QPalette.Window).lightness() < 128
+
+def apply_dark_palette(app: QtWidgets.QApplication):
+    """Apply dark color palette to application."""
+    dark = QtGui.QPalette()
+    dark.setColor(QtGui.QPalette.Window, QtGui.QColor(53, 53, 53))
+    dark.setColor(QtGui.QPalette.WindowText, QtGui.QColor(255, 255, 255))
+    dark.setColor(QtGui.QPalette.Base, QtGui.QColor(42, 42, 42))
+    dark.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(66, 66, 66))
+    dark.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(53, 53, 53))
+    dark.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(255, 255, 255))
+    dark.setColor(QtGui.QPalette.Text, QtGui.QColor(255, 255, 255))
+    dark.setColor(QtGui.QPalette.Button, QtGui.QColor(53, 53, 53))
+    dark.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(255, 255, 255))
+    dark.setColor(QtGui.QPalette.Link, QtGui.QColor(42, 130, 218))
+    dark.setColor(QtGui.QPalette.Highlight, QtGui.QColor(42, 130, 218))
+    dark.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))
+    
+    # Disabled colors
+    dark.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(128, 128, 128))
+    dark.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtGui.QColor(128, 128, 128))
+    dark.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, QtGui.QColor(128, 128, 128))
+    
+    app.setPalette(dark)
+
+def apply_light_palette(app: QtWidgets.QApplication):
+    """Apply light color palette to application."""
+    light = QtGui.QPalette()
+    light.setColor(QtGui.QPalette.Window, QtGui.QColor(240, 240, 240))
+    light.setColor(QtGui.QPalette.WindowText, QtGui.QColor(0, 0, 0))
+    light.setColor(QtGui.QPalette.Base, QtGui.QColor(255, 255, 255))
+    light.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(233, 233, 233))
+    light.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(255, 255, 255))
+    light.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(0, 0, 0))
+    light.setColor(QtGui.QPalette.Text, QtGui.QColor(0, 0, 0))
+    light.setColor(QtGui.QPalette.Button, QtGui.QColor(240, 240, 240))
+    light.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(0, 0, 0))
+    light.setColor(QtGui.QPalette.Link, QtGui.QColor(0, 0, 255))
+    light.setColor(QtGui.QPalette.Highlight, QtGui.QColor(42, 130, 218))
+    light.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))
+    
+    # Disabled colors
+    light.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(120, 120, 120))
+    light.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtGui.QColor(120, 120, 120))
+    light.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.WindowText, QtGui.QColor(120, 120, 120))
+    
+    app.setPalette(light)
+
+def create_checkmark_pixmap(size=16, color="#0078D4"):
+    """Create a checkmark pixmap programmatically."""
+    pixmap = QtGui.QPixmap(size, size)
+    pixmap.fill(QtCore.Qt.transparent)
+    
+    painter = QtGui.QPainter(pixmap)
+    painter.setRenderHint(QtGui.QPainter.Antialiasing)
+    
+    pen = QtGui.QPen(QtGui.QColor(color))
+    pen.setWidth(2)
+    pen.setCapStyle(QtCore.Qt.RoundCap)
+    pen.setJoinStyle(QtCore.Qt.RoundJoin)
+    painter.setPen(pen)
+    
+    # Draw checkmark
+    painter.drawLine(4, 8, 7, 11)
+    painter.drawLine(7, 11, 12, 4)
+    
+    painter.end()
+    return pixmap
+
+def create_x_mark_pixmap(size=16, color="#0078D4"):
+    """Create an X mark pixmap programmatically (alternative to checkmark)."""
+    pixmap = QtGui.QPixmap(size, size)
+    pixmap.fill(QtCore.Qt.transparent)
+    
+    painter = QtGui.QPainter(pixmap)
+    painter.setRenderHint(QtGui.QPainter.Antialiasing)
+    
+    pen = QtGui.QPen(QtGui.QColor(color))
+    pen.setWidth(2)
+    pen.setCapStyle(QtCore.Qt.RoundCap)
+    painter.setPen(pen)
+    
+    # Draw X mark
+    margin = 3
+    painter.drawLine(margin, margin, size-margin, size-margin)
+    painter.drawLine(margin, size-margin, size-margin, margin)
+    
+    painter.end()
+    return pixmap
+
+def _checkbox_style_with_images(dark: bool) -> str:
+    """Use SVG-based checkboxes - same as _checkbox_style but with descriptive name."""
+    return _checkbox_style(dark)
+
+
+
+def _checkbox_style(dark: bool) -> str:
+    """Return checkbox styling using packaged image files."""
+    
+    # Use appropriate images for theme
+    if dark:
+        unchecked_filename = "checkbox_unchecked_dark.png"
+        checked_filename = "checkbox_checked_dark.png"
+    else:
+        unchecked_filename = "checkbox_unchecked.png"
+        checked_filename = "checkbox_checked.png"
+    
+    # --- THIS IS THE NEW, PACKAGE-SAFE WAY TO FIND FILES ---
+    try:
+        # 'aicodeprep_gui.images' corresponds to the aicodeprep_gui/images folder
+        with resources.as_file(resources.files('aicodeprep_gui.images').joinpath(unchecked_filename)) as p:
+            unchecked_path = str(p)
+        with resources.as_file(resources.files('aicodeprep_gui.images').joinpath(checked_filename)) as p:
+            checked_path = str(p)
+    except Exception as e:
+        # Fallback or error logging if resources can't be found
+        logging.error(f"Could not load checkbox images: {e}")
+        return "" # Return empty style if images fail to load
+    # --- END OF THE NEW SECTION ---
+
+    # The rest of the function is the same as before
+    # Convert Windows paths to proper URLs for Qt
+    if os.name == 'nt':  # Windows
+        unchecked_url = unchecked_path.replace('\\', '/')
+        checked_url = checked_path.replace('\\', '/')
+    else:
+        unchecked_url = unchecked_path
+        checked_url = checked_path
+    
+    hover_border_color = "#00c3ff"
+    
+    return f"""
+    QTreeView::indicator, QTreeWidget::indicator {{
+        width: 16px;
+        height: 16px;
+        border: none;
+        background: transparent;
+        image: url({unchecked_url});
+    }}
+    
+    QTreeView::indicator:checked, QTreeWidget::indicator:checked {{
+        image: url({checked_url});
+    }}
+    
+    QTreeView::indicator:hover, QTreeWidget::indicator:hover {{
+        border: 1px solid {hover_border_color};
+        border-radius: 2px;
+    }}
+    
+    QTreeView::indicator:checked:hover, QTreeWidget::indicator:checked:hover {{
+        border: 1px solid {hover_border_color};
+        border-radius: 2px;
+        image: url({checked_url});
+    }}
+    """
+
+def get_checkbox_style_dark()  -> str: 
+    return _checkbox_style(True)
+
+def get_checkbox_style_light() -> str: 
+    return _checkbox_style(False)
+
+</code>
+
+aicodeprep_gui\file_processor.py:
+<code>
+import os
+import sys
+import logging
+from typing import List, Literal
+
+OutputFmt = Literal['xml', 'markdown']
+
+def _write_one_file_xml(outfile, rel_path, abs_path, skip_binfiles=None):
+    if is_binary_file(abs_path):
+        if skip_binfiles is not None:
+            skip_binfiles.append(rel_path)
+        return
+    outfile.write(f"{rel_path}:\n<code>\n")
+    try:
+        with open(abs_path, "r", encoding="utf-8", errors="ignore") as infile:
+            outfile.write(infile.read())
+    except Exception:
+        outfile.write(".. contents skipped (read error) ..")
+    outfile.write("\n</code>\n\n")
+
+from aicodeprep_gui.smart_logic import is_binary_file
+
+def _write_one_file_md(outfile, rel_path, abs_path, skip_binfiles=None):
+    if is_binary_file(abs_path):
+        if skip_binfiles is not None:
+            skip_binfiles.append(rel_path)
+        return
+    outfile.write(f"### START OF FILE {rel_path} ###\n")
+    try:
+        with open(abs_path, "r", encoding="utf-8", errors="ignore") as infile:
+            outfile.write(infile.read())
+    except Exception:
+        outfile.write(".. contents skipped (read error) ..\n")
+    outfile.write(f"\n### END OF FILE {rel_path} ###\n\n")
+
+def process_files(
+    selected_files: List[str],
+    output_file: str,
+    fmt: OutputFmt = 'xml',
+    prompt: str = "",
+    prompt_to_top: bool = False,
+    prompt_to_bottom: bool = True
+) -> int:
+    """
+    Process selected files and write their contents to output_file.
+    Optionally prepend and/or append a prompt/question.
+    Returns the number of files processed.
+    """
+    try:
+        output_path = os.path.join(os.getcwd(), output_file)
+        logging.info(f"Writing output to: {output_path}")
+
+        skip_binfiles = []
+        writer = _write_one_file_xml if fmt == 'xml' else _write_one_file_md
+
+        with open(output_path, 'w', encoding='utf-8') as outfile:
+            # Write prompt at the top if requested
+            if prompt and prompt_to_top:
+                outfile.write(prompt.strip() + "\n\n")
+
+            for file_path in selected_files:
+                try:
+                    try:
+                        rel_path = os.path.relpath(file_path, os.getcwd())
+                    except ValueError:
+                        rel_path = file_path
+                    writer(outfile, rel_path, file_path, skip_binfiles=skip_binfiles)
+                    logging.info(f"Processed: {rel_path}")
+                except Exception as exc:
+                    logging.error(f"Error processing {file_path}: {exc}")
+
+            if skip_binfiles:
+                outfile.write("\n")
+                for rel_path in skip_binfiles:
+                    outfile.write(f"{rel_path} binary file skipped..\n")
+
+            # Write prompt at the bottom if requested
+            if prompt and prompt_to_bottom:
+                outfile.write("\n\n" + prompt.strip())
+
+        return len(selected_files)
+    except Exception as exc:
+        logging.error(f"Error writing output file: {exc}")
+        return 0
+
+</code>
+
+aicodeprep_gui\gui.py:
+<code>
 import os
 import sys
 import platform
@@ -1605,3 +2136,1203 @@ def _read_prefs_file():
         logging.error(f"Error reading preferences file: {e}")
 
     return checked, window_size, splitter_state
+
+</code>
+
+aicodeprep_gui\linux_installer.py:
+<code>
+import os
+import shutil
+import logging
+
+NAUTILUS_SCRIPTS_DIR = os.path.expanduser("~/.local/share/nautilus/scripts")
+SCRIPT_NAME = "Open with aicodeprep-gui"
+
+# The shell script to be placed in the Nautilus scripts directory.
+NAUTILUS_SCRIPT_CONTENT = """
+#!/bin/bash
+
+# Nautilus script for aicodeprep-gui.
+# It processes the first selected directory.
+
+# Find the command path. 'which' should work as this script runs in a user session.
+CMD_PATH=$(which aicodeprep-gui)
+
+if [ -z "$CMD_PATH" ]; then
+    # Use zenity for a graphical error message if available
+    if command -v zenity &> /dev/null; then
+        zenity --error --width=300 --text="<b>aicodeprep-gui command not found.</b>\\n\\nPlease ensure it's installed and accessible from your terminal's PATH."
+    fi
+    exit 1
+fi
+
+# Nautilus provides selected paths as arguments.
+TARGET_DIR="$1"
+
+if [ -n "$TARGET_DIR" ] && [ -d "$TARGET_DIR" ]; then
+    # Run the GUI, passing the selected directory.
+    # Run in the background to not block Nautilus.
+    "$CMD_PATH" "$TARGET_DIR" &
+else
+    if command -v zenity &> /dev/null; then
+        zenity --info --text="Please select a directory to use this script."
+    fi
+fi
+"""
+
+def is_nautilus_installed():
+    """Check if Nautilus file manager is likely installed."""
+    return shutil.which('nautilus') is not None
+
+def install_nautilus_script():
+    """Installs the context menu script for the Nautilus file manager."""
+    if not is_nautilus_installed():
+        return False, "Nautilus file manager not found."
+
+    try:
+        os.makedirs(NAUTILUS_SCRIPTS_DIR, exist_ok=True)
+        script_path = os.path.join(NAUTILUS_SCRIPTS_DIR, SCRIPT_NAME)
+        
+        with open(script_path, "w") as f:
+            f.write(NAUTILUS_SCRIPT_CONTENT)
+        
+        # Make the script executable
+        os.chmod(script_path, 0o755)
+
+        msg = (f"Nautilus script '{SCRIPT_NAME}' installed successfully. "
+               "Please restart Nautilus (nautilus -q) or log out and back in for it to appear.")
+        logging.info(msg)
+        return True, msg
+    except Exception as e:
+        msg = f"Failed to install Nautilus script: {e}"
+        logging.error(msg)
+        return False, msg
+
+def uninstall_nautilus_script():
+    """Uninstalls the context menu script for Nautilus."""
+    script_path = os.path.join(NAUTILUS_SCRIPTS_DIR, SCRIPT_NAME)
+    if os.path.exists(script_path):
+        try:
+            os.remove(script_path)
+            msg = f"Nautilus script '{SCRIPT_NAME}' has been uninstalled."
+            logging.info(msg)
+            return True, msg
+        except Exception as e:
+            msg = f"Failed to uninstall Nautilus script: {e}"
+            logging.error(msg)
+            return False, msg
+    else:
+        msg = "Nautilus script not found (already uninstalled)."
+        return True, msg
+
+</code>
+
+aicodeprep_gui\macos_installer.py:
+<code>
+import os
+import shutil
+import tempfile
+import subprocess
+import logging
+
+# Template for the main workflow logic file.
+# The {EXECUTABLE_PATH} will be replaced with the actual path.
+DOCUMENT_WFLOW_TEMPLATE = """
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>AMApplicationBuild</key>
+    <string>526</string>
+    <key>AMApplicationVersion</key>
+    <string>2.10</string>
+    <key>AMDocumentVersion</key>
+    <string>2</string>
+    <key>actions</key>
+    <array>
+        <dict>
+            <key>action</key>
+            <dict>
+                <key>AMAccepts</key>
+                <dict>
+                    <key>Container</key>
+                    <string>List</string>
+                    <key>Optional</key>
+                    <true/>
+                    <key>Types</key>
+                    <array>
+                        <string>com.apple.cocoa.string</string>
+                    </array>
+                </dict>
+                <key>AMActionVersion</key>
+                <string>2.0.3</string>
+                <key>AMApplication</key>
+                <array>
+                    <string>Automator</string>
+                </array>
+                <key>AMParameterProperties</key>
+                <dict>
+                    <key>COMMAND_STRING</key>
+                    <dict/>
+                    <key>CheckedForUserDefaultShell</key>
+                    <dict/>
+                    <key>inputMethod</key>
+                    <dict/>
+                    <key>shell</key>
+                    <dict/>
+                    <key>source</key>
+                    <dict/>
+                </dict>
+                <key>AMProvides</key>
+                <dict>
+                    <key>Container</key>
+                    <string>List</string>
+                    <key>Types</key>
+                    <array>
+                        <string>com.apple.cocoa.string</string>
+                    </array>
+                </dict>
+                <key>ActionBundlePath</key>
+                <string>/System/Library/Automator/Run Shell Script.action</string>
+                <key>ActionName</key>
+                <string>Run Shell Script</string>
+                <key>ActionParameters</key>
+                <dict>
+                    <key>COMMAND_STRING</key>
+                    <string>#!/bin/bash
+# This Quick Action was generated by aicodeprep-gui.
+
+# The full path to the executable was detected during generation.
+CMD_PATH="{EXECUTABLE_PATH}"
+
+if [ ! -x "$CMD_PATH" ]; then
+  osascript -e 'display dialog "Error: The aicodeprep-gui executable was not found at its expected location: {EXECUTABLE_PATH}. You may need to reinstall the context menu from the app." buttons {{"OK"}} default button 1'
+  exit 1
+fi
+
+# We will process the first selected folder.
+# Automator passes selected items as arguments to the script.
+if [ "$#" -eq 0 ]; then
+    osascript -e 'display dialog "Please right-click on a folder to use this Quick Action." buttons {{"OK"}} default button 1'
+    exit 1
+fi
+
+FOLDER_PATH="$1"
+
+# Launch the GUI, passing the folder path.
+# We run it in the background so the Automator action finishes immediately.
+"$CMD_PATH" "$FOLDER_PATH" > /dev/null 2>&1 &
+</string>
+                    <key>CheckedForUserDefaultShell</key>
+                    <true/>
+                    <key>inputMethod</key>
+                    <integer>1</integer>
+                    <key>shell</key>
+                    <string>/bin/bash</string>
+                    <key>source</key>
+                    <string></string>
+                </dict>
+                <key>BundleIdentifier</key>
+                <string>com.apple.RunShellScript</string>
+                <key>UUID</key>
+                <string>725FD07E-C1D8-4B66-8B0D-751256D26C99</string>
+            </dict>
+        </dict>
+    </array>
+    <key>connectors</key>
+    <dict/>
+    <key>workflowMetaData</key>
+    <dict>
+        <key>workflowTypeIdentifier</key>
+        <string>com.apple.Automator.servicesMenu</string>
+        <key>serviceInputTypeIdentifier</key>
+        <string>com.apple.Automator.fileSystemObject.folder</string>
+        <key>serviceOutputTypeIdentifier</key>
+        <string>com.apple.Automator.nothing</string>
+        <key>serviceApplicationBundleID</key>
+        <string>com.apple.finder</string>
+        <key>serviceApplicationPath</key>
+        <string>/System/Library/CoreServices/Finder.app</string>
+        <key>serviceName</key>
+        <string>Open with aicodeprep-gui</string>
+    </dict>
+</dict>
+</plist>
+"""
+
+# Template for the Info.plist file, which defines the service menu item.
+INFO_PLIST_TEMPLATE = """
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSServices</key>
+    <array>
+        <dict>
+            <key>NSMenuItem</key>
+            <dict>
+                <key>default</key>
+                <string>Open with aicodeprep-gui</string>
+            </dict>
+            <key>NSMessage</key>
+            <string>runWorkflowAsService</string>
+            <key>NSRequiredContext</key>
+            <dict>
+                <key>NSApplicationIdentifier</key>
+                <string>com.apple.finder</string>
+            </dict>
+            <key>NSSendFileTypes</key>
+            <array>
+                <string>public.folder</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
+"""
+
+WORKFLOW_NAME = "Open with aicodeprep-gui.workflow"
+SERVICES_DIR = os.path.expanduser("~/Library/Services")
+
+def install_quick_action():
+    """Generates and installs the macOS Quick Action."""
+    executable_path = shutil.which('aicodeprep-gui')
+    if not executable_path:
+        msg = "Could not find 'aicodeprep-gui' executable in PATH."
+        logging.error(msg)
+        return False, msg
+
+    try:
+        # Create the .workflow bundle structure in a temporary directory
+        temp_dir = tempfile.mkdtemp()
+        workflow_path = os.path.join(temp_dir, WORKFLOW_NAME)
+        contents_path = os.path.join(workflow_path, "Contents")
+        os.makedirs(contents_path, exist_ok=True)
+
+        # Write the templated files
+        wflow_content = DOCUMENT_WFLOW_TEMPLATE.format(EXECUTABLE_PATH=executable_path)
+        with open(os.path.join(contents_path, "document.wflow"), "w") as f:
+            f.write(wflow_content)
+
+        with open(os.path.join(contents_path, "Info.plist"), "w") as f:
+            f.write(INFO_PLIST_TEMPLATE)
+            
+        # Move the generated workflow to the user's Services directory
+        dest_path = os.path.join(SERVICES_DIR, WORKFLOW_NAME)
+        if os.path.exists(dest_path):
+            shutil.rmtree(dest_path) # Remove old version if it exists
+        
+        shutil.move(workflow_path, SERVICES_DIR)
+        
+        # Clean up temporary directory
+        shutil.rmtree(temp_dir)
+
+        msg = (f"Quick Action '{WORKFLOW_NAME}' installed successfully to {SERVICES_DIR}. "
+               "It should now appear in the right-click menu for folders in Finder.")
+        logging.info(msg)
+        return True, msg
+
+    except Exception as e:
+        msg = f"Failed to install Quick Action: {e}"
+        logging.error(msg)
+        return False, msg
+
+def uninstall_quick_action():
+    """Removes the macOS Quick Action from the user's Library."""
+    dest_path = os.path.join(SERVICES_DIR, WORKFLOW_NAME)
+    if os.path.exists(dest_path):
+        try:
+            shutil.rmtree(dest_path)
+            msg = f"Quick Action '{WORKFLOW_NAME}' has been uninstalled."
+            logging.info(msg)
+            return True, msg
+        except Exception as e:
+            msg = f"Failed to uninstall Quick Action: {e}"
+            logging.error(msg)
+            return False, msg
+    else:
+        msg = "Quick Action was not found (already uninstalled)."
+        logging.info(msg)
+        return True, msg
+
+</code>
+
+aicodeprep_gui\main.py:
+<code>
+import os
+import sys
+import platform
+import ctypes
+from PySide6.QtCore import QSettings
+
+# Handle --delset command-line option to delete user settings and exit
+if "--delset" in sys.argv:
+    # Delete ButtonPresets
+    QSettings("aicodeprep-gui", "ButtonPresets").clear()
+    # Delete PromptOptions
+    QSettings("aicodeprep-gui", "PromptOptions").clear()
+    # Delete UserIdentity
+    QSettings("aicodeprep-gui", "UserIdentity").clear()
+    print("All aicodeprep-gui user settings deleted.")
+    sys.exit(0)
+import argparse
+import logging
+from typing import List
+from aicodeprep_gui.smart_logic import collect_all_files
+from aicodeprep_gui.gui import show_file_selection_gui
+
+# Configure logging with explicit console handler only
+logger = logging.getLogger()
+
+# Remove any existing handlers to prevent duplicate logging
+for handler in logger.handlers:
+    logger.removeHandler(handler)
+
+logger.setLevel(logging.INFO)
+
+# Create console handler
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+
+# Add handler to root logger
+logger.addHandler(console_handler)
+
+def main():
+    parser = argparse.ArgumentParser(description="aicodeprep-gui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
+    parser.add_argument("-n", "--no-copy", action="store_true",
+                        help="Do NOT copy output to clipboard (default: copy to clipboard)")
+    parser.add_argument("-o", "--output", default="fullcode.txt",
+                        help="Output file name (default: fullcode.txt)")
+    parser.add_argument("-d", "--debug", action="store_true",
+                        help="Enable debug logging")
+    parser.add_argument("directory", nargs="?", default=".",
+                        help="Directory to process (default: current directory)")
+    parser.add_argument("--force-update-check", action="store_true",
+                        help="Force update check (ignore 24h limit)")
+
+    # --- ADD THESE NEW ARGUMENTS ---
+    if platform.system() == "Windows":
+        parser.add_argument("--install-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
+        parser.add_argument("--remove-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
+        parser.add_argument("--menu-text", type=str, help=argparse.SUPPRESS)
+        parser.add_argument("--disable-classic-menu", action="store_true", help=argparse.SUPPRESS)
+    # --- END OF NEW ARGUMENTS ---
+
+    args = parser.parse_args()
+    force_update = args.force_update_check
+
+    # Set Windows AppUserModelID for proper taskbar icon
+    if platform.system() == "Windows":
+        myappid = 'wuu73.aicodeprep-gui.1.0.3'  # arbitrary unique string
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        except AttributeError:
+            # Fails on older Windows versions, but that's acceptable.
+            logging.warning("Could not set AppUserModelID. Taskbar icon may not be correct on older Windows.")
+
+    # --- ADD THIS NEW LOGIC BLOCK ---
+    if platform.system() == "Windows":
+        try:
+            from aicodeprep_gui import windows_registry
+        except ImportError:
+            windows_registry = None
+        if args.install_context_menu_privileged and windows_registry:
+            print("Running privileged action: Install context menu...")
+            menu_text = getattr(args, 'menu_text', None)
+            enable_classic = not getattr(args, 'disable_classic_menu', False)
+            windows_registry.install_context_menu(menu_text, enable_classic_menu=enable_classic)
+            sys.exit(0)
+        if args.remove_context_menu_privileged and windows_registry:
+            print("Running privileged action: Remove context menu...")
+            windows_registry.remove_context_menu()
+            sys.exit(0)
+    # --- END OF NEW LOGIC BLOCK ---
+
+    # Ensure Fusion style for QSS consistency
+    from PySide6 import QtWidgets
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        app = QtWidgets.QApplication(sys.argv)
+    app.setStyle("Fusion")
+
+    # Set application icon from package favicon.ico
+    from PySide6.QtGui import QIcon
+    from importlib import resources
+    with resources.as_file(resources.files('aicodeprep_gui.images').joinpath('favicon.ico')) as icon_path:
+        app.setWindowIcon(QIcon(str(icon_path)))
+
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+        console_handler.setLevel(logging.DEBUG)
+
+    # Get the target directory from the parsed arguments
+    target_dir = args.directory
+    logger.info(f"Target directory: {target_dir}")
+
+    # Change to the specified directory with error handling
+    try:
+        os.chdir(target_dir)
+    except FileNotFoundError:
+        logger.error(f"Directory not found: {target_dir}")
+        return
+    except Exception as e:
+        logger.error(f"Error changing directory: {e}")
+        return
+
+    logger.info("Starting code concatenation...")
+
+    all_files_with_flags = collect_all_files()
+
+    if not all_files_with_flags:
+        logger.warning("No files found to process!")
+        return
+
+    action, _ = show_file_selection_gui(all_files_with_flags, force_update=force_update)
+
+    if action != 'quit':
+        logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")
+        logger.info("https://wuu73.org/hello.html")
+
+if __name__ == "__main__":
+    main()
+
+</code>
+
+aicodeprep_gui\smart_logic.py:
+<code>
+from importlib import resources
+import os
+import sys
+import logging
+from typing import List, Tuple
+import fnmatch
+
+# New imports for the refactoring
+import toml
+from pathspec import PathSpec
+from pathspec.patterns import GitWildMatchPattern
+
+def get_config_path():
+    """Get the path to the default configuration file."""
+    if getattr(sys, 'frozen', False):
+        base_path = sys._MEIPASS
+        config_path = os.path.join(base_path, 'aicodeprep_gui', 'data', 'default_config.toml')
+    else:
+        try:
+            with resources.path('aicodeprep_gui.data', 'default_config.toml') as config_file:
+                config_path = str(config_file)
+        except ModuleNotFoundError:
+            config_path = os.path.join(os.path.dirname(__file__), 'data', 'default_config.toml')
+    return config_path
+
+def load_config_from_path(path: str) -> dict:
+    """Loads a TOML configuration file from a given path."""
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return toml.load(f)
+    except Exception as e:
+        logging.error(f"Error loading or parsing TOML config at {path}: {e}")
+        return {}
+
+def load_configurations() -> dict:
+    """Load default config, then load user config and merge them."""
+    default_config_path = get_config_path()
+    config = load_config_from_path(default_config_path)
+    if not config:
+        logging.critical("Failed to load default configuration. Exiting.")
+        sys.exit("Could not load the default configuration file.")
+    user_config_path = os.path.join(os.getcwd(), 'aicodeprep-gui.toml')
+    user_config = load_config_from_path(user_config_path)
+    if user_config:
+        logging.info(f"Found user configuration at {user_config_path}. Merging settings.")
+        config.update(user_config)
+    return config
+
+def is_binary_file(filepath: str) -> bool:
+    """Return True if this file is likely binary."""
+    try:
+        with open(filepath, 'rb') as f: chunk = f.read(1024)
+    except OSError: return False
+    if chunk.startswith((b'\xEF\xBB\xBF', b'\xFF\xFE', b'\xFE\xFF', b'\xFF\xFE\x00\x00', b'\x00\x00\xFE\xFF')): return False
+    return b'\x00' in chunk
+
+# --- CONFIG AND PATHSPEC LOADING ---
+config = load_configurations()
+CODE_EXTENSIONS = set(config.get('code_extensions', []))
+MAX_FILE_SIZE = config.get('max_file_size', 1000000)
+exclude_spec = PathSpec.from_lines(GitWildMatchPattern, config.get('exclude_patterns', []))
+include_spec = PathSpec.from_lines(GitWildMatchPattern, config.get('default_include_patterns', []))
+# These are still useful for some simple checks in the GUI and logic
+EXCLUDE_DIRS = [p.rstrip('/') for p in config.get('exclude_patterns', []) if p.endswith('/')]
+EXCLUDE_FILES = [p for p in config.get('exclude_patterns', []) if not p.endswith('/')]
+EXCLUDE_PATTERNS = EXCLUDE_FILES # Simplified for backward compatibility
+INCLUDE_FILES = config.get('default_include_patterns', [])
+INCLUDE_DIRS = [p.rstrip('/') for p in INCLUDE_FILES if p.endswith('/')]
+EXCLUDE_EXTENSIONS = [] # This concept is now handled by patterns
+
+# --- REWRITTEN collect_all_files FOR LAZY LOADING ---
+def collect_all_files() -> List[Tuple[str, str, bool]]:
+    """
+    Collects files and directories. For excluded directories, it returns them as
+    a single entry without their contents, allowing the GUI to lazy-load them.
+    Returns a list of (absolute_path, relative_path, is_checked_by_default).
+    """
+    all_paths = []
+    root_dir = os.getcwd()
+    seen_paths = set()
+    logging.info(f"Starting initial fast scan in: {root_dir}")
+
+    for root, dirs, files in os.walk(root_dir, topdown=True):
+        rel_root = os.path.relpath(root, root_dir)
+        if rel_root == '.': rel_root = ''
+
+        # Add the directory itself unless it's the root
+        if rel_root and root not in seen_paths:
+             all_paths.append((root, rel_root, False))
+             seen_paths.add(root)
+
+        # Prune directories from the walk
+        dirs_to_prune = []
+        for d in dirs:
+            rel_dir_path = os.path.join(rel_root, d)
+            if exclude_spec.match_file(rel_dir_path + '/'):
+                dirs_to_prune.append(d)
+        dirs[:] = [d for d in dirs if d not in dirs_to_prune]
+
+        # Process all items (unpruned dirs and files)
+        for name in dirs + files:
+            abs_path = os.path.join(root, name)
+            rel_path = os.path.join(rel_root, name)
+            if abs_path in seen_paths: continue
+
+            # Determine default check state
+            is_checked = False
+            check_path = rel_path + '/' if os.path.isdir(abs_path) else rel_path
+
+            if include_spec.match_file(check_path):
+                is_checked = True
+            elif os.path.isfile(abs_path) and os.path.splitext(name)[1].lower() in CODE_EXTENSIONS:
+                 is_checked = True
+
+            # Final filters for files
+            if os.path.isfile(abs_path):
+                if is_binary_file(abs_path) or os.path.getsize(abs_path) > MAX_FILE_SIZE:
+                    is_checked = False
+
+            all_paths.append((abs_path, rel_path, is_checked))
+            seen_paths.add(abs_path)
+
+    logging.info(f"Initial scan collected {len(all_paths)} items.")
+    return all_paths
+
+def is_excluded_directory(path: str) -> bool:
+    """Simplified check used by GUI folder-click logic."""
+    dir_name = os.path.basename(path)
+    return any(fnmatch.fnmatch(dir_name, pat) for pat in EXCLUDE_DIRS)
+
+def matches_pattern(filename: str, pattern: str) -> bool:
+    """Helper used by GUI logic."""
+    return fnmatch.fnmatch(filename.lower(), pattern.lower())
+
+</code>
+
+aicodeprep_gui\update_checker.py:
+<code>
+import datetime
+import sys
+import traceback
+from typing import Callable, Optional
+
+from PySide6.QtCore import QObject, QThread, Signal, QSettings, QDateTime, Qt
+from packaging.version import parse as parse_version
+
+try:
+    import requests
+except ImportError:
+    requests = None
+
+from . import __version__
+
+PYPI_URL = "https://pypi.org/pypi/aicodeprep-gui/json"
+ORG = "aicodeprep-gui"
+GROUP = "UpdateChecker"
+KEY_LAST_CHECK = "last_check"
+KEY_LAST_PROMPT = "last_prompt"
+KEY_PROMPTED_THIS_RUN = "prompted_this_run"
+
+def get_latest_pypi_version() -> Optional[str]:
+    """Fetch latest version string from PyPI. Returns None on error."""
+    if not requests:
+        return None
+    try:
+        resp = requests.get(PYPI_URL, timeout=5)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["info"]["version"]
+    except Exception as e:
+        print(f"[update_checker] Error fetching PyPI version: {e}", file=sys.stderr)
+        traceback.print_exc()
+        return None
+
+def is_newer_version(current: str, latest: str) -> bool:
+    """Return True if latest > current (semantic version compare)."""
+    try:
+        return parse_version(latest) > parse_version(current)
+    except Exception as e:
+        print(f"[update_checker] Version compare error: {e}", file=sys.stderr)
+        return False
+
+class _UpdateFetchWorker(QObject):
+    finished = Signal(bool, str)
+    def __init__(self, current_version: str):
+        QObject.__init__(self)
+        self.current_version = current_version
+
+    def do_work(self):
+        print(f"[update_checker] Worker running - fetching latest version from PyPI...")
+        latest = get_latest_pypi_version()
+        if latest is None:
+            print(f"[update_checker] Failed to fetch latest version from PyPI")
+            self.finished.emit(False, latest if latest else "")
+            return
+        print(f"[update_checker] Latest version from PyPI: {latest}, Current: {self.current_version}")
+        new_available = is_newer_version(self.current_version, latest)
+        print(f"[update_checker] Version comparison - New available: {new_available}")
+        self.finished.emit(new_available, latest)
+
+def check_for_updates(callback: Callable[[bool, str], None], parent=None, force: bool = False) -> Optional[QThread]:
+    """Check for updates, calling callback(new_available, latest_version) when done.
+    Returns the QThread if one is created, None if check is skipped."""
+    print(f"[update_checker] Starting update check for version {__version__}")
+    settings = QSettings(ORG, GROUP)
+    # Reset the prompted flag for new run so we can prompt once per day
+    settings.setValue(KEY_PROMPTED_THIS_RUN, False)
+    print("[update_checker] Reset prompted_this_run flag to False")
+    last_check_str = settings.value(KEY_LAST_CHECK, "")
+    # NEW: Store and retrieve last known version
+    last_known_version = settings.value("last_known_version", "")
+    now = QDateTime.currentDateTimeUtc()
+    if last_check_str and not force:
+        try:
+            last_check = QDateTime.fromString(last_check_str, Qt.ISODate)
+            if last_check.isValid() and last_check.secsTo(now) < 86400:
+                print(f"[update_checker] Skipping check - last checked {last_check_str} (< 24h ago)")
+                # Use last known version if available
+                if last_known_version:
+                    is_newer = is_newer_version(__version__, last_known_version)
+                    callback(is_newer, last_known_version)
+                else:
+                    callback(False, "")
+                return None
+        except Exception as e:
+            print(f"[update_checker] Error parsing last_check: {e}", file=sys.stderr)
+    print("[update_checker] Starting background update check thread")
+    # Run fetch in background thread
+    thread = QThread(parent)
+    worker = _UpdateFetchWorker(__version__)
+    thread.worker = worker
+    worker.moveToThread(thread)
+    def on_finish(new_available, latest):
+        print(f"[update_checker] Check completed - New available: {new_available}, Latest: {latest}")
+        settings.setValue(KEY_LAST_CHECK, now.toString(Qt.ISODate))
+        # NEW: Store the latest version for future use
+        if latest:
+            settings.setValue("last_known_version", latest)
+        callback(new_available, latest)
+        thread.quit()
+    worker.finished.connect(on_finish)
+    thread.finished.connect(thread.deleteLater)
+    thread.started.connect(worker.do_work)
+    thread.start()
+    return thread
+
+</code>
+
+aicodeprep_gui\windows_registry.py:
+<code>
+import sys
+import os
+import winreg
+import ctypes
+import shutil
+import logging
+
+def enable_classic_context_menu():
+    """
+    Enables the classic right-click context menu on Windows 11 by creating the required registry key.
+    """
+    try:
+        key_path = r"Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32"
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+            winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "")
+        logging.info("Classic context menu enabled (Windows 11).")
+        return True, "Classic context menu enabled."
+    except Exception as e:
+        logging.error(f"Failed to enable classic context menu: {e}")
+        return False, f"Failed to enable classic context menu: {e}"
+
+def disable_classic_context_menu():
+    """
+    Disables the classic right-click context menu on Windows 11 by deleting the registry key.
+    """
+    try:
+        key_path = r"Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32"
+        winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key_path)
+        # Optionally, try to delete parent key if empty
+        parent_key_path = r"Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"
+        try:
+            winreg.DeleteKey(winreg.HKEY_CURRENT_USER, parent_key_path)
+        except OSError:
+            pass
+        logging.info("Classic context menu disabled (Windows 11).")
+        return True, "Classic context menu disabled."
+    except FileNotFoundError:
+        return True, "Classic context menu key not found (already default)."
+    except Exception as e:
+        logging.error(f"Failed to disable classic context menu: {e}")
+        return False, f"Failed to disable classic context menu: {e}"
+
+def is_admin():
+    """Check if the script is running with administrative privileges."""
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except Exception as e:
+        logging.error(f"Failed to check admin status: {e}")
+        return False
+
+def run_as_admin(action, menu_text=None, enable_classic_menu=None):
+    """
+    Re-launches the script with admin rights to perform a specific action.
+    'action' can be 'install' or 'remove'.
+    'menu_text' is optional custom text for the context menu (only used with 'install').
+    'enable_classic_menu' is an optional boolean to control classic menu (only used with 'install').
+    """
+    if sys.platform != 'win32' and sys.platform != 'Windows':
+        return False, "This feature is only for Windows."
+
+    verb = "runas"
+    executable = sys.executable  # The python interpreter
+
+    # Use -m to run the main module
+    script_entry_point = "aicodeprep_gui.main"
+
+    if action == 'install':
+        params = f'-m {script_entry_point} --install-context-menu-privileged'
+        if menu_text and menu_text.strip():
+            # Escape quotes and pass the menu text as an argument
+            escaped_text = menu_text.replace('"', '\\"')
+            params += f' --menu-text "{escaped_text}"'
+        if enable_classic_menu is False:
+            params += ' --disable-classic-menu'
+    elif action == 'remove':
+        params = f'-m {script_entry_point} --remove-context-menu-privileged'
+    else:
+        return False, "Invalid action."
+
+    try:
+        ret = ctypes.windll.shell32.ShellExecuteW(None, verb, executable, params, None, 1)
+        if ret > 32:
+            return True, "UAC prompt initiated. The application will close."
+        else:
+            return False, "UAC prompt was cancelled or failed."
+    except Exception as e:
+        logging.error(f"Failed to elevate privileges: {e}")
+        return False, f"An error occurred while trying to elevate: {e}"
+
+def get_registry_command():
+    """
+    Constructs the command to be written into the registry.
+    Uses pythonw.exe to avoid a console window flashing on execution.
+    """
+    python_exe = sys.executable
+    pythonw_exe = python_exe.replace("python.exe", "pythonw.exe")
+
+    script_path = shutil.which('aicodeprep-gui')
+    if not script_path:
+        logging.error("Could not find 'aicodeprep-gui' script in system PATH.")
+        return None
+
+    # The command to be stored in the registry. Explorer replaces %V with the directory path.
+    return f'"{pythonw_exe}" "{script_path}" "%V"'
+
+def install_context_menu(menu_text=None, enable_classic_menu=True):
+    """Adds the context menu item to the Windows Registry. Assumes admin rights."""
+    if not is_admin():
+        logging.error("Install function called without admin rights.")
+        print("Administrator rights required.")
+        return False, "Administrator rights required."
+
+    command = get_registry_command()
+    if not command:
+        return False, "'aicodeprep-gui' not found. Is it installed and in your PATH?"
+
+    # Use custom menu text if provided, otherwise use default
+    if menu_text is None or menu_text.strip() == "":
+        menu_text = "Open with aicodeprep-gui"
+    else:
+        menu_text = menu_text.strip()
+
+    # Enable or disable classic menu as requested
+    if enable_classic_menu:
+        enable_classic_context_menu()
+        classic_msg = "Classic context menu enabled."
+    else:
+        disable_classic_context_menu()
+        classic_msg = "Classic context menu NOT enabled (Windows 11 default)."
+
+    try:
+        key_path = r'Directory\\Background\\shell\\aicodeprep-gui'
+        with winreg.CreateKey(winreg.HKEY_CLASSES_ROOT, key_path) as key:
+            winreg.SetValue(key, '', winreg.REG_SZ, menu_text)
+            with winreg.CreateKey(key, 'command') as command_key:
+                winreg.SetValue(command_key, '', winreg.REG_SZ, command)
+
+        logging.info(f"Context menu installed successfully with text: '{menu_text}'")
+        restart_explorer()
+        return True, f"Context menu installed successfully with text: '{menu_text}'! {classic_msg} Explorer has been restarted."
+    except Exception as e:
+        logging.error(f"Failed to install context menu: {e}")
+        return False, f"An error occurred: {e}"
+
+def remove_context_menu():
+    """Removes the context menu item from the Windows Registry. Assumes admin rights."""
+    if not is_admin():
+        logging.error("Remove function called without admin rights.")
+        print("Administrator rights required.")
+        return False, "Administrator rights required."
+
+    # Always restore default context menu
+    disable_classic_context_menu()
+
+    try:
+        key_path = r'Directory\\Background\\shell\\aicodeprep-gui'
+        winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, f"{key_path}\\command")
+        winreg.DeleteKey(winreg.HKEY_CLASSES_ROOT, key_path)
+
+        logging.info("Context menu removed successfully.")
+        restart_explorer()
+        return True, "Context menu removed and classic menu restored! Explorer has been restarted."
+    except FileNotFoundError:
+        return True, "Context menu item was not found (already removed). Classic menu restored."
+    except Exception as e:
+        logging.error(f"Failed to remove context menu: {e}")
+        return False, f"An error occurred: {e}"
+
+def restart_explorer():
+    """Restarts the Windows Explorer process to apply registry changes."""
+    try:
+        os.system("taskkill /f /im explorer.exe")
+        os.system("start explorer.exe")
+    except Exception as e:
+        logging.error(f"Failed to restart explorer.exe: {e}")
+
+</code>
+
+aicodeprep_gui\__init__.py:
+<code>
+# Package initialization
+__version__ = "1.0.3"
+
+</code>
+
+pyproject.toml:
+<code>
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# CRITICAL: Changed name to match your new package name
+name = "aicodeprep-gui" 
+version = "1.0.3"
+description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
+readme = "README.md"
+authors = [{ name = "Tom Brothers", email = "tom@wuu73.org" }]
+license = { file = "LICENSE" }
+classifiers = [
+    # NOTE: You might want to change "Proprietary" to an open-source license like "MIT"
+    # if you intend for others to use and contribute.
+    "License :: OSI Approved :: MIT License", 
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development",
+    "Environment :: X11 Applications :: Qt",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: MacOS X",
+]
+keywords = ["ai", "code", "preparation", "llm", "gui", "pyside6"]
+dependencies = [
+    # These are the RUNTIME dependencies. Users who pip install your package need these.
+    "PySide6>=6.7.0", # Simplified dependency, Essentials and Addons are included
+    "toml",
+    "pathspec",
+    "requests", # for your network check
+    "packaging"
+]
+requires-python = ">=3.8" # PySide6 requires Python 3.8+
+
+[project.scripts]
+# CRITICAL: Changed script name and entry point module
+aicodeprep-gui = "aicodeprep_gui.main:main"
+aicp = "aicodeprep_gui.main:main"
+
+[project.urls]
+# SUGGESTION: Update this once you rename the GitHub repo
+Homepage = "https://github.com/detroittommy879/aicodeprep-gui" 
+
+[tool.setuptools.packages.find]
+# This is correct and will find your `aicodeprep_gui` package
+where = ["."] 
+
+[tool.setuptools.package-data]
+# CRITICAL: Changed key to match your actual package name `aicodeprep_gui`
+aicodeprep_gui = ["data/default_config.toml", "images/*.png", "images/*.ico"]
+
+# SUGGESTION: Create optional dependencies for developers/builders
+[project.optional-dependencies]
+build = [
+    "pyinstaller>=6.0.0",
+    "pyinstaller-hooks-contrib",
+    "setuptools",
+    "wheel"
+]
+
+</code>
+
+README.md:
+<code>
+# aicodeprep-gui: The fast context maker
+
+**Effortlessly prepare and share project code with any AI model, on any OS, from any editor.**
+
+[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep-gui.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep-gui/stargazers)
+[![PyPI version](https://badge.fury.io/py/aicodeprep-gui.svg)](https://badge.fury.io/py/aicodeprep-gui)
+
+Manually copying and pasting files into AI chatbots is slow, error-prone, and kills your workflow. `aicodeprep-gui` solves this with a sleek, powerful, and blazing-fast desktop application that makes preparing code context a one-click process.
+
+It is **platform-independent** (Windows, macOS, Linux) and **IDE-independent**. Use it alongside VS Code, Cursor, Windsurf, or any other editor. It doesn't replace your agent; it superpowers your prompts by giving you perfect, user-curated context every time.
+
+<p align="center">
+  <em>(A demo GIF showing the app in action would be perfect here)</em>
+</p>
+
+## The aicodeprep-gui Workflow
+
+The core philosophy is simple: **You know your code best.** Instead of letting a "dumber" IDE agent guess which files are relevant, `aicodeprep-gui` puts you in control with a smart, intuitive UI.
+
+1.  **Launch Instantly**:
+
+    - **Right-click** any folder in your File Explorer, Finder, or Nautilus and select "Open with aicodeprep-gui".
+    - _or_ Pop open a terminal and type `aicp` and press Enter.
+
+2.  **Review Smart Selection**: The app opens instantly, having already pre-selected the most relevant files based on a `.gitignore`-style configuration.
+
+3.  **Fine-tune & Prompt**: Quickly check/uncheck files, use powerful **prompt presets** (like one for [Cline](https://github.com/stitionai/cline)), or write a custom question.
+
+4.  **Generate & Paste**: Click "GENERATE CONTEXT!". The entire code bundle and your prompt are **instantly copied to your clipboard**, ready to be pasted into ChatGPT, Gemini, Claude, Openrouter, or any other AI model.
+
+5.  **Smarter AI responses and abilities**: Whenever you rely on IDE extensions or agentic IDEs to do everything, they feed too much crap into the AI which always seems to reduce its intelligence. You end up needing to use Claude for everything even minor bugs, which gets expensive. With this tool, you can use the web chat interfaces for the hard/difficult stuff, bug fixing, planning, and then paste the result back into the agent set to use a cheap unlimited model, to make the actual file changes.
+
+## ✨ Key Features
+
+- 🚀 **Seamless OS Integration**: The only tool of its kind with optional, native right-click context menu integration for **Windows File Explorer**, **macOS Finder**, and **Linux Nautilus**.
+- 💻 **Truly Cross-Platform**: A single, consistent experience on Windows, macOS (Intel & Apple Silicon), and major Linux distributions.
+- ⌨️ **Simple & Fast Commands**: Launch from anywhere by simply typing `aicp` in your terminal. Pass a directory (`aicp ./my-project`) or run it in the current folder.
+- 🧠 **Intelligent File Scanning**:
+  - Uses a powerful `.gitignore`-style pattern system (`aicodeprep-gui.toml`) to smartly include/exclude files.
+  - Blazing-fast startup thanks to **lazy-loading**, which skips huge directories like `node_modules/` or `venv/` until you need them.
+  - Remembers your file selections, window size, and layout on a per-project basis in a local `.aicodeprep-gui` file.
+- 🎨 **Unique & Polished UI**:
+  - A clean, modern interface built with PySide6.
+  - **Automatic Light/Dark mode** detection that syncs with your OS, plus a manual toggle.
+  - Satisfying, custom-styled UI components, including an intuitive file tree with hover effects.
+  - Real-time **token counter** to help you stay within context limits.
+- 🔧 **Powerful Prompt Engineering**:
+  - Create, save, and manage **global prompt presets** that are available across all your projects.
+  - Comes with useful defaults for debugging, security analysis, or generating prompts for AI agents like **Cline**.
+- 🌐 **IDE & Agent Agnostic**:
+  - This is **not another IDE plugin**. It's a standalone utility that enhances your workflow with _any_ tool.
+  - Perfect for preparing context for agent-based IDEs like **Cursor** or **Windsurf**, or for direct use in web-based chatbots.
+
+---
+
+## Installation
+
+The TL;DR version:
+Make sure python is installed on your system, then install pipx. Just google how to do that or ask AI etc. Then open a fresh terminal/cmd window and type:
+
+pipx install aicodeprep-gui
+
+## Mac
+
+```sh
+# Install pipx using Homebrew
+brew install pipx
+
+# Add pipx to your PATH
+pipx ensurepath
+```
+
+#### (then close/open a fresh new terminal window)
+
+```sh
+pipx install aicodeprep-gui
+```
+
+## Windows
+
+Download python from python.org - pick one of the stable versions, 3.13.x is good.
+
+Then try:
+
+```sh
+py -m pip install --user pipx
+py -m pipx ensurepath
+```
+
+(if py doesn't work, try 'python' or 'python3')
+
+Close that terminal window, and open a fresh new one (very important after installing pipx
+
+```sh
+pipx install aicodeprep-gui
+```
+
+It should say success or something similar or done.
+
+Now that it is installed, you can type 'aicp' + enter in a terminal to run it or aicp path/to/folder/
+also aicodeprep-gui works instead of aicp. aicp is shorter, both do the same thing (open the app window in whichever folder you typed it)
+
+A common thing would be when you are using VS Code or Cursor, and whichever agent / agentic coder is pissing you off or acting stupid, go to the VS Code terminal and type 'aicp' to open it for the project you are working on.
+
+## Linux (Debian/Ubuntu instructions here but should work on most distros)
+
+#### Update package lists and upgrade existing packages
+
+```sh
+sudo apt update && sudo apt upgrade -y
+```
+
+#### Install pip for Python 3
+
+```sh
+sudo apt install python3-pip -y
+```
+
+#### Install and Configure pipx
+
+Now, use pip to install pipx. It's best to install it in your user space to avoid needing sudo for Python packages.
+
+```sh
+pip3 install --user pipx
+```
+
+```sh
+pipx ensurepath
+```
+
+#### IMPORTANT: After running pipx ensurepath, you must close and reopen your terminal for the PATH changes to take effect.
+
+In a new terminal, type:
+
+```sh
+pipx install aicodeprep-gui
+```
+
+### File Explorer Integration (Optional, Recommended)
+
+For the ultimate workflow, add the right-click menu item after installing:
+
+1.  Run the application (`aicp`).
+2.  Go to the **File** menu in the top-left corner.
+3.  Select **"Install Right-Click Menu..."** (or the equivalent for your OS).
+4.  Follow the on-screen instructions. A UAC prompt may appear on Windows, as this requires administrator rights.
+
+---
+
+## Usage
+
+### The GUI Way
+
+1.  **Launch**: Right-click a project folder or type `aicp` in a terminal inside the folder.
+2.  **Select**: Review the automatically selected files. The app will remember your choices for the next time you open it in this folder.
+3.  **Prompt (Optional)**: Click a preset button or type a question in the prompt box.
+4.  **Generate**: Click **GENERATE CONTEXT!**.
+5.  **Paste**: Your context is now on your clipboard. Paste it into your AI of choice.
+
+### The Command Line
+
+While the GUI is the main feature, you can use these command-line options:
+
+```bash
+# Run in the current directory
+aicp
+
+# Run in a specific directory
+aicodeprep-gui /path/to/your/project
+
+# See all options
+aicp --help
+```
+
+---
+
+## Configuration
+
+`aicodeprep-gui` is powerful out of the box, but you can customize its behavior by creating an `aicodeprep-gui.toml` file in your project's root directory. This allows you to override the default filters.
+
+**Example `aicodeprep-gui.toml`:**
+
+```toml
+# Set a different max file size in bytes
+max_file_size = 2000000
+
+# Override the default code extensions to check
+code_extensions = [".py", ".js", ".ts", ".html", ".css", ".rs"]
+
+# Add custom exclusion patterns (uses .gitignore syntax)
+exclude_patterns = [
+    "build/",
+    "dist/",
+    "*.log",
+    "temp_*",
+    "cache/"
+]
+
+# Add custom patterns for files that should always be checked by default
+default_include_patterns = [
+    "README.md",
+    "main.py",
+    "docs/architecture.md"
+]
+```
+
+For a full list of default settings, see the [default_config.toml](aicodeprep_gui/data/default_config.toml) in the source code.
+
+---
+
+## Contributing
+
+Contributions, bug reports, and feature requests are welcome! Please feel free to open an issue or submit a pull request on GitHub. Or just email me your complaints! Happy to hear from you: tom@wuu73.org
+
+---
+
+## Support & Donations
+
+If this tool saves you time and makes your life easier, consider supporting its development.
+
+| Method   | Address / Link                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------- |
+| Bitcoin  | `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`                                                      |
+| Litecoin | `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`                                                     |
+| Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
+| CashApp  | `$lightweb73`                                                                                     |
+| Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
+
+</code>
+
