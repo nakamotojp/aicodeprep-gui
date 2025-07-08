@@ -9,9 +9,7 @@ Manually copying and pasting files into AI chatbots is slow, error-prone, and ki
 
 It is **platform-independent** (Windows, macOS, Linux) and **IDE-independent**. Use it alongside VS Code, Cursor, Windsurf, or any other editor. It doesn't replace your agent; it superpowers your prompts by giving you perfect, user-curated context every time.
 
-<p align="center">
 ![Screenshot](scrs/n1.png)
-</p>
 
 ## The aicodeprep-gui Workflow
 
