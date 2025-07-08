@@ -8,13 +8,16 @@
 version=1.0
 
 [window]
-width=630
-height=1231
-splitter_state=AAAA/wAAAAEAAAACAAAB+wAAALgB/////wEAAAACAA==
+width=574
+height=1067
+splitter_state=AAAA/wAAAAEAAAACAAABhwAAAIsB/////wEAAAACAA==
 
 [files]
+CHANGELOG.md
+PRIVACY.md
 pyproject.toml
 README.md
+SUSTAINABLE-LICENSE
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui.py

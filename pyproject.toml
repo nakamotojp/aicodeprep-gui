@@ -5,15 +5,15 @@ build-backend = "setuptools.build_meta"
 [project]
 # CRITICAL: Changed name to match your new package name
 name = "aicodeprep-gui" 
-version = "1.0.3"
+version = "1.0.4"
 description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "tom@wuu73.org" }]
-license = { file = "LICENSE" }
+license = { file = "SUSTAINABLE-LICENSE" }
 classifiers = [
     # NOTE: You might want to change "Proprietary" to an open-source license like "MIT"
     # if you intend for others to use and contribute.
-    "License :: OSI Approved :: MIT License", 
+    "License :: Other/Proprietary License",  # Changed from OSI approved
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",

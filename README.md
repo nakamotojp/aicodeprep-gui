@@ -225,3 +225,17 @@ If this tool saves you time and makes your life easier, consider supporting its 
 | Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
 | CashApp  | `$lightweb73`                                                                                     |
 | Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
+
+---
+
+## License
+
+This software uses a Sustainable License:
+
+- ✅ Free for personal and commercial use
+- ✅ Keep and modify source code
+- ✅ Use app output commercially without restrictions
+- ❌ Cannot sell/redistribute this software
+- ❌ Cannot offer this as a hosted service
+
+[Full license details](SUSTAINABLE-LICENSE)

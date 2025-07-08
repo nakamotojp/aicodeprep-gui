@@ -4,6 +4,8 @@ free:
 quick how to on how to use it, on first start and put in menu
 
 premium:
+AI powered summary/compression for large codebases, context packer engine
+wuu73 api router
 gate the preset buttons, no nag screens, maybe right click menu?
 offer updated information about saving money, access to free APIs for Cline/etc, access to info
 $19.99 up to 10 machines or unlimited

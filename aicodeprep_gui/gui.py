@@ -610,6 +610,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         about_act = QtGui.QAction("&About", self)
         about_act.triggered.connect(self.open_about_dialog)
         help_menu.addAction(about_act)
+        # Add Complain/Feedback menu item
+        complain_act = QtGui.QAction("Send Feedback / Complain...", self)
+        complain_act.triggered.connect(self.open_complain_dialog)
+        help_menu.addAction(complain_act)
 
         self.format_combo = QtWidgets.QComboBox()
         self.format_combo.addItems(["XML <code>", "Markdown ###"])
@@ -855,16 +859,49 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         main_layout.addWidget(options_group_box)
         
-        button_layout1 = QtWidgets.QHBoxLayout(); button_layout2 = QtWidgets.QHBoxLayout()
-        main_layout.addLayout(button_layout1); main_layout.addLayout(button_layout2)
-        website_label = QtWidgets.QLabel("<a href=\"https://wuu73.org/aicp\">aicodeprep-gui @ wuu73.org</a>"); website_label.setOpenExternalLinks(True); main_layout.insertWidget(main_layout.count() - 2, website_label)
+        # Button layouts
+        button_layout1 = QtWidgets.QHBoxLayout()
+        button_layout2 = QtWidgets.QHBoxLayout()
+
         button_layout1.addStretch()
-        process_button = QtWidgets.QPushButton("GENERATE CONTEXT!"); process_button.clicked.connect(self.process_selected); button_layout1.addWidget(process_button)
-        select_all_button = QtWidgets.QPushButton("Select All"); select_all_button.clicked.connect(self.select_all); button_layout1.addWidget(select_all_button)
-        deselect_all_button = QtWidgets.QPushButton("Deselect All"); deselect_all_button.clicked.connect(self.deselect_all); button_layout1.addWidget(deselect_all_button)
+        process_button = QtWidgets.QPushButton("GENERATE CONTEXT!")
+        process_button.clicked.connect(self.process_selected)
+        button_layout1.addWidget(process_button)
+        select_all_button = QtWidgets.QPushButton("Select All")
+        select_all_button.clicked.connect(self.select_all)
+        button_layout1.addWidget(select_all_button)
+        deselect_all_button = QtWidgets.QPushButton("Deselect All")
+        deselect_all_button.clicked.connect(self.deselect_all)
+        button_layout1.addWidget(deselect_all_button)
+
         button_layout2.addStretch()
-        load_prefs_button = QtWidgets.QPushButton("Load preferences"); load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked); button_layout2.addWidget(load_prefs_button)
-        quit_button = QtWidgets.QPushButton("Quit"); quit_button.clicked.connect(self.quit_without_processing); button_layout2.addWidget(quit_button)
+        load_prefs_button = QtWidgets.QPushButton("Load preferences")
+        load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked)
+        button_layout2.addWidget(load_prefs_button)
+        quit_button = QtWidgets.QPushButton("Quit")
+        quit_button.clicked.connect(self.quit_without_processing)
+        button_layout2.addWidget(quit_button)
+
+        main_layout.addLayout(button_layout1)
+        main_layout.addLayout(button_layout2)
+
+        # --- Footer Layout ---
+        footer_layout = QtWidgets.QHBoxLayout()
+        
+        # Email link on the left
+        email_text = '<a href="mailto:tom@wuu73.org">tom@wuu73.org</a>'
+        email_label = QtWidgets.QLabel(email_text)
+        email_label.setOpenExternalLinks(True)
+        footer_layout.addWidget(email_label)
+        
+        footer_layout.addStretch()
+        
+        # Website link on the right
+        website_label = QtWidgets.QLabel('<a href="https://wuu73.org/aicp">aicodeprep-gui</a>')
+        website_label.setOpenExternalLinks(True)
+        footer_layout.addWidget(website_label)
+        
+        main_layout.addLayout(footer_layout)
 
         self.selected_files = []
         self.file_token_counts = {}
@@ -1455,6 +1492,77 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if getattr(self, "initial_show_event", False):
             QtCore.QTimer.singleShot(0, self._start_update_check)
             self.initial_show_event = False
+
+    def open_complain_dialog(self):
+        """Open the feedback/complain dialog."""
+        import requests
+
+        class FeedbackDialog(QtWidgets.QDialog):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self.setWindowTitle("Send Feedback / Complain")
+                self.setMinimumWidth(400)
+                layout = QtWidgets.QVBoxLayout(self)
+
+                layout.addWidget(QtWidgets.QLabel("Your Email (optional):"))
+                self.email_input = QtWidgets.QLineEdit()
+                self.email_input.setPlaceholderText("you@example.com")
+                layout.addWidget(self.email_input)
+
+                layout.addWidget(QtWidgets.QLabel("Message / Complaint:"))
+                self.msg_input = QtWidgets.QPlainTextEdit()
+                self.msg_input.setPlaceholderText("Describe your feedback, bug, or complaint here...")
+                layout.addWidget(self.msg_input)
+
+                self.status_label = QtWidgets.QLabel("")
+                self.status_label.setStyleSheet("color: #d43c2c;")
+                layout.addWidget(self.status_label)
+
+                btns = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+                btns.accepted.connect(self.accept)
+                btns.rejected.connect(self.reject)
+                layout.addWidget(btns)
+
+            def get_data(self):
+                return self.email_input.text().strip(), self.msg_input.toPlainText().strip()
+
+        dlg = FeedbackDialog(self)
+        if dlg.exec() != QtWidgets.QDialog.Accepted:
+            return
+
+        email, message = dlg.get_data()
+        if not email and not message:
+            QtWidgets.QMessageBox.warning(self, "Error", "Please enter at least an email or a message.")
+            return
+
+        try:
+            if message:
+                # Submit bug report
+                user_uuid = QtCore.QSettings("aicodeprep-gui", "UserIdentity").value("user_uuid", "")
+                payload = {
+                    "data": {
+                        "summary": message.splitlines()[0][:80] if message else "No summary",
+                        "details": message
+                    },
+                    "source_identifier": "aicodeprep-gui"
+                }
+                headers = {"Content-Type": "application/json"}
+                if user_uuid:
+                    headers["X-Client-ID"] = user_uuid
+                resp = requests.post("https://wuu73.org/idea/collect/bug-report", json=payload, headers=headers, timeout=10)
+                if resp.status_code == 200:
+                    QtWidgets.QMessageBox.information(self, "Thank you", "Your feedback/complaint was submitted successfully.")
+                else:
+                    QtWidgets.QMessageBox.critical(self, "Error", f"Submission failed: {resp.status_code} {resp.text}")
+            else:
+                # Only email provided
+                resp = requests.post("https://wuu73.org/idea/collect/submit", json={"email": email}, timeout=10)
+                if resp.status_code == 200:
+                    QtWidgets.QMessageBox.information(self, "Thank you", "Your email was submitted successfully.")
+                else:
+                    QtWidgets.QMessageBox.critical(self, "Error", f"Submission failed: {resp.status_code} {resp.text}")
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"Could not submit feedback: {e}")
 
     def open_about_dialog(self):
         """Show About dialog with version, install age, and links."""
