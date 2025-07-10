@@ -15,7 +15,8 @@ splitter_state=AAAA/wAAAAEAAAACAAABoQAAAKoB/////wEAAAACAA==
 [files]
 pyproject.toml
 README.md
-SUSTAINABLE-LICENSE
+AICodePrep.workflow\Contents\document.wflow
+AICodePrep.workflow\Contents\Info.plist
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui.py

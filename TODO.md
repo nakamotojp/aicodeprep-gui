@@ -27,6 +27,9 @@ twine upload --repository testpypi dist/\*
 python -m build
 twine upload dist/\*
 ---------0
+Mac finder menu issue
+test user config files, write documentation for it.
+create docs website
 
 help diagrams:
 'is Cline, Roo Code acting dumb? yes --> if yes, type aicp + enter in the VS Code terminal to open the app.

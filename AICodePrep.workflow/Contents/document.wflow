@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>AMApplicationBuild</key>
-	<string>526</string>
+	<string>528</string>
 	<key>AMApplicationVersion</key>
 	<string>2.10</string>
 	<key>AMDocumentVersion</key>
@@ -73,7 +73,7 @@ FOLDER_PATH="$1"
 osascript &lt;&lt;EOD
 tell application "Terminal"
   activate
-  do script "'/Applications/AICodePrepGUI.app/Contents/MacOS/main' '$FOLDER_PATH'"
+  do script "aicp '$FOLDER_PATH'"
 end tell
 EOD</string>
 					<key>CheckedForUserDefaultShell</key>
