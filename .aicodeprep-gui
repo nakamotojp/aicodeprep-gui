@@ -8,13 +8,11 @@
 version=1.0
 
 [window]
-width=574
-height=1067
-splitter_state=AAAA/wAAAAEAAAACAAABhwAAAIsB/////wEAAAACAA==
+width=596
+height=1127
+splitter_state=AAAA/wAAAAEAAAACAAABoQAAAKoB/////wEAAAACAA==
 
 [files]
-CHANGELOG.md
-PRIVACY.md
 pyproject.toml
 README.md
 SUSTAINABLE-LICENSE

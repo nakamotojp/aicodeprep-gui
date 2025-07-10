@@ -1,13 +1,17 @@
 # aicodeprep-gui: The fast context maker
 
-**Effortlessly prepare and share project code with any AI model, on any OS, from any editor.**
+**Context Engineering basically.. but made effortless! prepare and share project code with any AI model, on any OS, from any editor.**
 
 [![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep-gui.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep-gui/stargazers)
 [![PyPI version](https://badge.fury.io/py/aicodeprep-gui.svg)](https://badge.fury.io/py/aicodeprep-gui)
 
 Manually copying and pasting files into AI chatbots is slow, error-prone, and kills your workflow. `aicodeprep-gui` solves this with a sleek, powerful, and blazing-fast desktop application that makes preparing code context a one-click process.
 
-It is **platform-independent** (Windows, macOS, Linux) and **IDE-independent**. Use it alongside VS Code, Cursor, Windsurf, or any other editor. It doesn't replace your agent; it superpowers your prompts by giving you perfect, user-curated context every time.
+It is **platform-independent** (Windows, macOS, Linux) and **IDE-independent**. Use it alongside VS Code, Cursor, Windsurf, or any other editor. It doesn't replace your agentic workflow; it works along side it, user-curated context every time.
+
+AI models get 'dumbed down' the more irrelevant text that gets sent with your prompt - like when you are trying to fix a bug, agents (like Cursor, Cline, etc) will send huge giant pages of text about MCP servers, how to edit files etc all of that is not related to your bug. When you use the web chat interfaces, it is clean without any tools, no MCP stuff etc and it can 100% focus on your task.
+
+This tool allows you to go from project ---> web chat very fast. It is designed to remove that friction. All the features are to save time and save you from having to do repetitive things.
 
 ![Screenshot](scrs/n1.png)
 
