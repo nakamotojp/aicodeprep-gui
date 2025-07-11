@@ -2,6 +2,20 @@
 
 ---
 
+## [1.0.6] - 2025-10-01
+
+### 🐛 Fixed
+
+- **macOS Finder Integration**: Updated Quick Action installation method to extract the workflow ZIP to the Desktop for manual installation, resolving permission and compatibility issues.
+- **Update Checker**: Improved thread cleanup and signal handling to prevent rare crashes during background checks.
+- **GUI Stability**: Fixed minor issues with resource path handling in themes, telemetry pings, and menu item rendering.
+- **Installer Scripts**: Enhanced error handling and logging in macOS/Windows/Linux installers for better user feedback.
+- **General Bug Fixes**: Addressed various edge cases in file processing, prompt saving, and cross-platform compatibility.
+
+### 🔄 Changed
+
+- **Version Bump**: Internal version updated to 1.0.6 with minor optimizations for faster startup and reduced memory usage.
+
 ## [1.0.3] - 2025-06-22
 
 ### ✨ New Features

@@ -13,10 +13,12 @@ height=1127
 splitter_state=AAAA/wAAAAEAAAACAAABoQAAAKoB/////wEAAAACAA==
 
 [files]
+CHANGELOG.md
+INSTALLER_Linux.sh
+INSTALLER_MacOS.sh
+INSTALLER_Windows.bat
 pyproject.toml
 README.md
-AICodePrep.workflow\Contents\document.wflow
-AICodePrep.workflow\Contents\Info.plist
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui.py
@@ -27,5 +29,6 @@ aicodeprep_gui\smart_logic.py
 aicodeprep_gui\update_checker.py
 aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
+aicodeprep_gui\data\AICodePrep.workflow.zip
 aicodeprep_gui\data\default_config.toml
 aicodeprep_gui\images\__init__.py
