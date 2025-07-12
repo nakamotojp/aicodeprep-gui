@@ -10,7 +10,7 @@ For the easiest installation, please use the included installer scripts. For adv
 
 ### Easiest Method (Recommended)
 
-1.  **Install Python:** Double-click the included Python installer file (e.g., `python-3.11.4-amd64.exe`).
+1.  **Install Python:** Double-click the included Python installer file (e.g., `python-3.13.5-amd64.exe`).
     - **IMPORTANT:** In the first screen of the Python installer, make sure to check the box at the bottom that says **"Add python.exe to PATH"**.
     - Follow the on-screen instructions to complete the installation.
 2.  **Install the App:** Once Python is installed, simply double-click the `INSTALLER_Windows.bat` script. A command window will open, show the installation progress, and close when finished.

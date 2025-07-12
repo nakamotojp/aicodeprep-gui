@@ -30,6 +30,8 @@ The core philosophy is simple: **You know your code best.** Instead of letting a
 
 4.  **Generate & Paste**: Click "GENERATE CONTEXT!". The entire code bundle and your prompt are **instantly copied to your clipboard**, ready to be pasted into ChatGPT, Gemini, Claude, Openrouter, or any other AI model.
 
+![Screenshot](scrs/flowbig.png)
+
 5.  **Smarter AI responses and abilities**: Whenever you rely on IDE extensions or agentic IDEs to do everything, they feed too much crap into the AI which always seems to reduce its intelligence. You end up needing to use Claude for everything even minor bugs, which gets expensive. With this tool, you can use the web chat interfaces for the hard/difficult stuff, bug fixing, planning, and then paste the result back into the agent set to use a cheap unlimited model, to make the actual file changes.
 
 ## ✨ Key Features
