@@ -1,4 +1,15 @@
-can you analyze the code, the changelog, and then update it for 1.0.6? i forgot to keep track, but a lot of it was minor bug fixes, fixed mac finder menu method etc
+i want to add a new feature, where users can vote in the app for possible future new features. It can let the user click on a range from Nah doesn't interest me to like it, very good idea, LOVE THIS IDEA on any of the ideas and it will turn the box green after clicking. They can vote on several things. When they click "Vote!" it will use the existing code that can send a message to just send a message to the api, the message can just say what they voted for or against.
+
+For now let them vote on these - Idea 1: Optional preview pane to see files.
+2: Ability to add more folders to the same context block from anywhere 
+3: drag and drop more files/folders onto app to add.
+4: partial context or skeleton context optional 'half checkmarked' files - which means the path/to/fileName.xyz is listed just not the full contents. This could be a gradient from nothing to full file, like just function/class names in the file, just to give a little context but not full. So the AI knows its there.
+5: MCP Server ability to paste directly into the browser chat's automatically and make it emulate an API
+6: A 3 or 4 AIs super problem solver function that automatically sends the context + prompt to several APIs, automatic compare outputs with another AI. This could be a button for extra hard problem solving. 
+
+I want a counter to count how many times the user has opened the app, and after 5 times it will show the vote screen on exit (either by quitting or generating context) (green text 'Vote Screen!"  with the different ideas and ability to click on the range for each one. They don't need to vote for all of them, and there is a skip button.
+
+Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste.
 
 aicodeprep_gui\data\default_config.toml:
 <code>
@@ -536,6 +547,7 @@ import sys
 import platform
 import logging
 import uuid
+import json
 from datetime import datetime, date
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from aicodeprep_gui import __version__
@@ -803,12 +815,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Get or create anonymous user UUID
         settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
-        user_uuid = settings.value("user_uuid")
-        if not user_uuid:
+        self.user_uuid = settings.value("user_uuid")
+        if not self.user_uuid:
             import uuid
-            user_uuid = str(uuid.uuid4())
-            settings.setValue("user_uuid", user_uuid)
-            logging.info(f"Generated new anonymous user UUID: {user_uuid}")
+            self.user_uuid = str(uuid.uuid4())
+            settings.setValue("user_uuid", self.user_uuid)
+            logging.info(f"Generated new anonymous user UUID: {self.user_uuid}")
+
+        # Send metrics "open" event
+        self._send_metric_event("open")
 
         # --- Store install date if first run ---
         install_date_str = settings.value("install_date")
@@ -823,7 +838,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.network_manager = QtNetwork.QNetworkAccessManager(self)
         now = datetime.now()
         time_str = f"{now.strftime('%I').lstrip('0') or '12'}{now.strftime('%M')}{now.strftime('%p').lower()}"
-        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={user_uuid}"))
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={self.user_uuid}"))
         self.network_manager.get(request)
 
         # --- Schedule update checker (non-blocking, after telemetry) ---
@@ -1140,11 +1155,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # --- New Help / About menu ---
         help_menu = mb.addMenu("&Help")
+
+        links_act = QtGui.QAction("Help / Links and Guides", self)
+        links_act.triggered.connect(self.open_links_dialog)
+        help_menu.addAction(links_act)
+        help_menu.addSeparator()
+
         about_act = QtGui.QAction("&About", self)
         about_act.triggered.connect(self.open_about_dialog)
         help_menu.addAction(about_act)
-        # Add Complain/Feedback menu item
-        complain_act = QtGui.QAction("Send Feedback / Complain...", self)
+        
+        complain_act = QtGui.QAction("Send Ideas, bugs, thoughts!", self)
         complain_act.triggered.connect(self.open_complain_dialog)
         help_menu.addAction(complain_act)
 
@@ -1729,6 +1750,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         return selected
 
     def process_selected(self):
+        self._send_metric_event("generate_start", token_count=self.total_tokens)
         self.action = 'process'
         selected_files = self.get_selected_files()
         chosen_fmt = self.format_combo.currentData()
@@ -1855,7 +1877,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         
         if self.remember_checkbox and self.remember_checkbox.isChecked():
             self.save_prefs() # Save prefs only if 'remember' is checked
-        if self.action != 'process': self.action = 'quit'
+        if self.action != 'process': 
+            self.action = 'quit'
+            self._send_metric_event("quit")
         super(FileSelectionGUI, self).closeEvent(event)
 
     def load_prefs_if_exists(self):
@@ -2044,6 +2068,46 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             QtCore.QTimer.singleShot(0, self._start_update_check)
             self.initial_show_event = False
 
+    def open_links_dialog(self):
+        """Shows a dialog with helpful links."""
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle("Help / Links and Guides")
+        dialog.setMinimumWidth(450)
+        
+        layout = QtWidgets.QVBoxLayout(dialog)
+        
+        title_label = QtWidgets.QLabel("Helpful Links & Guides")
+        title_font = QtGui.QFont()
+        title_font.setBold(True)
+        title_font.setPointSize(self.default_font.pointSize() + 2)
+        title_label.setFont(title_font)
+        layout.addWidget(title_label)
+        
+        layout.addSpacing(10)
+
+        links_group = QtWidgets.QGroupBox("Click a link to open in your browser")
+        links_layout = QtWidgets.QVBoxLayout(links_group)
+
+        link1 = QtWidgets.QLabel('<a href="https://wuu73.org/blog/aiguide1.html">AI Coding on a Budget</a>')
+        link1.setOpenExternalLinks(True)
+        links_layout.addWidget(link1)
+
+        link2 = QtWidgets.QLabel('<a href="https://wuu73.org/aicp">App Home Page</a>')
+        link2.setOpenExternalLinks(True)
+        links_layout.addWidget(link2)
+
+        link3 = QtWidgets.QLabel('<a href="https://wuu73.org/blog/index.html">Quick Links to many AI web chats</a>')
+        link3.setOpenExternalLinks(True)
+        links_layout.addWidget(link3)
+        
+        layout.addWidget(links_group)
+
+        button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
+        button_box.accepted.connect(dialog.accept)
+        layout.addWidget(button_box)
+        
+        dialog.exec()
+
     def open_complain_dialog(self):
         """Open the feedback/complain dialog."""
         import requests
@@ -2051,7 +2115,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         class FeedbackDialog(QtWidgets.QDialog):
             def __init__(self, parent=None):
                 super().__init__(parent)
-                self.setWindowTitle("Send Feedback / Complain")
+                self.setWindowTitle("Send Ideas, bugs, thoughts!")
                 self.setMinimumWidth(400)
                 layout = QtWidgets.QVBoxLayout(self)
 
@@ -2060,9 +2124,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.email_input.setPlaceholderText("you@example.com")
                 layout.addWidget(self.email_input)
 
-                layout.addWidget(QtWidgets.QLabel("Message / Complaint:"))
+                layout.addWidget(QtWidgets.QLabel("Message:"))
                 self.msg_input = QtWidgets.QPlainTextEdit()
-                self.msg_input.setPlaceholderText("Describe your feedback, bug, or complaint here...")
+                self.msg_input.setPlaceholderText("Describe your idea, bug, or thought here...")
                 layout.addWidget(self.msg_input)
 
                 self.status_label = QtWidgets.QLabel("")
@@ -2157,6 +2221,34 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         dlg.setText(html)
         dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         dlg.exec()
+
+    def _send_metric_event(self, event_type: str, token_count: int = None):
+        """Sends an application event to the metrics endpoint in a non-blocking way."""
+        try:
+            if not hasattr(self, 'user_uuid') or not self.user_uuid:
+                logging.warning("Metrics: user_uuid not found, skipping event.")
+                return
+
+            endpoint_url = "https://wuu73.org/idea/aicp-metrics/event"
+            request = QtNetwork.QNetworkRequest(QtCore.QUrl(endpoint_url))
+            request.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, "application/json")
+
+            payload = {
+                "user_id": self.user_uuid,
+                "event_type": event_type,
+                "local_time": datetime.now().isoformat()
+            }
+            if token_count is not None:
+                payload["token_count"] = token_count
+
+            json_data = QtCore.QByteArray(json.dumps(payload).encode('utf-8'))
+
+            # Use the existing network manager to send a fire-and-forget request
+            self.network_manager.post(request, json_data)
+            logging.info(f"Sent metric event: {event_type}")
+
+        except Exception as e:
+            logging.error(f"Error creating metric request for event '{event_type}': {e}")
 
 def show_file_selection_gui(files, force_update=False):
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
@@ -2510,7 +2602,7 @@ def main():
 
     # Set Windows AppUserModelID for proper taskbar icon
     if platform.system() == "Windows":
-        myappid = 'wuu73.aicodeprep-gui.1.0.6'  # arbitrary unique string
+        myappid = 'wuu73.aicodeprep-gui.1.0.7'  # arbitrary unique string
         try:
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except AttributeError:
@@ -3094,642 +3186,8 @@ def restart_explorer():
 aicodeprep_gui\__init__.py:
 <code>
 # Package initialization
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
-</code>
-
-CHANGELOG.md:
-<code>
-# 📦 Changelog
-
----
-
-## [1.0.3] - 2025-06-22
-
-### ✨ New Features
-
-- **Native OS Context Menu Installers:**
-  - Added a `File` menu option to easily install a right-click context menu for your operating system's file manager.
-  - **Windows:** "Install Right-Click Menu" dialog with options for custom menu text and enabling/disabling the classic (full) context menu for Windows 11.
-  - **macOS:** "Install Finder Quick Action" to add an "Open with aicodeprep-gui" action to Finder.
-  - **Linux:** "Install File Manager Action" for automated installation of a Nautilus (GNOME/Cinnamon) script, with manual instructions for other file managers.
-- **Automatic Update Checker:**
-  - The application now non-intrusively checks for new versions on PyPI upon startup.
-  - If an update is available, a dialog will appear offering a one-click upgrade option.
-- **"About" Dialog:**
-  - Added a new "Help" -> "About" menu that displays the current version, update status, and how long the app has been installed.
-
-### 🔄 Changed
-
-- **Improved Documentation:**
-  - Complete overhaul of `README.md` with a more professional tone, clearer installation instructions (recommending `pipx`), and better feature descriptions.
-- **Windows Integration:**
-  - The application now sets a Windows AppUserModelID for a proper, consistent taskbar icon.
-
-### 🛠️ Technical Improvements
-
-- **New Dependencies:** Added `requests` and `packaging` to support the new update checker.
-- **New Modules:** Added `windows_registry.py`, `macos_installer.py`, `linux_installer.py`, and `update_checker.py` to modularize the new installer and update-checking logic.
-- **Anonymous Telemetry:** A basic, one-way anonymous ping is sent on startup to help estimate the number of active users. This sends no personal data or code. See `PRIVACY.md` for details.
-
-## [1.0.0] - 2025-06-20
-
-### 🎉 Major Release - Production Ready
-
-#### ✨ New Features
-
-- **Enhanced Global Preset System:**
-
-  - Global preset management using QSettings for cross-project persistence
-  - Default presets: "Debug", "Security check", "Best Practices", "Please review for"
-  - New ✚ and 🗑️ buttons for easy preset creation and deletion
-  - Presets automatically available across all project folders
-  - Improved preset UI with scrollable horizontal layout
-
-- **Improved File Tree Experience:**
-
-  - Enhanced tree building logic with better performance
-  - Smart auto-expansion of folders containing checked files
-  - Better visual feedback with hover effects on checkboxes
-  - Cleaner, more intuitive folder navigation
-  - Improved checkbox styling using permanent image files
-
-- **Enhanced Output Options:**
-
-  - Choose between XML `<code>` tags or Markdown `###` formatting via dropdown
-  - Optional prompt/question text appended to output
-  - Intelligent file processing with better error handling
-  - Support for custom prompts with preset integration
-
-- **Robust Configuration System:**
-  - Mature TOML configuration with comprehensive default settings
-  - User overrides via `aicodeprep-gui.toml` in project directories
-  - `.gitignore`-style pattern matching using pathspec library
-  - Extensive default exclusion patterns for common build artifacts
-
-#### 🔄 Changed
-
-- **Performance Improvements:**
-
-  - Optimized file tree population with lazy loading
-  - Faster initial startup times
-  - Reduced memory usage during file scanning
-  - More responsive UI interactions
-
-- **User Experience Enhancements:**
-
-  - Improved menu bar with File and Edit menus
-  - Better error messages and descriptive logging
-  - Enhanced drag-and-drop folder support
-  - Cleaner visual design with better spacing and fonts
-
-- **File Handling:**
-  - Better binary file detection and exclusion
-  - Improved relative path handling
-  - Enhanced file size limits and validation
-  - More robust error handling for file operations
-
-#### 🛠️ Technical Improvements
-
-- **Code Architecture:**
-
-  - Comprehensive refactoring for maintainability
-  - Better separation of concerns between modules
-  - Improved error handling throughout the application
-  - Enhanced logging with descriptive error messages
-
-- **Dependencies:**
-  - Streamlined dependency list: PySide6, toml, pathspec
-  - Removed unused dependencies for cleaner installation
-  - Better cross-platform compatibility
-
----
-
-## [0.9.8] - 2025-06-18
-
-### 🚀 Major Refactoring: TOML Configuration & Lazy Loading
-
-#### ✨ New Features
-
-- **TOML Configuration System:**
-
-  - Replaced custom Markdown configuration with industry-standard TOML format
-  - New `default_config.toml` file with comprehensive configuration options
-  - Support for user-specific configuration via `aicodeprep-gui.toml` in working directory
-  - `.gitignore`-style pattern matching using `pathspec` library for robust file exclusion
-
-- **Lazy Loading File Tree:**
-
-  - Implemented lazy loading for excluded directories (like `node_modules`, `venv`, etc.)
-  - Extremely fast initial startup by avoiding scanning large excluded directories
-  - On-demand expansion of any directory for fine-grained file selection
-  - Users can now manually expand and select specific files from previously excluded directories
-
-- **Enhanced Pattern Matching:**
-  - All file and directory exclusion now uses `.gitignore`-style patterns
-  - More powerful and standardized exclusion rules
-  - Unified inclusion/exclusion lists for better organization
-
-#### 🔄 Changed
-
-- **Dependencies:**
-
-  - Added `toml` for configuration parsing
-  - Added `pathspec` for `.gitignore`-style pattern matching
-  - Removed `tiktoken` dependency (no longer used)
-
-- **Configuration Format:**
-
-  - Migrated from `config.md` to `default_config.toml`
-  - More structured and maintainable configuration system
-  - Better support for complex exclusion patterns
-
-- **Performance Improvements:**
-  - Significantly faster startup times due to lazy loading
-  - Reduced memory usage during initial file scanning
-  - More responsive UI when working with large codebases
-
-#### 🛠️ Technical Improvements
-
-- **Code Architecture:**
-
-  - Complete rewrite of `smart_logic.py` for better performance and maintainability
-  - Improved GUI tree building logic with lazy loading support
-  - Enhanced checkbox styling using Unicode characters instead of temporary files
-  - Better error handling and descriptive error messages for debugging
-
-- **File Processing:**
-  - More efficient directory traversal with intelligent pruning
-  - Better binary file detection and handling
-  - Improved pathspec-based filtering throughout the application
-
----
-
-## [0.9.7] - 2025-04-28
-
-### ✨ New Features
-
-- **Output Format Selection:**
-
-  - Added dropdown menu to select output format for `fullcode.txt`
-  - Options: "XML <code>" (uses `<code>...</code>` tags) or "Markdown ###" (uses `### File Path` ... `### END File Path`)
-
-- **Prompt Presets:**
-
-  - Users can create, save, and quickly apply preset text snippets to the LLM prompt box
-  - Added "Edit" → "New Preset..." menu option and "✚" button for easy creation
-  - Presets saved per-folder in `.aicodeprep` preferences file
-
-- **Enhanced Configuration System:**
-
-  - Default configuration loaded from `aicodeprep_gui_c/data/config.md`
-  - User-specific overrides via `aicodeprep_config.md` file in working directory
-
-- **UI & UX Improvements:**
-
-  - Native QMainWindow menu bar ("File" → "Quit", "Edit" → "New Preset...")
-  - Binary files automatically detected, greyed out, and made unselectable
-  - Improved checkbox styling with programmatically generated checkmark images
-  - Vertical splitter state now saved and restored via `.aicodeprep` file
-  - Application style set to "Fusion" for consistent rendering
-
-- **File & Directory Handling:**
-  - Enhanced logic to skip excluded directories during initial file collection
-  - Files and folders starting with dots (e.g., `.vscode`, `.idea`) skipped by default
-  - Glob-style pattern matching for exclusions via `fnmatch`
-
-### 🔄 Changed
-
-- **Token Counting:**
-
-  - Simplified character-based approximation (`total_chars / 4`)
-  - Removed direct runtime dependency on `tiktoken` for GUI token counting
-
-- **Preferences File:**
-  - `.aicodeprep` now stores splitter state and prompt presets
-  - Enhanced preference management system
-
-### 🐛 Fixed
-
-- Binary files can no longer be accidentally selected
-- More robust directory exclusion logic
-
----
-
-## [0.9.6] - 2025-05-27
-
-### ✨ New Features
-
-- **Dark Mode Support:**
-  - Automatic theme detection based on system preferences
-  - Manual dark/light mode toggle in top-right corner
-  - Carefully designed dark theme palette for optimal readability
-
-### 🔄 Changed
-
-- **PySide6 Migration:**
-  - Upgraded from PyQt5 to PySide6 for improved performance
-  - Better Qt6 features and future-proofing
-  - Simplified dependencies
-
----
-
-## [0.9.5] - 2025-01-24
-
-### 🎉 Added
-
-- **macOS Support:**
-  - Native macOS app bundle
-  - Finder workflow integration for right-click Quick Actions
-  - Tested on macOS Ventura 13.4+ (M1+)
-
----
-
-## [0.5.0] - 2024-11-14
-
-### 🎉 Added
-
-- **Windows GUI Version:**
-  - Cross-platform Qt-based GUI application
-  - Right-click context menu integration for Windows Explorer
-  - Enhanced file selection with granular inclusion/exclusion
-  - DPI awareness for high-resolution displays
-
-### ✨ New Features
-
-- Interactive file selection before code preparation
-- Checkbox-based file inclusion/exclusion
-- Scalable UI with multiple theme options
-- Windows Explorer context menu integration
-
-### 🔄 Changed
-
-- Enhanced configuration options
-- Improved logging and error handling
-
----
-
-## [0.2.2] - 2024-11-02
-
-### 🛠️ Improvements
-
-- Minor tweaks and bug fixes
-- Performance optimizations
-
----
-
-## [0.2.0] - 2024-02-11
-
-### 🔧 Configuration Overhaul
-
-- Moved all hard-coded options to `default_config.yaml` file
-
-### 🎉 Added
-
-- **New Configuration Options:**
-  - `exclude_extensions` for global file type exclusion
-  - `exclude_patterns` for pattern-based exclusions (e.g., `.min.js`)
-  - `include_dirs` for explicit directory inclusion
-  - Enhanced priority system for inclusion/exclusion rules
-  - Better support for user configuration overrides
-
-### 🔄 Changed
-
-- **Improved Processing Logic:**
-  - Clear priority rules for file inclusion/exclusion:
-    1. Explicitly included files (highest priority)
-    2. Explicitly excluded files
-    3. Excluded extensions
-    4. Code extensions (lowest priority)
-  - Enhanced directory processing with priority-based logic
-  - Updated exclusion patterns based on real-world usage
-
-</code>
-
-INSTALLER_Linux.sh:
-<code>
-#!/bin/bash
-
-# ============================================================================
-# aicodeprep-gui Installer for Linux
-# ============================================================================
-# This script attempts to automate the installation of aicodeprep-gui.
-# It detects the package manager to install Python dependencies if needed,
-# then uses pipx to install the application.
-# ============================================================================
-
-# Function to print and log messages
-LOG_FILE="install_log_linux.txt"
-log() {
-    echo -e "$1" | tee -a "$LOG_FILE"
-}
-
-# Ensure the log file is clean on new run
-> "$LOG_FILE"
-
-log "--- Starting aicodeprep-gui Installer for Linux ---"
-log "--- $(date) ---"
-log ""
-
-# Stop script on any error
-set -e
-
-# --- Step 1: Detect Package Manager and Install Dependencies ---
-log "Step 1: Checking for dependencies (python3, python3-pip)..."
-
-if ! command -v python3 &> /dev/null || ! python3 -m pip --version &> /dev/null; then
-    log "Python3 or pip is missing. Attempting to install them."
-    log "This will require administrative privileges (sudo) and will ask for your password."
-
-    if command -v apt-get &> /dev/null; then
-        log "Detected Debian/Ubuntu based system (apt)."
-        sudo apt-get update
-        sudo apt-get install -y python3 python3-pip
-    elif command -v dnf &> /dev/null; then
-        log "Detected Fedora/CentOS based system (dnf)."
-        sudo dnf install -y python3 python3-pip
-    elif command -v pacman &> /dev/null; then
-        log "Detected Arch based system (pacman)."
-        sudo pacman -Syu --noconfirm python python-pip
-    elif command -v zypper &> /dev/null; then
-        log "Detected OpenSUSE based system (zypper)."
-        sudo zypper install -y python3 python3-pip
-    else
-        log "\nERROR: Could not detect a supported package manager (apt, dnf, pacman, zypper)."
-        log "Please install 'python3' and 'python3-pip' manually using your system's package manager, then run this script again."
-        exit 1
-    fi
-    log "Dependencies should now be installed."
-else
-    log "Dependencies (python3 and pip) are already installed."
-fi
-log ""
-
-# --- Step 2: Install/Upgrade Pipx ---
-log "Step 2: Installing/upgrading pipx..."
-log "pipx is a tool to install Python applications in isolated environments."
-python3 -m pip install --user --upgrade pipx
-log "pipx installed successfully."
-log ""
-
-# --- Step 3: Add Pipx to PATH ---
-log "Step 3: Ensuring pipx is in your system's PATH..."
-# Note: pipx ensurepath returns a non-zero exit code if paths are already present,
-# which would stop the script if `set -e` is active. So we run it carefully.
-set +e
-python3 -m pipx ensurepath
-set -e
-log "pipx paths are configured. The output above gives details."
-log "You might need to add the indicated directory to your ~/.bashrc or ~/.zshrc file if it's not already there."
-log ""
-
-
-# --- Step 4: Install aicodeprep-gui ---
-log "Step 4: Installing aicodeprep-gui..."
-log "This may take a minute or two..."
-# The PATH might not be updated in this current session, so we call pipx via python
-python3 -m pipx install aicodeprep-gui
-
-log ""
-log "============================================================================"
-log "  SUCCESS! aicodeprep-gui has been installed."
-log "============================================================================"
-log ""
-log "  \e[1m\e[31mIMPORTANT:\e[0m You MUST close this Terminal window and open a NEW one"
-log "  for the changes to take effect."
-log ""
-log "  After opening a new terminal, you can run the app from any"
-log "  folder by typing:"
-log "  \e[1maicp\e[0m"
-log ""
-log "============================================================================"
-log "Installation script finished."
-
-# Unset error checking
-set +e
-exit 0
-</code>
-
-INSTALLER_MacOS.sh:
-<code>
-#!/bin/bash
-
-# ============================================================================
-# aicodeprep-gui Installer for macOS
-# ============================================================================
-# This script automates the installation of aicodeprep-gui using Homebrew
-# and pipx, which is the most robust method for macOS.
-# ============================================================================
-
-# Function to print and log messages
-LOG_FILE="install_log_macos.txt"
-log() {
-    echo "$1" | tee -a "$LOG_FILE"
-}
-
-# Ensure the log file is clean on new run
-> "$LOG_FILE"
-
-log "--- Starting aicodeprep-gui Installer for macOS ---"
-log "--- $(date) ---"
-log ""
-
-# Stop script on any error
-set -e
-
-# --- Step 1: Check for Homebrew ---
-log "Step 1: Checking for Homebrew..."
-if ! command -v brew &> /dev/null; then
-    log "ERROR: Homebrew is not installed. Homebrew is the recommended package manager for macOS and is required by this script."
-    log ""
-    log "To install Homebrew, open a new Terminal window and run this command:"
-    log '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
-    log ""
-    log "After Homebrew is installed, please run this script again."
-    exit 1
-fi
-log "Homebrew is installed."
-log ""
-
-# --- Step 2: Install/Upgrade Pipx using Homebrew ---
-log "Step 2: Installing/upgrading pipx via Homebrew..."
-log "pipx is a tool to install Python applications in isolated environments."
-log "This may take a moment and might ask for your password..."
-brew install pipx
-log "pipx installed successfully."
-log ""
-
-# --- Step 3: Add Pipx to PATH ---
-log "Step 3: Ensuring pipx is in your system's PATH..."
-pipx ensurepath
-log "pipx paths are configured. The output above gives details."
-log ""
-
-# --- Step 4: Install aicodeprep-gui ---
-log "Step 4: Installing aicodeprep-gui..."
-log "This may take a minute or two..."
-pipx install aicodeprep-gui
-
-log ""
-log "============================================================================"
-log "  SUCCESS! aicodeprep-gui has been installed."
-log "============================================================================"
-log ""
-log "  IMPORTANT: You MUST close this Terminal window and open a NEW one"
-log "  for the changes to take effect."
-log ""
-log "  After opening a new terminal, you can run the app from any"
-log "  folder by typing:"
-log "  aicp"
-log ""
-log "============================================================================"
-log "Installation script finished."
-
-# Unset error checking to prevent exit on non-zero from here
-set +e
-exit 0
-</code>
-
-INSTALLER_Windows.bat:
-<code>
-
----
-**New File: `scripts/install-windows.bat`**
-```bat
-@echo off
-setlocal
-
-:: ============================================================================
-:: aicodeprep-gui Installer for Windows
-:: ============================================================================
-:: This script automates the installation of aicodeprep-gui using pipx.
-:: It checks for Python, installs pipx, and then installs the application.
-:: It will create a log file in this directory.
-:: ============================================================================
-
-set "LOGFILE=install_log_windows.txt"
-echo. > %LOGFILE%
-
-call :log "--- Starting aicodeprep-gui Installer for Windows ---"
-call :log "--- %date% %time% ---"
-call :log ""
-
-:: --- Step 1: Find Python ---
-call :log "Step 1: Checking for Python..."
-set "PYTHON_CMD="
-
-:: Check for 'py' launcher first (modern standard)
-py --version >nul 2>&1
-if %errorlevel% equ 0 (
-    set "PYTHON_CMD=py"
-    call :log "Found Python via the 'py' launcher."
-) else (
-    :: Fallback to 'python'
-    python --version >nul 2>&1
-    if %errorlevel% equ 0 (
-        set "PYTHON_CMD=python"
-        call :log "Found Python via the 'python' command."
-    ) else (
-        :: Fallback to 'python3'
-        python3 --version >nul 2>&1
-        if %errorlevel% equ 0 (
-            set "PYTHON_CMD=python3"
-            call :log "Found Python via the 'python3' command."
-        )
-    )
-)
-
-if not defined PYTHON_CMD (
-    call :log "ERROR: Python is not installed or not found in your system's PATH."
-    call :log "Please install the latest stable version of Python from:"
-    call :log "https://www.python.org/downloads/windows/"
-    call :log ""
-    call :log "IMPORTANT: During installation, make sure to check the box that says"
-    call :log "'Add Python to PATH'."
-    goto :end_script
-)
-
-call :log "Python found! Using '%PYTHON_CMD%' for commands."
-call :log ""
-
-:: --- Step 2: Ensure Pip is available ---
-call :log "Step 2: Checking for Pip..."
-%PYTHON_CMD% -m pip --version >nul 2>&1
-if %errorlevel% neq 0 (
-    call :log "ERROR: Pip (Python's package installer) is not available."
-    call :log "This is unusual. Your Python installation might be corrupted."
-    call :log "Please try reinstalling Python from python.org."
-    goto :end_script
-)
-call :log "Pip is available."
-call :log ""
-
-:: --- Step 3: Install/Upgrade Pipx ---
-call :log "Step 3: Installing/upgrading pipx..."
-call :log "pipx is a tool to install Python applications in isolated environments."
-call :log "This is the recommended way to install tools like aicodeprep-gui."
-
-%PYTHON_CMD% -m pip install --user --upgrade pipx >> %LOGFILE% 2>&1
-if %errorlevel% neq 0 (
-    call :log "ERROR: Failed to install pipx. Please check the log file for details:"
-    call :log "%LOGFILE%"
-    goto :end_script
-)
-call :log "pipx installed successfully."
-call :log ""
-
-:: --- Step 4: Add Pipx to PATH ---
-call :log "Step 4: Ensuring pipx is in your system's PATH..."
-%PYTHON_CMD% -m pipx ensurepath >> %LOGFILE% 2>&1
-if %errorlevel% neq 0 (
-    call :log "WARNING: 'pipx ensurepath' command failed. This might be okay."
-    call :log "We will proceed, but if the 'aicp' command doesn't work later,"
-    call :log "you may need to add the scripts path to your PATH environment variable manually."
-) else (
-    call :log "pipx paths are configured."
-)
-call :log ""
-
-:: --- Step 5: Install aicodeprep-gui ---
-call :log "Step 5: Installing aicodeprep-gui..."
-call :log "This may take a minute or two..."
-pipx install aicodeprep-gui >> %LOGFILE% 2>&1
-if %errorlevel% neq 0 (
-    call :log "ERROR: Failed to install aicodeprep-gui with pipx."
-    call :log "Trying to upgrade it in case it's an old version..."
-    pipx upgrade aicodeprep-gui >> %LOGFILE% 2>&1
-    if %errorlevel% neq 0 (
-      call :log "ERROR: Upgrade also failed. Please check the log file for details:"
-      call :log "%LOGFILE%"
-      goto :end_script
-    )
-)
-
-call :log ""
-call :log "============================================================================"
-call :log "  SUCCESS! aicodeprep-gui has been installed."
-call :log "============================================================================"
-call :log ""
-call :log "  IMPORTANT: You MUST close this window and open a NEW Command"
-call :log "  Prompt, PowerShell, or Terminal window for the changes to take effect."
-call :log ""
-call :log "  After opening a new terminal, you can run the app from any"
-call :log "  folder by typing:"
-call :log "  aicp"
-call :log ""
-call :log "============================================================================"
-goto :end_script
-
-:log
-echo %~1
-echo %~1 >> %LOGFILE%
-exit /b
-
-:end_script
-call :log ""
-call :log "Installation script finished. Press any key to close this window."
-pause >nul
-exit /b
 </code>
 
 pyproject.toml:
@@ -3741,7 +3199,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # CRITICAL: Changed name to match your new package name
 name = "aicodeprep-gui" 
-version = "1.0.6"
+version = "1.0.7"
 description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "tom@wuu73.org" }]
@@ -3784,7 +3242,7 @@ where = ["."]
 
 [tool.setuptools.package-data]
 # CRITICAL: Changed key to match your actual package name `aicodeprep_gui`
-aicodeprep_gui = ["data/default_config.toml", "images/*.png", "images/*.ico"]
+aicodeprep_gui = ["data/default_config.toml", "images/*.png", "images/*.ico", "data/AICodePrep.workflow.zip"]
 
 # SUGGESTION: Create optional dependencies for developers/builders
 [project.optional-dependencies]
@@ -3830,6 +3288,8 @@ The core philosophy is simple: **You know your code best.** Instead of letting a
 3.  **Fine-tune & Prompt**: Quickly check/uncheck files, use powerful **prompt presets** (like one for [Cline](https://github.com/stitionai/cline)), or write a custom question.
 
 4.  **Generate & Paste**: Click "GENERATE CONTEXT!". The entire code bundle and your prompt are **instantly copied to your clipboard**, ready to be pasted into ChatGPT, Gemini, Claude, Openrouter, or any other AI model.
+
+![Screenshot](scrs/flowbig.png)
 
 5.  **Smarter AI responses and abilities**: Whenever you rely on IDE extensions or agentic IDEs to do everything, they feed too much crap into the AI which always seems to reduce its intelligence. You end up needing to use Claude for everything even minor bugs, which gets expensive. With this tool, you can use the web chat interfaces for the hard/difficult stuff, bug fixing, planning, and then paste the result back into the agent set to use a cheap unlimited model, to make the actual file changes.
 
@@ -4046,7 +3506,16 @@ This software uses a Sustainable License:
 </code>
 
 
-aicodeprep_gui\data\AICodePrep.workflow.zip binary file skipped..
 
+i want to add a new feature, where users can vote in the app for possible future new features. It can let the user click on a range from Nah doesn't interest me to like it, very good idea, LOVE THIS IDEA on any of the ideas and it will turn the box green after clicking. They can vote on several things. When they click "Vote!" it will use the existing code that can send a message to just send a message to the api, the message can just say what they voted for or against.
 
-can you analyze the code, the changelog, and then update it for 1.0.6? i forgot to keep track, but a lot of it was minor bug fixes, fixed mac finder menu method etc
+For now let them vote on these - Idea 1: Optional preview pane to see files.
+2: Ability to add more folders to the same context block from anywhere 
+3: drag and drop more files/folders onto app to add.
+4: partial context or skeleton context optional 'half checkmarked' files - which means the path/to/fileName.xyz is listed just not the full contents. This could be a gradient from nothing to full file, like just function/class names in the file, just to give a little context but not full. So the AI knows its there.
+5: MCP Server ability to paste directly into the browser chat's automatically and make it emulate an API
+6: A 3 or 4 AIs super problem solver function that automatically sends the context + prompt to several APIs, automatic compare outputs with another AI. This could be a button for extra hard problem solving. 
+
+I want a counter to count how many times the user has opened the app, and after 5 times it will show the vote screen on exit (either by quitting or generating context) (green text 'Vote Screen!"  with the different ideas and ability to click on the range for each one. They don't need to vote for all of them, and there is a skip button.
+
+Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste.

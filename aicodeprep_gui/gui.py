@@ -3,6 +3,7 @@ import sys
 import platform
 import logging
 import uuid
+import json
 from datetime import datetime, date
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from aicodeprep_gui import __version__
@@ -270,12 +271,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Get or create anonymous user UUID
         settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
-        user_uuid = settings.value("user_uuid")
-        if not user_uuid:
+        self.user_uuid = settings.value("user_uuid")
+        if not self.user_uuid:
             import uuid
-            user_uuid = str(uuid.uuid4())
-            settings.setValue("user_uuid", user_uuid)
-            logging.info(f"Generated new anonymous user UUID: {user_uuid}")
+            self.user_uuid = str(uuid.uuid4())
+            settings.setValue("user_uuid", self.user_uuid)
+            logging.info(f"Generated new anonymous user UUID: {self.user_uuid}")
+
+        # Send metrics "open" event
+        self._send_metric_event("open")
 
         # --- Store install date if first run ---
         install_date_str = settings.value("install_date")
@@ -290,7 +294,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.network_manager = QtNetwork.QNetworkAccessManager(self)
         now = datetime.now()
         time_str = f"{now.strftime('%I').lstrip('0') or '12'}{now.strftime('%M')}{now.strftime('%p').lower()}"
-        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={user_uuid}"))
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={self.user_uuid}"))
         self.network_manager.get(request)
 
         # --- Schedule update checker (non-blocking, after telemetry) ---
@@ -607,11 +611,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # --- New Help / About menu ---
         help_menu = mb.addMenu("&Help")
+
+        links_act = QtGui.QAction("Help / Links and Guides", self)
+        links_act.triggered.connect(self.open_links_dialog)
+        help_menu.addAction(links_act)
+        help_menu.addSeparator()
+
         about_act = QtGui.QAction("&About", self)
         about_act.triggered.connect(self.open_about_dialog)
         help_menu.addAction(about_act)
-        # Add Complain/Feedback menu item
-        complain_act = QtGui.QAction("Send Feedback / Complain...", self)
+        
+        complain_act = QtGui.QAction("Send Ideas, bugs, thoughts!", self)
         complain_act.triggered.connect(self.open_complain_dialog)
         help_menu.addAction(complain_act)
 
@@ -1196,6 +1206,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         return selected
 
     def process_selected(self):
+        self._send_metric_event("generate_start", token_count=self.total_tokens)
         self.action = 'process'
         selected_files = self.get_selected_files()
         chosen_fmt = self.format_combo.currentData()
@@ -1322,7 +1333,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         
         if self.remember_checkbox and self.remember_checkbox.isChecked():
             self.save_prefs() # Save prefs only if 'remember' is checked
-        if self.action != 'process': self.action = 'quit'
+        if self.action != 'process': 
+            self.action = 'quit'
+            self._send_metric_event("quit")
         super(FileSelectionGUI, self).closeEvent(event)
 
     def load_prefs_if_exists(self):
@@ -1511,6 +1524,46 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             QtCore.QTimer.singleShot(0, self._start_update_check)
             self.initial_show_event = False
 
+    def open_links_dialog(self):
+        """Shows a dialog with helpful links."""
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle("Help / Links and Guides")
+        dialog.setMinimumWidth(450)
+        
+        layout = QtWidgets.QVBoxLayout(dialog)
+        
+        title_label = QtWidgets.QLabel("Helpful Links & Guides")
+        title_font = QtGui.QFont()
+        title_font.setBold(True)
+        title_font.setPointSize(self.default_font.pointSize() + 2)
+        title_label.setFont(title_font)
+        layout.addWidget(title_label)
+        
+        layout.addSpacing(10)
+
+        links_group = QtWidgets.QGroupBox("Click a link to open in your browser")
+        links_layout = QtWidgets.QVBoxLayout(links_group)
+
+        link1 = QtWidgets.QLabel('<a href="https://wuu73.org/blog/aiguide1.html">AI Coding on a Budget</a>')
+        link1.setOpenExternalLinks(True)
+        links_layout.addWidget(link1)
+
+        link2 = QtWidgets.QLabel('<a href="https://wuu73.org/aicp">App Home Page</a>')
+        link2.setOpenExternalLinks(True)
+        links_layout.addWidget(link2)
+
+        link3 = QtWidgets.QLabel('<a href="https://wuu73.org/blog/index.html">Quick Links to many AI web chats</a>')
+        link3.setOpenExternalLinks(True)
+        links_layout.addWidget(link3)
+        
+        layout.addWidget(links_group)
+
+        button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
+        button_box.accepted.connect(dialog.accept)
+        layout.addWidget(button_box)
+        
+        dialog.exec()
+
     def open_complain_dialog(self):
         """Open the feedback/complain dialog."""
         import requests
@@ -1518,7 +1571,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         class FeedbackDialog(QtWidgets.QDialog):
             def __init__(self, parent=None):
                 super().__init__(parent)
-                self.setWindowTitle("Send Feedback / Complain")
+                self.setWindowTitle("Send Ideas, bugs, thoughts!")
                 self.setMinimumWidth(400)
                 layout = QtWidgets.QVBoxLayout(self)
 
@@ -1527,9 +1580,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.email_input.setPlaceholderText("you@example.com")
                 layout.addWidget(self.email_input)
 
-                layout.addWidget(QtWidgets.QLabel("Message / Complaint:"))
+                layout.addWidget(QtWidgets.QLabel("Message:"))
                 self.msg_input = QtWidgets.QPlainTextEdit()
-                self.msg_input.setPlaceholderText("Describe your feedback, bug, or complaint here...")
+                self.msg_input.setPlaceholderText("Describe your idea, bug, or thought here...")
                 layout.addWidget(self.msg_input)
 
                 self.status_label = QtWidgets.QLabel("")
@@ -1624,6 +1677,34 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         dlg.setText(html)
         dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         dlg.exec()
+
+    def _send_metric_event(self, event_type: str, token_count: int = None):
+        """Sends an application event to the metrics endpoint in a non-blocking way."""
+        try:
+            if not hasattr(self, 'user_uuid') or not self.user_uuid:
+                logging.warning("Metrics: user_uuid not found, skipping event.")
+                return
+
+            endpoint_url = "https://wuu73.org/idea/aicp-metrics/event"
+            request = QtNetwork.QNetworkRequest(QtCore.QUrl(endpoint_url))
+            request.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, "application/json")
+
+            payload = {
+                "user_id": self.user_uuid,
+                "event_type": event_type,
+                "local_time": datetime.now().isoformat()
+            }
+            if token_count is not None:
+                payload["token_count"] = token_count
+
+            json_data = QtCore.QByteArray(json.dumps(payload).encode('utf-8'))
+
+            # Use the existing network manager to send a fire-and-forget request
+            self.network_manager.post(request, json_data)
+            logging.info(f"Sent metric event: {event_type}")
+
+        except Exception as e:
+            logging.error(f"Error creating metric request for event '{event_type}': {e}")
 
 def show_file_selection_gui(files, force_update=False):
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])

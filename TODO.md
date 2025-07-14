@@ -1,12 +1,31 @@
 -- secretlint
 
+potential bugs:
+Windows registry path quoting bug
+windows_registry.py:get_registry_command() returns
+f'"{pythonw_exe}" "{script_path}" "%V"'
+If either path contains spaces, the nested quotes are not escaped, which breaks the registry entry.
+→ Fix: use shlex.quote() or raw-string escaping.
+
+Linux Nautilus script name collision
+The generated script is always named Open with aicodeprep-gui; if the user already installed an older version, the file will be overwritten silently.
+→ Fix: append version or hash to filename, or warn before overwrite.
+Update check can block on slow network
+\_UpdateFetchWorker uses requests.get() with timeout=5, but on flaky networks the worker thread never returns if DNS stalls.
+→ Fix: set timeout=(3, 5) (connect, read) and wrap in try/except.
+
+---
+
 free:
 quick how to on how to use it, on first start and put in menu
 
 premium:
+preview window on right side option
+option to enable skeleton context, list folders/files that are not included but just the names/paths added
+for that little bit of context
 AI powered summary/compression for large codebases, context packer engine
 wuu73 api router
-gate the preset buttons, no nag screens, maybe right click menu?
+gate the preset buttons or limit to 3, no nag screens, maybe right click menu?
 offer updated information about saving money, access to free APIs for Cline/etc, access to info
 $19.99 up to 10 machines or unlimited
 future access to planned features like automatic cut/paste to all the different web chat's,
