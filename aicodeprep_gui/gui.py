@@ -870,9 +870,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.prompt_top_checkbox.stateChanged.connect(self._save_prompt_options)
         self.prompt_bottom_checkbox.stateChanged.connect(self._save_prompt_options)
 
-        # --- New Options & Settings Group ---
-        options_group_box = QtWidgets.QGroupBox("Options & Settings")
-        options_group_layout = QtWidgets.QVBoxLayout(options_group_box)
+# --- New Collapsible Options Group ---
+        # The QGroupBox is checkable, which allows it to function as an accordion.
+        options_group_box = QtWidgets.QGroupBox("Options")
+        options_group_box.setCheckable(True)
+        options_group_box.setChecked(True)  # Default to visible/expanded
+
+        # This container widget holds all the options. We show/hide this container.
+        options_container = QtWidgets.QWidget()
+
+        # The layout for the container's content.
+        options_content_layout = QtWidgets.QVBoxLayout(options_container)
+        options_content_layout.setContentsMargins(0, 5, 0, 5) # Clean inner margins
 
         # First row: Output format and Dark mode
         options_top_row = QtWidgets.QHBoxLayout()
@@ -880,12 +889,22 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         options_top_row.addWidget(self.format_combo)
         options_top_row.addStretch()
         options_top_row.addWidget(self.dark_mode_box)
-        options_group_layout.addLayout(options_top_row)
+        options_content_layout.addLayout(options_top_row)
 
-        # Add the three checkbox layouts
-        options_group_layout.addLayout(remember_layout)
-        options_group_layout.addLayout(prompt_top_layout)
-        options_group_layout.addLayout(prompt_bottom_layout)
+        # Add the three checkbox layouts (which were created just above this block)
+        options_content_layout.addLayout(remember_layout)
+        options_content_layout.addLayout(prompt_top_layout)
+        options_content_layout.addLayout(prompt_bottom_layout)
+
+        # The main layout for the QGroupBox itself. It will contain the collapsible widget.
+        group_box_main_layout = QtWidgets.QVBoxLayout(options_group_box)
+        # Margins for the groupbox, so the content doesn't touch the borders
+        group_box_main_layout.setContentsMargins(10, 5, 10, 10)
+        group_box_main_layout.addWidget(options_container)
+
+        # Connect the group box's toggled signal to the container's setVisible method.
+        # This is what makes the content expand and collapse.
+        options_group_box.toggled.connect(options_container.setVisible)
 
         main_layout.addWidget(options_group_box)
         
