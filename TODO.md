@@ -1,6 +1,19 @@
 -- secretlint
 
 potential bugs:
+
+Target directory: .
+2025-07-14 13:05:17,263 - INFO - Starting code concatenation...
+2025-07-14 13:05:17,263 - INFO - Starting initial fast scan in: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-c-lazyloadingworks - Copy
+2025-07-14 13:05:17,277 - INFO - Initial scan collected 105 items.
+2025-07-14 13:05:17,289 - ERROR - Error creating metric request for event 'open': 'FileSelectionGUI' object has no attribute 'network_manager'
+2025-07-14 13:05:17,861 - INFO - Restored splitter state from preferences
+[gui] Starting update check...
+[update_checker] Starting update check for version 1.0.7
+[update_checker] Reset prompted_this_run flag to False
+[update_checker] Starting background update check thread
+[gui] Update check thread started
+
 Windows registry path quoting bug
 windows_registry.py:get_registry_command() returns
 f'"{pythonw_exe}" "{script_path}" "%V"'
@@ -20,6 +33,7 @@ free:
 quick how to on how to use it, on first start and put in menu
 
 premium:
+Block secrets, api keys, automatically so people don't have to worry which files they include
 preview window on right side option
 option to enable skeleton context, list folders/files that are not included but just the names/paths added
 for that little bit of context

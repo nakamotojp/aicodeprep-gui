@@ -269,6 +269,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.files = files
         self.latest_pypi_version = None
 
+        # Network manager should be initialized early as it's used by multiple components
+        self.network_manager = QtNetwork.QNetworkAccessManager(self)
+
         # Get or create anonymous user UUID
         settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
         self.user_uuid = settings.value("user_uuid")
@@ -277,6 +280,16 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.user_uuid = str(uuid.uuid4())
             settings.setValue("user_uuid", self.user_uuid)
             logging.info(f"Generated new anonymous user UUID: {self.user_uuid}")
+
+        # --- Persistent app open counter ---
+        app_open_count = settings.value("app_open_count", 0, type=int)
+        try:
+            app_open_count = int(app_open_count)
+        except Exception:
+            app_open_count = 0
+        app_open_count += 1
+        settings.setValue("app_open_count", app_open_count)
+        self.app_open_count = app_open_count
 
         # Send metrics "open" event
         self._send_metric_event("open")
@@ -291,7 +304,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         logging.debug(f"Stored install_date: {install_date_str}")
 
         from datetime import datetime
-        self.network_manager = QtNetwork.QNetworkAccessManager(self)
         now = datetime.now()
         time_str = f"{now.strftime('%I').lstrip('0') or '12'}{now.strftime('%M')}{now.strftime('%p').lower()}"
         request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={self.user_uuid}"))
@@ -1322,6 +1334,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.text_label.setText("No preferences file found (.aicodeprep-gui)")
 
     def closeEvent(self, event):
+        # --- Feature Vote Dialog Trigger ---
+        try:
+            settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
+            has_voted = settings.value("has_voted_on_features_v1", False, type=bool)
+            if getattr(self, "app_open_count", 0) >= 5 and not has_voted:
+                dlg = VoteDialog(self.user_uuid, self.network_manager, parent=self)
+                dlg.exec()
+                settings.setValue("has_voted_on_features_v1", True)
+        except Exception as e:
+            logging.error(f"Error showing VoteDialog: {e}")
+
         # Clean up update thread if it's still running
         if self.update_thread and self.update_thread.isRunning():
             print("[gui] Stopping update check thread before closing...")
@@ -1812,3 +1835,94 @@ def _read_prefs_file():
         logging.error(f"Error reading preferences file: {e}")
 
     return checked, window_size, splitter_state
+
+# --- Feature Voting Dialog ---
+class VoteDialog(QtWidgets.QDialog):
+    FEATURE_IDEAS = [
+      "Idea 1: Add an optional preview pane to quickly view file contents.",
+      "Idea 2: Allow users to add additional folders to the same context block from any location.",
+      "Idea 3: Enable drag-and-drop functionality for adding files and folders directly into the app.",
+      "Idea 4: Introduce partial or skeleton context for files, where only key details (e.g., file paths, function/class names) are included. This provides lightweight context without full file content, helping the AI recognize the file's existence with minimal data.",
+      "Idea 5: Add an MCP Server feature to paste directly into the browser chat and emulate an API for seamless interaction.",
+      "Idea 6: Create a 'Super Problem Solver' mode that leverages 3-4 AIs to collaboratively solve complex problems. This would send the context and prompt to multiple APIs, automatically compare outputs, and consolidate results for enhanced problem-solving.",
+      "Idea 7: Auto Block Secrets - Automatically block sensitive information like API keys and secrets from being included in the context, ensuring user privacy and security.",
+      "Idea 8: Add a command line option"
+    ]
+
+    def __init__(self, user_uuid, network_manager, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Vote on New Features")
+        self.setMinimumWidth(600)
+        self.votes = {}
+        self.user_uuid = user_uuid
+        self.network_manager = network_manager
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        # Title
+        title = QtWidgets.QLabel("Vote Screen!")
+        title.setAlignment(QtCore.Qt.AlignHCenter)
+        title.setStyleSheet("font-size: 28px; color: #1fa31f; font-weight: bold; margin-bottom: 12px;")
+        layout.addWidget(title)
+
+        # Feature voting rows
+        self.button_groups = []
+        for idx, idea in enumerate(self.FEATURE_IDEAS):
+            row = QtWidgets.QHBoxLayout()
+            label = QtWidgets.QLabel(idea)
+            label.setWordWrap(True)
+            label.setMinimumWidth(220)
+            row.addWidget(label, 2)
+            btns = []
+            for opt in self.VOTE_OPTIONS:
+                btn = QtWidgets.QPushButton(opt)
+                btn.setCheckable(True)
+                btn.setMinimumWidth(120)
+                btn.clicked.connect(self._make_vote_handler(idx, opt, btn))
+                row.addWidget(btn, 1)
+                btns.append(btn)
+            self.button_groups.append(btns)
+            layout.addLayout(row)
+            layout.addSpacing(4)
+
+        # Bottom buttons
+        btn_row = QtWidgets.QHBoxLayout()
+        btn_row.addStretch()
+        self.vote_btn = QtWidgets.QPushButton("Vote!")
+        self.vote_btn.clicked.connect(self.submit_votes)
+        btn_row.addWidget(self.vote_btn)
+        self.skip_btn = QtWidgets.QPushButton("Skip")
+        self.skip_btn.clicked.connect(self.reject)
+        btn_row.addWidget(self.skip_btn)
+        layout.addLayout(btn_row)
+
+    def _make_vote_handler(self, idx, opt, btn):
+        def handler():
+            # Uncheck other buttons in this group
+            for b in self.button_groups[idx]:
+                if b is not btn:
+                    b.setChecked(False)
+                    b.setStyleSheet("")
+            btn.setChecked(True)
+            btn.setStyleSheet("background-color: #1fa31f; color: white;")
+            self.votes[self.FEATURE_IDEAS[idx]] = opt
+        return handler
+
+    def submit_votes(self):
+        # Collect votes for all features (if not voted, skip)
+        details = {idea: self.votes.get(idea, None) for idea in self.FEATURE_IDEAS}
+        payload = {
+            "user_id": self.user_uuid,
+            "event_type": "feature_vote",
+            "local_time": datetime.now().isoformat(),
+            "details": details
+        }
+        try:
+            endpoint_url = "https://wuu73.org/idea/aicp-metrics/event"
+            request = QtNetwork.QNetworkRequest(QtCore.QUrl(endpoint_url))
+            request.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, "application/json")
+            json_data = QtCore.QByteArray(json.dumps(payload).encode('utf-8'))
+            self.network_manager.post(request, json_data)
+        except Exception as e:
+            QtWidgets.QMessageBox.warning(self, "Error", f"Failed to submit votes: {e}")
+        self.accept()
