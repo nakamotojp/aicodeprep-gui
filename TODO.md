@@ -2,6 +2,9 @@
 
 potential bugs:
 
+automatic update checker glitchy
+verify mac os finder menu installer
+
 Target directory: .
 2025-07-14 13:05:17,263 - INFO - Starting code concatenation...
 2025-07-14 13:05:17,263 - INFO - Starting initial fast scan in: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-c-lazyloadingworks - Copy
@@ -9,7 +12,7 @@ Target directory: .
 2025-07-14 13:05:17,289 - ERROR - Error creating metric request for event 'open': 'FileSelectionGUI' object has no attribute 'network_manager'
 2025-07-14 13:05:17,861 - INFO - Restored splitter state from preferences
 [gui] Starting update check...
-[update_checker] Starting update check for version 1.0.7
+[update_checker] Starting update check for version 1.0.8
 [update_checker] Reset prompted_this_run flag to False
 [update_checker] Starting background update check thread
 [gui] Update check thread started
@@ -32,8 +35,9 @@ Update check can block on slow network
 free:
 quick how to on how to use it, on first start and put in menu
 
-premium:
-Block secrets, api keys, automatically so people don't have to worry which files they include
+premium: (just random ideas to think about later)
+guarantee total privacy/option to block the tiny bit of metrics (its already anonymous and only when people use it or tokens just to know how people use it)
+Block secrets, api keys, automatically so people don't have to worry which files they include by accident
 preview window on right side option
 option to enable skeleton context, list folders/files that are not included but just the names/paths added
 for that little bit of context
@@ -41,6 +45,11 @@ AI powered summary/compression for large codebases, context packer engine
 wuu73 api router
 gate the preset buttons or limit to 3, no nag screens, maybe right click menu?
 offer updated information about saving money, access to free APIs for Cline/etc, access to info
+vibe code how to or app that holds the users hands step by step for people that just don't know much but want to build cool things
+
+themes and ability to edit the UI, fonts, colors, banner
+caching/detection of changed files and other things to speed it up, Go Lang translation?
+
 $19.99 up to 10 machines or unlimited
 future access to planned features like automatic cut/paste to all the different web chat's,
 automatic 'brain' where it sends prompt to several api's, compares answers

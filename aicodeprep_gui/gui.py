@@ -8,9 +8,22 @@ from datetime import datetime, date
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from aicodeprep_gui import __version__
 from aicodeprep_gui import update_checker
-from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
+from PySide6.QtCore import QTemporaryDir
+
+class UpdateCheckWorker(QtCore.QObject):
+    """A worker that runs in a separate thread to check for updates without blocking the GUI."""
+    finished = QtCore.Signal(str)  # Emits message string or empty string if no update
+
+    def run(self):
+        """Fetches update info and emits the result."""
+        message = update_checker.get_update_info()
+        self.finished.emit(message or "")
 from importlib import resources
-from aicodeprep_gui.apptheme import system_pref_is_dark, apply_dark_palette, apply_light_palette, get_checkbox_style_dark, get_checkbox_style_light
+from aicodeprep_gui.apptheme import (
+    system_pref_is_dark, apply_dark_palette, apply_light_palette, 
+    get_checkbox_style_dark, get_checkbox_style_light,
+    create_arrow_pixmap, get_groupbox_style
+)
 from typing import List, Tuple
 from aicodeprep_gui import smart_logic
 from aicodeprep_gui.file_processor import process_files
@@ -236,10 +249,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             import subprocess
             subprocess.Popen(["xdg-open", folder_path])
 
-    def __init__(self, files, force_update=False):
+    def __init__(self, files):
         super().__init__()
-        self.force_update = force_update
         self.initial_show_event = True
+
+        # --- Create a temporary directory for generated theme assets ---
+        self.temp_dir = QTemporaryDir()
+        self.arrow_pixmap_paths = {}
+        if self.temp_dir.isValid():
+            self._generate_arrow_pixmaps()
+        else:
+            logging.warning("Could not create temporary directory for theme assets.")
+
         # Set application icon
         try:
             with resources.path('aicodeprep_gui.images', 'favicon.ico') as icon_path:
@@ -670,12 +691,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addSpacing(8)
 
         # --- Update available label (hidden by default) ---
-        self.update_label = QtWidgets.QLabel()
-        self.update_label.setTextFormat(QtCore.Qt.RichText)
-        self.update_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.update_label.setVisible(False)
-        main_layout.addWidget(self.update_label)
-        main_layout.addSpacing(8)
+        # (Removed old update label block)
 
         self.info_label = QtWidgets.QLabel("The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into Gemini in AI studio, Deepseek, ChatGPT, etc.")
         self.info_label.setWordWrap(True)  # Add this line to enable word wrapping
@@ -870,11 +886,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.prompt_top_checkbox.stateChanged.connect(self._save_prompt_options)
         self.prompt_bottom_checkbox.stateChanged.connect(self._save_prompt_options)
 
-# --- New Collapsible Options Group ---
-        # The QGroupBox is checkable, which allows it to function as an accordion.
+        # --- New Collapsible Options Group ---
         options_group_box = QtWidgets.QGroupBox("Options")
         options_group_box.setCheckable(True)
-        options_group_box.setChecked(True)  # Default to visible/expanded
+        self.options_group_box = options_group_box # Store a reference to apply styles later
 
         # This container widget holds all the options. We show/hide this container.
         options_container = QtWidgets.QWidget()
@@ -905,8 +920,70 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Connect the group box's toggled signal to the container's setVisible method.
         # This is what makes the content expand and collapse.
         options_group_box.toggled.connect(options_container.setVisible)
+        options_group_box.toggled.connect(self._save_panel_visibility)
+        
+        # Apply the new custom style for the collapsible group box
+        self._update_groupbox_style(self.options_group_box)
 
-        main_layout.addWidget(options_group_box)
+        main_layout.addWidget(self.options_group_box)
+
+        # --- New Premium Features Group ---
+        premium_group_box = QtWidgets.QGroupBox("Premium Features - just ideas for now")
+        premium_group_box.setCheckable(True)
+        self.premium_group_box = premium_group_box
+
+        premium_container = QtWidgets.QWidget()
+
+        premium_content_layout = QtWidgets.QVBoxLayout(premium_container)
+        premium_content_layout.setContentsMargins(0, 5, 0, 5)
+
+        # Helper function to create a disabled feature row
+        def create_feature_row(text: str, tooltip: str) -> QtWidgets.QHBoxLayout:
+            layout = QtWidgets.QHBoxLayout()
+            layout.setContentsMargins(0, 0, 0, 0)
+            
+            checkbox = QtWidgets.QCheckBox(text)
+            checkbox.setEnabled(False)
+            layout.addWidget(checkbox)
+            
+            help_icon = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+            help_icon.setToolTip(tooltip)
+            help_icon.setAlignment(QtCore.Qt.AlignVCenter)
+            layout.addWidget(help_icon)
+            
+            layout.addStretch()
+            return layout
+
+        # Define premium features
+        features = [
+            ("Auto-hide secrets & API keys", "Automatically identifies and redacts sensitive information like API keys, passwords, and secrets from the context before it's generated, preventing accidental leaks."),
+            ("Enable \"Partial Context\" in file tree", "Include files as \"partial context\" (marked with a red 'P'). Instead of the full file content, only the file path, or a summary like function and class names, will be included. This gives the AI awareness of project structure without using excessive tokens."),
+            ("Access to unlimited free API endpoints", "Get access to a curated, updated list of free and low-cost API endpoints for models like GPT-4.1, Deepseek, and more. Includes guides on how to use them for free as AI coding agents using this tool to go web chat <--> agents to keep your costs near zero."),
+            ("AI \"Brain\" for complex problems", "Experimental Problem Solver, the \"Brain\" sends your context and prompt to several different LLMs simultaneously. The responses are then analyzed by a larger, more powerful model to synthesize the best possible solution."),
+            ("Automated browser interaction", "Automatically opens your preferred AI chat web page, pastes the context and prompt into the chat box, and submits it for you. A huge time-saver."),
+            ("File preview window", "Adds a new dockable window that shows a read-only preview of the currently selected file in the file tree, making it easier to decide what to include."),
+            ("aicp --skip-ui", "Option to skip opening the UI, instead just immediately create the context block using saved settings."),
+            ("Optional Caching", "so only the files/folders that have changed are scanned and/or processed.")
+
+
+        ]
+
+        for text, tooltip in features:
+            premium_content_layout.addLayout(create_feature_row(text, tooltip))
+
+        # The main layout for the QGroupBox itself. It will contain the collapsible widget.
+        premium_group_box_main_layout = QtWidgets.QVBoxLayout(premium_group_box)
+        premium_group_box_main_layout.setContentsMargins(10, 5, 10, 10)
+        premium_group_box_main_layout.addWidget(premium_container)
+        premium_group_box.toggled.connect(premium_container.setVisible)
+        premium_group_box.toggled.connect(self._save_panel_visibility)
+        
+        # Apply style and add to main layout
+        self._update_groupbox_style(self.premium_group_box)
+        main_layout.addWidget(self.premium_group_box)
+
+        # --- Load saved panel visibility states ---
+        self._load_panel_visibility()
         
         # Button layouts
         button_layout1 = QtWidgets.QHBoxLayout()
@@ -933,6 +1010,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         main_layout.addLayout(button_layout1)
         main_layout.addLayout(button_layout2)
+
+        # --- Update available label (at the bottom) ---
+        self.update_label = QtWidgets.QLabel()
+        self.update_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.update_label.setVisible(False)
+        self.update_label.setStyleSheet("color: #28a745; font-weight: bold; padding: 5px;")
+        self.update_label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        main_layout.addWidget(self.update_label)
 
         # --- Footer Layout ---
         footer_layout = QtWidgets.QHBoxLayout()
@@ -1413,6 +1498,22 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         settings.setValue("prompt_to_top", self.prompt_top_checkbox.isChecked())
         settings.setValue("prompt_to_bottom", self.prompt_bottom_checkbox.isChecked())
 
+    def _load_panel_visibility(self):
+        """Load collapsible panel visibility states from QSettings."""
+        settings = QtCore.QSettings("aicodeprep-gui", "PanelVisibility")
+        # Default to options showing, premium hidden
+        options_visible = settings.value("options_visible", True, type=bool)
+        premium_visible = settings.value("premium_visible", False, type=bool)
+        
+        self.options_group_box.setChecked(options_visible)
+        self.premium_group_box.setChecked(premium_visible)
+
+    def _save_panel_visibility(self):
+        """Save collapsible panel visibility states to QSettings."""
+        settings = QtCore.QSettings("aicodeprep-gui", "PanelVisibility")
+        settings.setValue("options_visible", self.options_group_box.isChecked())
+        settings.setValue("premium_visible", self.premium_group_box.isChecked())
+
     def _load_dark_mode_setting(self) -> bool:
         """Load dark mode preference from QSettings, or use system preference if not set."""
         try:
@@ -1475,90 +1576,81 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 f"font-size: 20px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
             )
 
+        # Update the options box style for the new theme
+        self._update_options_style()
+
         # Save the user's dark mode preference
         self._save_dark_mode_setting()
 
-    def _start_update_check(self):
-        """Start the update check and store the thread reference."""
-        print("[gui] Starting update check...")
-        self.update_thread = update_checker.check_for_updates(self._on_update_checked, parent=self, force=self.force_update)
-        if self.update_thread:
-            print("[gui] Update check thread started")
-        else:
-            print("[gui] Update check skipped (already checked recently)")
-
-    def _on_update_checked(self, new_available: bool, latest: str):
-        """Slot called when update check completes."""
-
-        # --- Update label logic ---
-        if hasattr(self, "update_label"):
-            if new_available:
-                self.update_label.setText('Update available! Open a terminal and type:<br><b>pipx upgrade aicodeprep-gui</b>')
-                self.update_label.setStyleSheet("color: #28a745; font-weight: bold;")
-                self.update_label.setVisible(True)
-            else:
-                self.update_label.setVisible(False)
-
-        self.latest_pypi_version = latest
-        print(f"[gui] Update check callback received - New available: {new_available}, Latest: {latest}")
-        from PySide6.QtCore import QSettings, QDate, QDateTime, Qt
-        from PySide6.QtWidgets import QMessageBox, QPushButton
-        import subprocess
-
-        ORG = "aicodeprep-gui"
-        GROUP = "UpdateChecker"
-        KEY_LAST_PROMPT = "last_prompt"
-        KEY_PROMPTED_THIS_RUN = "prompted_this_run"
-
-        settings = QSettings(ORG, GROUP)
-        today = QDate.currentDate().toString(Qt.ISODate)
-        prompted_this_run = settings.value(KEY_PROMPTED_THIS_RUN, False, type=bool)
-        last_prompt = settings.value(KEY_LAST_PROMPT, "")
-
-        print(f"[gui] Prompt check - prompted_this_run: {prompted_this_run}, last_prompt: {last_prompt}, today: {today}")
-
-        # Only prompt if new version, not already prompted today, and not this run
-        if not new_available or prompted_this_run or last_prompt == today:
-            print("[gui] Not showing update dialog (conditions not met)")
+    def _generate_arrow_pixmaps(self):
+        """Generates arrow icons and saves them to the temporary directory."""
+        if not self.temp_dir.isValid():
             return
 
-        print("[gui] Showing update available dialog")
+        colors = {
+            "light_fg": "#333333",
+            "dark_fg": "#DDDDDD"
+        }
+        
+        # Light theme arrows
+        pix_right_light = create_arrow_pixmap('right', color=colors["light_fg"])
+        path_right_light = os.path.join(self.temp_dir.path(), "arrow_right_light.png")
+        pix_right_light.save(path_right_light, "PNG")
+        
+        pix_down_light = create_arrow_pixmap('down', color=colors["light_fg"])
+        path_down_light = os.path.join(self.temp_dir.path(), "arrow_down_light.png")
+        pix_down_light.save(path_down_light, "PNG")
 
-        # Mark as prompted for this run and today
-        settings.setValue(KEY_PROMPTED_THIS_RUN, True)
-        settings.setValue(KEY_LAST_PROMPT, today)
+        # Dark theme arrows
+        pix_right_dark = create_arrow_pixmap('right', color=colors["dark_fg"])
+        path_right_dark = os.path.join(self.temp_dir.path(), "arrow_right_dark.png")
+        pix_right_dark.save(path_right_dark, "PNG")
 
-        msg = QMessageBox(self)
-        msg.setWindowTitle("Update Available")
-        msg.setIcon(QMessageBox.Information)
-        msg.setText(
-            f"A new version of aicodeprep-gui is available: {latest}. You are on {__version__}.\n"
-            "Would you like to upgrade now?"
-        )
-        upgrade_btn = msg.addButton("Upgrade", QMessageBox.AcceptRole)
-        later_btn = msg.addButton("Later", QMessageBox.RejectRole)
-        msg.setStandardButtons(QMessageBox.NoButton)
-        msg.setModal(False)
-        msg.show()
+        pix_down_dark = create_arrow_pixmap('down', color=colors["dark_fg"])
+        path_down_dark = os.path.join(self.temp_dir.path(), "arrow_down_dark.png")
+        pix_down_dark.save(path_down_dark, "PNG")
+        
+        self.arrow_pixmap_paths = {
+            "light": {"down": path_down_light, "right": path_right_light},
+            "dark": {"down": path_down_dark, "right": path_right_dark},
+        }
 
-        def on_button_clicked(btn):
-            if btn == upgrade_btn:
-                # Run pipx upgrade in subprocess, show result
-                try:
-                    proc = subprocess.Popen(
-                        ["pipx", "install", "--upgrade", "aicodeprep-gui"],
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-                    )
-                    out, err = proc.communicate(timeout=120)
-                    if proc.returncode == 0:
-                        QMessageBox.information(self, "Upgrade Complete", "aicodeprep-gui was upgraded successfully.\nPlease restart the application.")
-                    else:
-                        QMessageBox.warning(self, "Upgrade Failed", f"Upgrade failed:\n{err or out}")
-                except Exception as e:
-                    QMessageBox.critical(self, "Upgrade Error", f"Could not run upgrade:\n{e}")
-            msg.close()
+    def _update_groupbox_style(self, groupbox: QtWidgets.QGroupBox):
+        """Applies the custom QGroupBox style based on the current theme."""
+        if not groupbox or not self.temp_dir.isValid() or not self.arrow_pixmap_paths:
+            return
 
-        msg.buttonClicked.connect(on_button_clicked)
+        theme = "dark" if self.is_dark_mode else "light"
+        paths = self.arrow_pixmap_paths.get(theme)
+        if not paths:
+            return # Don't apply style if paths aren't generated
+        
+        style = get_groupbox_style(paths['down'], paths['right'], self.is_dark_mode)
+        groupbox.setStyleSheet(style)
+
+    def _start_update_check(self):
+        """Starts the simple, non-blocking update check."""
+        self.update_thread = QtCore.QThread()
+        self.update_worker = UpdateCheckWorker()
+        self.update_worker.moveToThread(self.update_thread)
+
+        self.update_thread.started.connect(self.update_worker.run)
+        self.update_worker.finished.connect(self.on_update_check_finished)
+
+        # Clean up thread and worker after finishing
+        self.update_worker.finished.connect(self.update_thread.quit)
+        self.update_worker.finished.connect(self.update_worker.deleteLater)
+        self.update_thread.finished.connect(self.update_thread.deleteLater)
+
+        self.update_thread.start()
+
+    def on_update_check_finished(self, message: str):
+        """Slot to handle the result of the update check."""
+        if message:
+            self.update_label.setText(message)
+            self.update_label.setVisible(True)
+        else:
+            self.update_label.setVisible(False)
 
     def showEvent(self, event):
         super(FileSelectionGUI, self).showEvent(event)
@@ -1688,24 +1780,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         except Exception:
             days_installed = 0
 
-        # build HTML content
         version_str = __version__
-
-        pypi_version_info = ""
-        if self.latest_pypi_version:
-            is_newer = update_checker.is_newer_version(__version__, self.latest_pypi_version)
-            if is_newer:
-                status_text = '<span style="color: #28a745; font-weight: bold;">(Update available)</span>'
-            else:
-                status_text = '<span style="color: grey;">(Up to date)</span>'
-            pypi_version_info = f'<p>Latest version: {self.latest_pypi_version} {status_text}</p>'
-        else:
-            pypi_version_info = '<p>Latest version: <span style="color: grey;">Checking PyPI...</span></p>'
 
         html = (
             f"<h2>aicodeprep-gui</h2>"
             f"<p>Installed version: {version_str}</p>"
-            f"{pypi_version_info}"
             f"<p>Installed {days_installed} days ago.</p>"
             "<p>"
             '<br><a href="https://github.com/sponsors/detroittommy879">GitHub Sponsors</a><br>'
@@ -1748,9 +1827,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         except Exception as e:
             logging.error(f"Error creating metric request for event '{event_type}': {e}")
 
-def show_file_selection_gui(files, force_update=False):
+def show_file_selection_gui(files):
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-    gui = FileSelectionGUI(files, force_update=force_update)
+    gui = FileSelectionGUI(files)
     gui.show()
     app.exec()
     return gui.action, gui.get_selected_files()
@@ -1860,12 +1939,12 @@ class VoteDialog(QtWidgets.QDialog):
     FEATURE_IDEAS = [
       "Idea 1: Add an optional preview pane to quickly view file contents.",
       "Idea 2: Allow users to add additional folders to the same context block from any location.",
-      "Idea 3: Enable drag-and-drop functionality for adding files and folders directly into the app.",
+      "Idea 3: Optional Caching so only the files/folders that have changed are scanned and/or processed.",
       "Idea 4: Introduce partial or skeleton context for files, where only key details (e.g., file paths, function/class names) are included. This provides lightweight context without full file content, helping the AI recognize the file's existence with minimal data.",
-      "Idea 5: Add an MCP Server feature to paste directly into the browser chat and emulate an API for seamless interaction.",
+      "Idea 5: Context7",
       "Idea 6: Create a 'Super Problem Solver' mode that leverages 3-4 AIs to collaboratively solve complex problems. This would send the context and prompt to multiple APIs, automatically compare outputs, and consolidate results for enhanced problem-solving.",
       "Idea 7: Auto Block Secrets - Automatically block sensitive information like API keys and secrets from being included in the context, ensuring user privacy and security.",
-      "Idea 8: Add a command line option"
+      "Idea 8: Add a command line option to immediately create context, skip UI"
     ]
 
     def __init__(self, user_uuid, network_manager, parent=None):

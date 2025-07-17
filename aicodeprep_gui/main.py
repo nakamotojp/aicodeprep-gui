@@ -64,7 +64,7 @@ def main():
 
     # Set Windows AppUserModelID for proper taskbar icon
     if platform.system() == "Windows":
-        myappid = 'wuu73.aicodeprep-gui.1.0.7'  # arbitrary unique string
+        myappid = 'wuu73.aicodeprep-gui.1.0.8'  # arbitrary unique string
         try:
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except AttributeError:
@@ -128,7 +128,7 @@ def main():
         logger.warning("No files found to process!")
         return
 
-    action, _ = show_file_selection_gui(all_files_with_flags, force_update=force_update)
+    action, _ = show_file_selection_gui(all_files_with_flags)
 
     if action != 'quit':
         logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")

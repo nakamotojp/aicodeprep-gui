@@ -17,6 +17,8 @@ wheels/
 *.egg
 __pycache__/
 
+TESTIMONIALS.md
+
 # screenshots
 vcrs/
 

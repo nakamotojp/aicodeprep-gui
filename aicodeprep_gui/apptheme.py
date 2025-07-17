@@ -122,11 +122,81 @@ def create_x_mark_pixmap(size=16, color="#0078D4"):
     painter.end()
     return pixmap
 
+def create_arrow_pixmap(direction: str, size: int = 16, color: str = "#000000") -> QtGui.QPixmap:
+    """Creates a triangular arrow pixmap, perfect for collapsible sections."""
+    pixmap = QtGui.QPixmap(size, size)
+    pixmap.fill(QtCore.Qt.transparent)
+    
+    painter = QtGui.QPainter(pixmap)
+    painter.setRenderHint(QtGui.QPainter.Antialiasing)
+    
+    painter.setPen(QtCore.Qt.NoPen)
+    painter.setBrush(QtGui.QColor(color))
+    
+    if direction == 'down':
+        # Down-pointing triangle
+        points = [
+            QtCore.QPoint(int(size * 0.25), int(size * 0.3)),
+            QtCore.QPoint(int(size * 0.75), int(size * 0.3)),
+            QtCore.QPoint(int(size * 0.5), int(size * 0.7))
+        ]
+    else:  # 'right'
+        # Right-pointing triangle
+        points = [
+            QtCore.QPoint(int(size * 0.3), int(size * 0.25)),
+            QtCore.QPoint(int(size * 0.7), int(size * 0.5)),
+            QtCore.QPoint(int(size * 0.3), int(size * 0.75))
+        ]
+        
+    painter.drawPolygon(QtGui.QPolygon(points))
+    painter.end()
+    return pixmap
+
+def get_groupbox_style(arrow_down_path: str, arrow_right_path: str, dark: bool) -> str:
+    """Generates QSS for a collapsible QGroupBox with custom arrow indicators."""
+    border_color = "#555555" if dark else "#AAAAAA"
+    title_color = "#FFFFFF" if dark else "#000000"
+    
+    # Convert Windows paths to what QSS expects (forward slashes)
+    if os.name == 'nt':
+        arrow_down_url = arrow_down_path.replace('\\', '/')
+        arrow_right_url = arrow_right_path.replace('\\', '/')
+    else:
+        arrow_down_url = arrow_down_path
+        arrow_right_url = arrow_right_path
+
+    return f"""
+        QGroupBox {{
+            border: 1px solid {border_color};
+            border-radius: 5px;
+            margin-top: 1em; /* Provides space for the title to be drawn on top of the border */
+        }}
+        QGroupBox::title {{
+            subcontrol-origin: margin;
+            subcontrol-position: top left;
+            padding-left: 22px; /* Make space for the indicator */
+            padding-right: 5px;
+            color: {title_color};
+        }}
+        QGroupBox::indicator {{
+            width: 16px;
+            height: 16px;
+            /* Position the indicator to the left of the title */
+            position: absolute;
+            top: 0.1em;
+            left: 5px;
+        }}
+        QGroupBox::indicator:unchecked {{
+            image: url('{arrow_right_url}');
+        }}
+        QGroupBox::indicator:checked {{
+            image: url('{arrow_down_url}');
+        }}
+    """
+
 def _checkbox_style_with_images(dark: bool) -> str:
     """Use SVG-based checkboxes - same as _checkbox_style but with descriptive name."""
     return _checkbox_style(dark)
-
-
 
 def _checkbox_style(dark: bool) -> str:
     """Return checkbox styling using packaged image files."""
