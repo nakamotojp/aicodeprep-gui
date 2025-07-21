@@ -1,6 +1,4 @@
-I have a new fonts folder (don't necessarily want all of those fonts but there are some in there to test out) how can i have a font switcher drop down menu, or if that is too complex how can i test out one of the JetBrainsMono fonts, but if i don't like it go back to standard? also can we make it easy to move options from the free options box to the premium box if i wanted to move them around later on?
-
-Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste.
+The --pro mode test worked but can you change it so instead of the enable pro features checkbox changing the banner like that just have it print text at the bottom of the ui that says "pro toggle test 1" or pro toggle test 2" for either on or off, and just make that checkbox toggle between 1 and 2. This way it doesn't affect pro being enabled, only the --pro command line argument will enable pro. if --pro is not on the command line then it'll be greyed out.
 
 aicodeprep_gui\data\default_config.toml:
 <code>
@@ -239,6 +237,32 @@ exclude_patterns = [
 
 aicodeprep_gui\images\__init__.py:
 <code>
+
+</code>
+
+aicodeprep_gui\pro\patches.py:
+<code>
+"""Tiny UI patches for Pro mode."""
+from PySide6.QtGui import QLinearGradient, QColor
+
+def patch_banner(label):
+    """Switch banner to Pro colors & text."""
+    gradient = QLinearGradient(0, 0, 1, 0)
+    gradient.setColorAt(0, QColor("#00b894"))
+    gradient.setColorAt(1, QColor("#00cec9"))
+    label.setStyleSheet(
+        "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00b894, stop:1 #00cec9);"
+        "color: white; padding: 0px; border-radius: 8px;"
+    )
+    label.setText("AI Code Prep Pro")
+
+</code>
+
+aicodeprep_gui\pro\__init__.py:
+<code>
+"""Premium plugin loader."""
+import os, sys
+enabled = '--pro' in sys.argv or os.path.isfile('pro_enabled')
 
 </code>
 
@@ -633,6 +657,7 @@ from typing import List, Tuple
 from aicodeprep_gui import smart_logic
 from aicodeprep_gui.file_processor import process_files
 from aicodeprep_gui import __version__
+from aicodeprep_gui import pro
 
 class FlowLayout(QtWidgets.QLayout):
     def __init__(self, parent=None, margin=-1, hspacing=-1, vspacing=-1):
@@ -1288,6 +1313,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
         )
         self.vibe_label.setFixedHeight(44)
+        if pro.enabled:
+            from aicodeprep_gui.pro.patches import patch_banner
+            patch_banner(self.vibe_label)
         banner_wrap = QtWidgets.QWidget()
         banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
         banner_layout.setContentsMargins(14, 0, 14, 0)
@@ -1573,8 +1601,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         ]
 
-        for text, tooltip in features:
-            premium_content_layout.addLayout(create_feature_row(text, tooltip))
+        
+        self.pro_toggle = QtWidgets.QCheckBox("Enable Pro features")
+        self.pro_toggle.setChecked(pro.enabled)
+        self.pro_toggle.setEnabled(pro.enabled)  # Add this line
+
+        self.pro_toggle.toggled.connect(self._toggle_pro)
+        premium_content_layout.addWidget(self.pro_toggle)
 
         # The main layout for the QGroupBox itself. It will contain the collapsible widget.
         premium_group_box_main_layout = QtWidgets.QVBoxLayout(premium_group_box)
@@ -2055,13 +2088,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             logging.error(f"Error showing VoteDialog: {e}")
 
         # Clean up update thread if it's still running
-        if self.update_thread and self.update_thread.isRunning():
-            print("[gui] Stopping update check thread before closing...")
-            self.update_thread.quit()
-            if not self.update_thread.wait(3000):  # Wait up to 3 seconds
-                print("[gui] Force terminating update check thread...")
-                self.update_thread.terminate()
-                self.update_thread.wait()
+        try:
+            if self.update_thread and self.update_thread.isRunning():
+                print("[gui] Stopping update check thread before closing...")
+                self.update_thread.quit()
+                if not self.update_thread.wait(3000):  # Wait up to 3 seconds
+                    print("[gui] Force terminating update check thread...")
+                    self.update_thread.terminate()
+                    self.update_thread.wait()
+        except RuntimeError:
+            # Qt C++ object already deleted, thread cleanup handled by Qt
+            print("[gui] Update thread already cleaned up by Qt")
         
         if self.remember_checkbox and self.remember_checkbox.isChecked():
             self.save_prefs() # Save prefs only if 'remember' is checked
@@ -2118,6 +2155,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         settings = QtCore.QSettings("aicodeprep-gui", "PanelVisibility")
         settings.setValue("options_visible", self.options_group_box.isChecked())
         settings.setValue("premium_visible", self.premium_group_box.isChecked())
+
+    def _toggle_pro(self, on):
+        if on:
+            open('pro_enabled', 'w').close()
+        else:
+            try:
+                os.remove('pro_enabled')
+            except FileNotFoundError:
+                pass
+        QtWidgets.QMessageBox.information(
+            self, "Restart Required",
+            "Please restart the application for Pro changes to take effect.")
 
     def _load_dark_mode_setting(self) -> bool:
         """Load dark mode preference from QSettings, or use system preference if not set."""
@@ -2853,6 +2902,8 @@ def main():
     parser = argparse.ArgumentParser(description="aicodeprep-gui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
     parser.add_argument("-n", "--no-copy", action="store_true",
                         help="Do NOT copy output to clipboard (default: copy to clipboard)")
+    parser.add_argument("--pro", action="store_true",
+                    help="Enable Pro features (fake license mode)")                    
     parser.add_argument("-o", "--output", default="fullcode.txt",
                         help="Output file name (default: fullcode.txt)")
     parser.add_argument("-d", "--debug", action="store_true",
@@ -2871,6 +2922,9 @@ def main():
     # --- END OF NEW ARGUMENTS ---
 
     args = parser.parse_args()
+    if '--pro' in sys.argv:
+        open('pro_enabled', 'w').close()   # Create marker file
+    
     force_update = args.force_update_check
 
     # Set Windows AppUserModelID for proper taskbar icon
@@ -3757,6 +3811,10 @@ pipx install aicodeprep-gui
 
 Download python from python.org - pick one of the stable versions, 3.13.x is good.
 
+Make sure the button for adding python.exe to path is turned on):
+
+![Python path dialog](scrs/python-path.png)
+
 Then try:
 
 ```sh
@@ -3774,12 +3832,13 @@ pipx install aicodeprep-gui
 
 It should say success or something similar or done.
 
-Now that it is installed, you can type 'aicp' + enter in a terminal to run it or aicp path/to/folder/
-also aicodeprep-gui works instead of aicp. aicp is shorter, both do the same thing (open the app window in whichever folder you typed it)
+Now that it is installed, you can type 'aicp' + enter in a terminal to run it, or 'aicp path/to/folder/'
 
-A common thing would be when you are using VS Code or Cursor, and whichever agent / agentic coder is pissing you off or acting stupid, go to the VS Code terminal and type 'aicp' to open it for the project you are working on.
+also aicodeprep-gui command works instead of aicp - but aicp is shorter, both do the same thing (open the app window in whichever folder you typed it)
 
-## Linux (Debian/Ubuntu instructions here but should work on most distros)
+A common thing would be when you are using VS Code or Cursor, and whichever agent / agentic coder is unable to do the task or is acting stupid, go to the VS Code terminal and type 'aicp' to open it for the project you are working on. Adjust which files are going to be included in the context, then press GENERATE CONTEXT!. Paste into AI chat.
+
+## Linux (Debian/Ubuntu instructions here but should work anywhere Python and Qt6 can work)
 
 #### Update package lists and upgrade existing packages
 
@@ -3919,13 +3978,101 @@ This software uses a Sustainable License:
 
 </code>
 
+Z.md:
+<code>
+### 💡 Seeking Feedback: The Future of AI Code Prep GUI (New & Premium Feature Ideas)
 
-aicodeprep_gui\data\fonts\JetBrainsMono-Regular.ttf binary file skipped..
-aicodeprep_gui\data\fonts\JetBrainsMono-VariableFont_wght.ttf binary file skipped..
-aicodeprep_gui\data\fonts\Lekton-Regular.ttf binary file skipped..
-aicodeprep_gui\data\fonts\SpaceMono-Regular.ttf binary file skipped..
+Hey!
+
+I’ve been gradually improving **AI Code Prep GUI** and wanted to share some feature ideas to get your feedback. I'm planning both core additions and potential premium upgrades, and I'd love to hear what you'd find most useful—whether you're a current user or just curious about the project.
+
+Your input is super valuable in shaping the direction of the tool!
+
+---
+
+### 🆓 Planned Free Improvements
+
+These are enhancements I want to make available for everyone to improve the core experience.
+
+- **🌐 Accessibility: Internationalization & Localization**
+  Self explanatory. Colorblind colors, Any suggestions welcome!
+
+- **⚡ Performance & Caching**
+  A smarter engine that detects only changed files to avoid reprocessing everything, plus a potential Go-based translation layer for blazing-fast context generation.
+
+- **📘 Quickstart Tutorial**
+  A short, guided walkthrough on first launch, which can also be accessed later from the menu.
+
+- **🧠 "Why This Works": Better Explanations & Proof**
+  Clear, repeatable examples demonstrating why this workflow gets better results from AI models. We'll show testable comparisons so the benefits are obvious.
+
+- **🤖 Highlight some Specific Workflows**
+  Highlighting some specific workflows, like using **GPT-4.1 as a "refining agent with Cline"** For example, a flow where you get raw output from the best web chat models and then have GPT-4.1 automatically clean it up while auto editing files can often produce superior results.
+
+### 💎 Ideas for features
+
+- **💀 Skeleton Modes**
+  Multiple modes to intelligently compress folders, files, or even entire code sections while still providing some context. I could have more than just checkmarks, like right click for skeleton instead with a different color or symbol.
+
+  Example of a "skeleton" output:
+
+  ```markdown
+  ### These files/folders exist but the contents were skipped
+
+  /fried/Potatoes.md
+  /fried/test/
+  /fried/Soups.py
+
+  ### END of Skipped
+  ```
+
+- **🧠Context Packer Engine with several modes and granular control**
+  System designed to intelligently compress parts of massive codebases, making it possible to feed huge projects into models without letting some agent guess at it.
+
+- **🔐 Secrets & API Key Detection**
+  Automatically scan for and offer to block API keys, passwords, and other secrets to prevent accidental exposure.
+
+- **🪟 Live Preview Panel**
+  An optional side-panel that shows you the exact code and prompt context being prepared in real-time.
+
+- **🔁 Wuu73 API Router**
+  An in-house proxy service to route requests across multiple API providers, helping you maximize free-tier usage and find the best model for the job.
+
+- **📚 Guides & Cheatsheets**
+  A collection of tips, tutorials, and resources. Examples include:
+
+  - How to use this tool and the info to be able to code better than using all the shiny new expensive stuff. How to not fall for all the COOL LOOKING but not necessarily great stuff out there
+
+- **🎨 Full UI Customization**
+  Unlock themes, custom fonts, colors. It can be important for the tools we use daily to be pleasant to look at.
+
+- **📋 A "Clipboard Helper"** (OS-level app or browser extension) to automatically paste context into web chats like Gemini, ChatGPT, etc and cut and paste back.
+
+- **👥 A "Panel of Experts Problem Solver Mode"** that sends a query to multiple models, then compares answers to help you pick the best one. When I do this manually it usually finds a fix for a problem.
+
+- **🗣️ "AI Experts Simulation"** modes that simulate a discussion between multiple AI agents to arrive at a more robust solution.
+
+---
+
+### 👇 Your Feedback is Needed!
+
+I'd love to hear your thoughts on any or all of this:
+
+- **Which of these features should get priority?**
+- **Is there anything you feel is missing from this list?**
+
+Thanks again to everyone who has tried the tool and provided feedback so far!
+
+– Tom
+
+🔗 **[aicodeprep-gui on GitHub](https://github.com/detroittommy879/aicodeprep-gui)**
+
+```
+
+```
+
+</code>
 
 
-I have a new fonts folder (don't necessarily want all of those fonts but there are some in there to test out) how can i have a font switcher drop down menu, or if that is too complex how can i test out one of the JetBrainsMono fonts, but if i don't like it go back to standard? also can we make it easy to move options from the free options box to the premium box if i wanted to move them around later on?
 
-Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste.
+The --pro mode test worked but can you change it so instead of the enable pro features checkbox changing the banner like that just have it print text at the bottom of the ui that says "pro toggle test 1" or pro toggle test 2" for either on or off, and just make that checkbox toggle between 1 and 2. This way it doesn't affect pro being enabled, only the --pro command line argument will enable pro. if --pro is not on the command line then it'll be greyed out.

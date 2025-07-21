@@ -84,6 +84,10 @@ pipx install aicodeprep-gui
 
 Download python from python.org - pick one of the stable versions, 3.13.x is good.
 
+Make sure the button for adding python.exe to path is turned on):
+
+![Python path dialog](scrs/python-path.png)
+
 Then try:
 
 ```sh
@@ -101,12 +105,13 @@ pipx install aicodeprep-gui
 
 It should say success or something similar or done.
 
-Now that it is installed, you can type 'aicp' + enter in a terminal to run it or aicp path/to/folder/
-also aicodeprep-gui works instead of aicp. aicp is shorter, both do the same thing (open the app window in whichever folder you typed it)
+Now that it is installed, you can type 'aicp' + enter in a terminal to run it, or 'aicp path/to/folder/'
 
-A common thing would be when you are using VS Code or Cursor, and whichever agent / agentic coder is pissing you off or acting stupid, go to the VS Code terminal and type 'aicp' to open it for the project you are working on.
+also aicodeprep-gui command works instead of aicp - but aicp is shorter, both do the same thing (open the app window in whichever folder you typed it)
 
-## Linux (Debian/Ubuntu instructions here but should work on most distros)
+A common thing would be when you are using VS Code or Cursor, and whichever agent / agentic coder is unable to do the task or is acting stupid, go to the VS Code terminal and type 'aicp' to open it for the project you are working on. Adjust which files are going to be included in the context, then press GENERATE CONTEXT!. Paste into AI chat.
+
+## Linux (Debian/Ubuntu instructions here but should work anywhere Python and Qt6 can work)
 
 #### Update package lists and upgrade existing packages
 

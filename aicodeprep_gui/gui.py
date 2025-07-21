@@ -28,6 +28,7 @@ from typing import List, Tuple
 from aicodeprep_gui import smart_logic
 from aicodeprep_gui.file_processor import process_files
 from aicodeprep_gui import __version__
+from aicodeprep_gui import pro
 
 class FlowLayout(QtWidgets.QLayout):
     def __init__(self, parent=None, margin=-1, hspacing=-1, vspacing=-1):
@@ -683,6 +684,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
         )
         self.vibe_label.setFixedHeight(44)
+        if pro.enabled:
+            from aicodeprep_gui.pro.patches import patch_banner
+            patch_banner(self.vibe_label)
         banner_wrap = QtWidgets.QWidget()
         banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
         banner_layout.setContentsMargins(14, 0, 14, 0)
@@ -968,8 +972,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         ]
 
-        for text, tooltip in features:
-            premium_content_layout.addLayout(create_feature_row(text, tooltip))
+        
+        self.pro_toggle = QtWidgets.QCheckBox("Enable Pro features")
+        self.pro_toggle.setChecked(pro.enabled)
+        self.pro_toggle.setEnabled(pro.enabled)  # Add this line
+
+        self.pro_toggle.toggled.connect(self._toggle_pro)
+        premium_content_layout.addWidget(self.pro_toggle)
 
         # The main layout for the QGroupBox itself. It will contain the collapsible widget.
         premium_group_box_main_layout = QtWidgets.QVBoxLayout(premium_group_box)
@@ -1450,13 +1459,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             logging.error(f"Error showing VoteDialog: {e}")
 
         # Clean up update thread if it's still running
-        if self.update_thread and self.update_thread.isRunning():
-            print("[gui] Stopping update check thread before closing...")
-            self.update_thread.quit()
-            if not self.update_thread.wait(3000):  # Wait up to 3 seconds
-                print("[gui] Force terminating update check thread...")
-                self.update_thread.terminate()
-                self.update_thread.wait()
+        try:
+            if self.update_thread and self.update_thread.isRunning():
+                print("[gui] Stopping update check thread before closing...")
+                self.update_thread.quit()
+                if not self.update_thread.wait(3000):  # Wait up to 3 seconds
+                    print("[gui] Force terminating update check thread...")
+                    self.update_thread.terminate()
+                    self.update_thread.wait()
+        except RuntimeError:
+            # Qt C++ object already deleted, thread cleanup handled by Qt
+            print("[gui] Update thread already cleaned up by Qt")
         
         if self.remember_checkbox and self.remember_checkbox.isChecked():
             self.save_prefs() # Save prefs only if 'remember' is checked
@@ -1513,6 +1526,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         settings = QtCore.QSettings("aicodeprep-gui", "PanelVisibility")
         settings.setValue("options_visible", self.options_group_box.isChecked())
         settings.setValue("premium_visible", self.premium_group_box.isChecked())
+
+    def _toggle_pro(self, on):
+        if on:
+            open('pro_enabled', 'w').close()
+        else:
+            try:
+                os.remove('pro_enabled')
+            except FileNotFoundError:
+                pass
+        QtWidgets.QMessageBox.information(
+            self, "Restart Required",
+            "Please restart the application for Pro changes to take effect.")
 
     def _load_dark_mode_setting(self) -> bool:
         """Load dark mode preference from QSettings, or use system preference if not set."""

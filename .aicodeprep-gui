@@ -16,6 +16,7 @@ splitter_state=AAAA/wAAAAEAAAACAAABdQAAAKEB/////wEAAAACAA==
 .clinerules
 pyproject.toml
 README.md
+Z.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui.py
@@ -27,8 +28,6 @@ aicodeprep_gui\update_checker.py
 aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
 aicodeprep_gui\data\default_config.toml
-aicodeprep_gui\data\fonts\JetBrainsMono-Regular.ttf
-aicodeprep_gui\data\fonts\JetBrainsMono-VariableFont_wght.ttf
-aicodeprep_gui\data\fonts\Lekton-Regular.ttf
-aicodeprep_gui\data\fonts\SpaceMono-Regular.ttf
 aicodeprep_gui\images\__init__.py
+aicodeprep_gui\pro\patches.py
+aicodeprep_gui\pro\__init__.py

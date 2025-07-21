@@ -1,39 +1,19 @@
 -- secretlint
 
-potential bugs:
-
-automatic update checker glitchy
-verify mac os finder menu installer
-
-Target directory: .
-2025-07-14 13:05:17,263 - INFO - Starting code concatenation...
-2025-07-14 13:05:17,263 - INFO - Starting initial fast scan in: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-c-lazyloadingworks - Copy
-2025-07-14 13:05:17,277 - INFO - Initial scan collected 105 items.
-2025-07-14 13:05:17,289 - ERROR - Error creating metric request for event 'open': 'FileSelectionGUI' object has no attribute 'network_manager'
-2025-07-14 13:05:17,861 - INFO - Restored splitter state from preferences
-[gui] Starting update check...
-[update_checker] Starting update check for version 1.0.8
-[update_checker] Reset prompted_this_run flag to False
-[update_checker] Starting background update check thread
-[gui] Update check thread started
-
-Windows registry path quoting bug
-windows_registry.py:get_registry_command() returns
-f'"{pythonw_exe}" "{script_path}" "%V"'
-If either path contains spaces, the nested quotes are not escaped, which breaks the registry entry.
-→ Fix: use shlex.quote() or raw-string escaping.
-
-Linux Nautilus script name collision
-The generated script is always named Open with aicodeprep-gui; if the user already installed an older version, the file will be overwritten silently.
-→ Fix: append version or hash to filename, or warn before overwrite.
-Update check can block on slow network
-\_UpdateFetchWorker uses requests.get() with timeout=5, but on flaky networks the worker thread never returns if DNS stalls.
-→ Fix: set timeout=(3, 5) (connect, read) and wrap in try/except.
-
 ---
+
+single triple backtick
+
+definite add, these i run into often enough to be annoying when coding with ai:
+AI powered ability to compress any part of a project's code, not just letting it try by itself
+specific folders, files, more than one type of compression
+could compress entire sections of repositories while still showing their inputs and outputs and how they interact with the rest of it
 
 free:
 quick how to on how to use it, on first start and put in menu
+better explanations and proof or repeatable tests people can do to prove how it is better to do things this way to get the full intelligence from ai
+emphasis on how using several models and GPT 4.1 to be the agent in Cline - if the output of the smarter models isn't totally correct, GPT 4.1 often cleans it up
+without me even knowing! you can get 1.3x Claude 4 intelligence using Claude with GPT 4.1 as the agent.
 
 premium: (just random ideas to think about later)
 guarantee total privacy/option to block the tiny bit of metrics (its already anonymous and only when people use it or tokens just to know how people use it)

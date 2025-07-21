@@ -42,6 +42,8 @@ def main():
     parser = argparse.ArgumentParser(description="aicodeprep-gui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
     parser.add_argument("-n", "--no-copy", action="store_true",
                         help="Do NOT copy output to clipboard (default: copy to clipboard)")
+    parser.add_argument("--pro", action="store_true",
+                    help="Enable Pro features (fake license mode)")                    
     parser.add_argument("-o", "--output", default="fullcode.txt",
                         help="Output file name (default: fullcode.txt)")
     parser.add_argument("-d", "--debug", action="store_true",
@@ -60,6 +62,9 @@ def main():
     # --- END OF NEW ARGUMENTS ---
 
     args = parser.parse_args()
+    if '--pro' in sys.argv:
+        open('pro_enabled', 'w').close()   # Create marker file
+    
     force_update = args.force_update_check
 
     # Set Windows AppUserModelID for proper taskbar icon
