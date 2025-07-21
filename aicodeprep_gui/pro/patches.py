@@ -1,13 +1,4 @@
-"""Tiny UI patches for Pro mode."""
-from PySide6.QtGui import QLinearGradient, QColor
-
+"""UI patches for Pro mode - now just a placeholder since we're not modifying the banner."""
 def patch_banner(label):
-    """Switch banner to Pro colors & text."""
-    gradient = QLinearGradient(0, 0, 1, 0)
-    gradient.setColorAt(0, QColor("#00b894"))
-    gradient.setColorAt(1, QColor("#00cec9"))
-    label.setStyleSheet(
-        "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00b894, stop:1 #00cec9);"
-        "color: white; padding: 0px; border-radius: 8px;"
-    )
-    label.setText("AI Code Prep Pro")
+    """No longer needed - banner stays the same regardless of toggle state."""
+    pass

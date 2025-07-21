@@ -22,6 +22,8 @@ TESTIMONIALS.md
 # screenshots
 vcrs/
 
+pro_enabled
+
 # PyInstaller
 *.manifest
 *.spec

@@ -684,9 +684,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
         )
         self.vibe_label.setFixedHeight(44)
-        if pro.enabled:
-            from aicodeprep_gui.pro.patches import patch_banner
-            patch_banner(self.vibe_label)
+        # Pro banner patch removed
         banner_wrap = QtWidgets.QWidget()
         banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
         banner_layout.setContentsMargins(14, 0, 14, 0)
@@ -973,12 +971,26 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         ]
 
         
-        self.pro_toggle = QtWidgets.QCheckBox("Enable Pro features")
-        self.pro_toggle.setChecked(pro.enabled)
-        self.pro_toggle.setEnabled(pro.enabled)  # Add this line
+        # Add a label for the test text
+        self.pro_test_label = QtWidgets.QLabel("")
+        self.pro_test_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.pro_test_label.setVisible(False)  # Initially hidden
 
-        self.pro_toggle.toggled.connect(self._toggle_pro)
+        # Update the checkbox setup
+        self.pro_toggle = QtWidgets.QCheckBox("Pro toggle test")
+        self.pro_toggle.setToolTip("Toggle between test 1 and test 2 display")
+        self.pro_toggle.setChecked(False)  # Start with test 1
+        self.pro_toggle.setEnabled(pro.enabled)  # Greyed out if --pro not used
+        if pro.enabled:
+            self.pro_test_label.setText("pro toggle test 1")
+            self.pro_test_label.setVisible(True)
+
+        # Update the connection
+        self.pro_toggle.toggled.connect(self._toggle_pro_test)
+
+        # Add the test label to the premium content layout
         premium_content_layout.addWidget(self.pro_toggle)
+        premium_content_layout.addWidget(self.pro_test_label)
 
         # The main layout for the QGroupBox itself. It will contain the collapsible widget.
         premium_group_box_main_layout = QtWidgets.QVBoxLayout(premium_group_box)
@@ -1527,17 +1539,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         settings.setValue("options_visible", self.options_group_box.isChecked())
         settings.setValue("premium_visible", self.premium_group_box.isChecked())
 
-    def _toggle_pro(self, on):
-        if on:
-            open('pro_enabled', 'w').close()
+    def _toggle_pro_test(self, checked):
+        """Toggle between test 1 and test 2 text display."""
+        if checked:
+            self.pro_test_label.setText("pro toggle test 2")
         else:
-            try:
-                os.remove('pro_enabled')
-            except FileNotFoundError:
-                pass
-        QtWidgets.QMessageBox.information(
-            self, "Restart Required",
-            "Please restart the application for Pro changes to take effect.")
+            self.pro_test_label.setText("pro toggle test 1")
 
     def _load_dark_mode_setting(self) -> bool:
         """Load dark mode preference from QSettings, or use system preference if not set."""

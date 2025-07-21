@@ -1,5 +1,3 @@
-The --pro mode test worked but can you change it so instead of the enable pro features checkbox changing the banner like that just have it print text at the bottom of the ui that says "pro toggle test 1" or pro toggle test 2" for either on or off, and just make that checkbox toggle between 1 and 2. This way it doesn't affect pro being enabled, only the --pro command line argument will enable pro. if --pro is not on the command line then it'll be greyed out.
-
 aicodeprep_gui\data\default_config.toml:
 <code>
 # aicodeprep-gui - Default Configuration File
@@ -242,19 +240,10 @@ aicodeprep_gui\images\__init__.py:
 
 aicodeprep_gui\pro\patches.py:
 <code>
-"""Tiny UI patches for Pro mode."""
-from PySide6.QtGui import QLinearGradient, QColor
-
+"""UI patches for Pro mode - now just a placeholder since we're not modifying the banner."""
 def patch_banner(label):
-    """Switch banner to Pro colors & text."""
-    gradient = QLinearGradient(0, 0, 1, 0)
-    gradient.setColorAt(0, QColor("#00b894"))
-    gradient.setColorAt(1, QColor("#00cec9"))
-    label.setStyleSheet(
-        "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00b894, stop:1 #00cec9);"
-        "color: white; padding: 0px; border-radius: 8px;"
-    )
-    label.setText("AI Code Prep Pro")
+    """No longer needed - banner stays the same regardless of toggle state."""
+    pass
 
 </code>
 
@@ -1313,9 +1302,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
         )
         self.vibe_label.setFixedHeight(44)
-        if pro.enabled:
-            from aicodeprep_gui.pro.patches import patch_banner
-            patch_banner(self.vibe_label)
+        # Pro banner patch removed
         banner_wrap = QtWidgets.QWidget()
         banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
         banner_layout.setContentsMargins(14, 0, 14, 0)
@@ -1602,12 +1589,26 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         ]
 
         
-        self.pro_toggle = QtWidgets.QCheckBox("Enable Pro features")
-        self.pro_toggle.setChecked(pro.enabled)
-        self.pro_toggle.setEnabled(pro.enabled)  # Add this line
+        # Add a label for the test text
+        self.pro_test_label = QtWidgets.QLabel("")
+        self.pro_test_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.pro_test_label.setVisible(False)  # Initially hidden
 
-        self.pro_toggle.toggled.connect(self._toggle_pro)
+        # Update the checkbox setup
+        self.pro_toggle = QtWidgets.QCheckBox("Pro toggle test")
+        self.pro_toggle.setToolTip("Toggle between test 1 and test 2 display")
+        self.pro_toggle.setChecked(False)  # Start with test 1
+        self.pro_toggle.setEnabled(pro.enabled)  # Greyed out if --pro not used
+        if pro.enabled:
+            self.pro_test_label.setText("pro toggle test 1")
+            self.pro_test_label.setVisible(True)
+
+        # Update the connection
+        self.pro_toggle.toggled.connect(self._toggle_pro_test)
+
+        # Add the test label to the premium content layout
         premium_content_layout.addWidget(self.pro_toggle)
+        premium_content_layout.addWidget(self.pro_test_label)
 
         # The main layout for the QGroupBox itself. It will contain the collapsible widget.
         premium_group_box_main_layout = QtWidgets.QVBoxLayout(premium_group_box)
@@ -2156,17 +2157,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         settings.setValue("options_visible", self.options_group_box.isChecked())
         settings.setValue("premium_visible", self.premium_group_box.isChecked())
 
-    def _toggle_pro(self, on):
-        if on:
-            open('pro_enabled', 'w').close()
+    def _toggle_pro_test(self, checked):
+        """Toggle between test 1 and test 2 text display."""
+        if checked:
+            self.pro_test_label.setText("pro toggle test 2")
         else:
-            try:
-                os.remove('pro_enabled')
-            except FileNotFoundError:
-                pass
-        QtWidgets.QMessageBox.information(
-            self, "Restart Required",
-            "Please restart the application for Pro changes to take effect.")
+            self.pro_test_label.setText("pro toggle test 1")
 
     def _load_dark_mode_setting(self) -> bool:
         """Load dark mode preference from QSettings, or use system preference if not set."""
@@ -4073,6 +4069,3 @@ Thanks again to everyone who has tried the tool and provided feedback so far!
 
 </code>
 
-
-
-The --pro mode test worked but can you change it so instead of the enable pro features checkbox changing the banner like that just have it print text at the bottom of the ui that says "pro toggle test 1" or pro toggle test 2" for either on or off, and just make that checkbox toggle between 1 and 2. This way it doesn't affect pro being enabled, only the --pro command line argument will enable pro. if --pro is not on the command line then it'll be greyed out.
