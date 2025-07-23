@@ -212,6 +212,7 @@ class BaseNode(QGraphicsItem):
     "snap_to_grid": true
   }
 }
+(i want to have different model providers so i can track tokens by provider so how can i better handle the models stuff?)
 ```
 
 ---

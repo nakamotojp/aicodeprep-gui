@@ -47,7 +47,7 @@ These are enhancements I want to make available for everyone to improve the core
 - **🧠Context Packer Engine with several modes and granular control**
   System designed to intelligently compress parts of massive codebases, making it possible to feed huge projects into models without letting some agent guess at it.
 
-- **🔐 Secrets & API Key Detection**
+- **🔐 Secrets & API Key Detection & Blocking**
   Automatically scan for and offer to block API keys, passwords, and other secrets to prevent accidental exposure.
 
 - **🪟 Live Preview Panel**

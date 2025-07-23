@@ -17,6 +17,10 @@ wheels/
 *.egg
 __pycache__/
 
+loca/
+
+fullcode.txt
+
 TESTIMONIALS.md
 
 # screenshots

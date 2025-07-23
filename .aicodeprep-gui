@@ -9,14 +9,16 @@ version=1.0
 
 [window]
 width=556
-height=1365
-splitter_state=AAAA/wAAAAEAAAACAAABdQAAAKEB/////wEAAAACAA==
+height=1169
+splitter_state=AAAA/wAAAAEAAAACAAABVQAAAOgB/////wEAAAACAA==
 
 [files]
 .clinerules
+INSTRUCTIONS.md
 pyproject.toml
 README.md
 Z.md
+zzz_brain_mode.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui.py
@@ -28,6 +30,5 @@ aicodeprep_gui\update_checker.py
 aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
 aicodeprep_gui\data\default_config.toml
-aicodeprep_gui\images\__init__.py
 aicodeprep_gui\pro\patches.py
 aicodeprep_gui\pro\__init__.py
