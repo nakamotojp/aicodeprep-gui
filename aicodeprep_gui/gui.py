@@ -963,7 +963,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             ("Access to unlimited free API endpoints", "Get access to a curated, updated list of free and low-cost API endpoints for models like GPT-4.1, Deepseek, and more. Includes guides on how to use them for free as AI coding agents using this tool to go web chat <--> agents to keep your costs near zero."),
             ("AI \"Brain\" for complex problems", "Experimental Problem Solver, the \"Brain\" sends your context and prompt to several different LLMs simultaneously. The responses are then analyzed by a larger, more powerful model to synthesize the best possible solution."),
             ("Automated browser interaction", "Automatically opens your preferred AI chat web page, pastes the context and prompt into the chat box, and submits it for you. A huge time-saver."),
-            ("File preview window", "Adds a new dockable window that shows a read-only preview of the currently selected file in the file tree, making it easier to decide what to include."),
+            ("File preview window", "Adds a new dockable window that shows a read-only preview of the currently selected file in the file tree, making it easier to decide what to include. Toggle this option to enable/disable the preview pane."),
             ("aicp --skip-ui", "Option to skip opening the UI, instead just immediately create the context block using saved settings."),
             ("Optional Caching", "so only the files/folders that have changed are scanned and/or processed.")
 
@@ -991,6 +991,28 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Add the test label to the premium content layout
         premium_content_layout.addWidget(self.pro_toggle)
         premium_content_layout.addWidget(self.pro_test_label)
+
+        # Add Preview Window toggle to premium features
+        if pro.enabled:
+            self.preview_toggle = QtWidgets.QCheckBox("Enable file preview window")
+            self.preview_toggle.setToolTip("Show docked preview of selected files")
+            preview_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+            preview_help.setToolTip("Shows a docked window on the right that previews file contents when you select them in the tree")
+            preview_help.setAlignment(QtCore.Qt.AlignVCenter)
+
+            preview_layout = QtWidgets.QHBoxLayout()
+            preview_layout.setContentsMargins(0, 0, 0, 0)
+            preview_layout.addWidget(self.preview_toggle)
+            preview_layout.addWidget(preview_help)
+            preview_layout.addStretch()
+
+            premium_content_layout.addLayout(preview_layout)
+
+            # Initialize preview window
+            self.preview_window = pro.get_preview_window()
+            if self.preview_window:
+                self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.preview_window)
+                self.preview_toggle.toggled.connect(self.toggle_preview_window)
 
         # The main layout for the QGroupBox itself. It will contain the collapsible widget.
         premium_group_box_main_layout = QtWidgets.QVBoxLayout(premium_group_box)
@@ -1062,6 +1084,39 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.file_token_counts = {}
         self.update_token_counter()
         self._load_global_presets()
+
+    def toggle_preview_window(self, enabled):
+        """Toggle the preview window visibility."""
+        if self.preview_window:
+            if enabled:
+                self.preview_window.show()
+                # Connect tree selection signal
+                self.tree_widget.itemSelectionChanged.connect(self.update_file_preview)
+                # Show initial preview if something is selected
+                self.update_file_preview()
+            else:
+                self.preview_window.hide()
+                # Disconnect tree selection signal
+                try:
+                    self.tree_widget.itemSelectionChanged.disconnect(self.update_file_preview)
+                except TypeError:
+                    pass  # Signal was never connected
+
+    def update_file_preview(self):
+        """Update the preview based on current tree selection."""
+        if not self.preview_window or not self.preview_window.isVisible():
+            return
+
+        selected_items = self.tree_widget.selectedItems()
+        if selected_items:
+            item = selected_items[0]
+            file_path = item.data(0, QtCore.Qt.UserRole)
+            if file_path and os.path.isfile(file_path):
+                self.preview_window.preview_file(file_path)
+            else:
+                self.preview_window.clear_preview()
+        else:
+            self.preview_window.clear_preview()
 
     def on_item_expanded(self, item):
         """Handler for when a tree item is expanded, used for lazy loading."""

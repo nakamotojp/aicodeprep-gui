@@ -1,3 +1,33 @@
+# 🏆 Adding a New Pro Feature – Quick Reference
+
+1. **Check Pro Mode**  
+   Feature only shows up if `aicodeprep_gui.pro.enabled` is `True` (set by `--pro` flag or `pro_enabled` file).
+
+2. **Create the Feature File**  
+   Put it in `aicodeprep_gui/pro/` (e.g., `pro/my_feature.py`).  
+   Include a docstring at the top:  
+   `"""Brief one-line description of the feature."""`
+
+3. **Expose via `pro/__init__.py`**  
+   ```python
+   def get_my_feature():
+       from .my_feature import MyFeatureClass
+       return MyFeatureClass()
+Hook into gui.py
+Import: from aicodeprep_gui import pro
+Add checkbox in the Premium Features group box.
+Grey it out if not pro.enabled.
+On toggle, call your feature via pro.get_my_feature().
+Follow Existing Patterns
+Re-use apptheme.py styles and utilities.
+Respect dark/light mode.
+Log with logging.info(...) / logging.error(...).
+Test with aicp --pro.
+Example one-liner for .clinerules:
+“New pro features go in aicodeprep_gui/pro/, expose via pro/__init__.py, and connect in gui.py under the Premium Features panel, respecting pro.enabled check.”
+
+---
+
 # PySide6 Qt Documentation - Checkboxes and QTreeWidget Styling
 
 ## Overview
