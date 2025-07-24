@@ -8,15 +8,17 @@
 version=1.0
 
 [window]
-width=967
-height=1169
-splitter_state=AAAA/wAAAAEAAAACAAABVQAAAOgB/////wEAAAACAA==
+width=814
+height=1418
+splitter_state=AAAA/wAAAAEAAAACAAACVQAAANIB/////wEAAAACAA==
+
+[format]
+output_format=markdown
 
 [files]
 .clinerules
 pyproject.toml
 README.md
-Z.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui.py

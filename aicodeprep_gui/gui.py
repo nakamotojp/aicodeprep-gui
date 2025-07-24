@@ -347,6 +347,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.window_size_from_prefs = None
         self.splitter_state_from_prefs = None # Initialize this attribute
         self.load_prefs_if_exists()
+        # (Do not set format_combo index here! It must be set after the combo box is created.)
 
         if platform.system() == 'Windows':
             scale_factor = self.app.primaryScreen().logicalDotsPerInch() / 96.0
@@ -664,6 +665,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.format_combo.setFixedWidth(130)
         self.format_combo.setItemData(0, 'xml')
         self.format_combo.setItemData(1, 'markdown')
+        # Set format combo box index from prefs (now that combo box exists)
+        fmt = getattr(self, "output_format_from_prefs", "xml")
+        idx = 0 if fmt == "xml" else 1
+        self.format_combo.setCurrentIndex(idx)
+        self.format_combo.currentIndexChanged.connect(self._save_format_choice)
         output_label = QtWidgets.QLabel("&Output format:")
         output_label.setBuddy(self.format_combo)
         self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
@@ -695,8 +701,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # --- Update available label (hidden by default) ---
         # (Removed old update label block)
 
-        self.info_label = QtWidgets.QLabel("The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into Gemini in AI studio, Deepseek, ChatGPT, etc.")
+        self.info_label = QtWidgets.QLabel("The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into <a href='https://www.kimi.com/chat'>Kimi K2</a>, <a href='https://aistudio.google.com/'>Gemini</a>, <a href='https://chat.deepseek.com/'>Deepseek</a>, <a href='https://openrouter.ai/'>Openrouter</a>, <a href='https://chatgpt.com/'>ChatGPT</a>, <a href='https://claude.ai'>Claude</a>")
         self.info_label.setWordWrap(True)  # Add this line to enable word wrapping
+        self.info_label.setOpenExternalLinks(True)  # Enable clickable links
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
         main_layout.addWidget(self.info_label)
 
@@ -971,26 +978,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         ]
 
         
-        # Add a label for the test text
-        self.pro_test_label = QtWidgets.QLabel("")
-        self.pro_test_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.pro_test_label.setVisible(False)  # Initially hidden
-
-        # Update the checkbox setup
-        self.pro_toggle = QtWidgets.QCheckBox("Pro toggle test")
-        self.pro_toggle.setToolTip("Toggle between test 1 and test 2 display")
-        self.pro_toggle.setChecked(False)  # Start with test 1
-        self.pro_toggle.setEnabled(pro.enabled)  # Greyed out if --pro not used
-        if pro.enabled:
-            self.pro_test_label.setText("pro toggle test 1")
-            self.pro_test_label.setVisible(True)
-
-        # Update the connection
-        self.pro_toggle.toggled.connect(self._toggle_pro_test)
-
-        # Add the test label to the premium content layout
-        premium_content_layout.addWidget(self.pro_toggle)
-        premium_content_layout.addWidget(self.pro_test_label)
 
         # Add Preview Window toggle to premium features
         if pro.enabled:
@@ -1546,10 +1533,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         super(FileSelectionGUI, self).closeEvent(event)
 
     def load_prefs_if_exists(self):
-        checked, window_size, splitter_state = _read_prefs_file()
+        checked, window_size, splitter_state, output_format = _read_prefs_file()
         self.checked_files_from_prefs = checked
         self.window_size_from_prefs = window_size
         self.splitter_state_from_prefs = splitter_state
+        self.output_format_from_prefs = output_format
         self.prefs_loaded = True
 
     def save_prefs(self):
@@ -1563,7 +1551,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         
         size = self.size()
         splitter_state = self.splitter.saveState()
-        _write_prefs_file(checked_relpaths, window_size=(size.width(), size.height()), splitter_state=splitter_state)
+        fmt = self.format_combo.currentData()
+        _write_prefs_file(checked_relpaths, window_size=(size.width(), size.height()), splitter_state=splitter_state, output_format=fmt)
         self._save_prompt_options()
 
     def _load_prompt_options(self):
@@ -1594,12 +1583,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         settings.setValue("options_visible", self.options_group_box.isChecked())
         settings.setValue("premium_visible", self.premium_group_box.isChecked())
 
-    def _toggle_pro_test(self, checked):
-        """Toggle between test 1 and test 2 text display."""
-        if checked:
-            self.pro_test_label.setText("pro toggle test 2")
-        else:
-            self.pro_test_label.setText("pro toggle test 1")
 
     def _load_dark_mode_setting(self) -> bool:
         """Load dark mode preference from QSettings, or use system preference if not set."""
@@ -1663,11 +1646,24 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 f"font-size: 20px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
             )
 
-        # Update the options box style for the new theme
-        self._update_options_style()
+        # Update the groupbox styles for the new theme
+        self._update_groupbox_style(self.options_group_box)
+        self._update_groupbox_style(self.premium_group_box)
 
         # Save the user's dark mode preference
         self._save_dark_mode_setting()
+
+    def _save_format_choice(self, idx):
+        fmt = self.format_combo.currentData()
+        checked_relpaths = []
+        for rel_path, item in self.path_to_item.items():
+            if item.checkState(0) == QtCore.Qt.Checked:
+                file_path_abs = item.data(0, QtCore.Qt.UserRole)
+                if file_path_abs and os.path.isfile(file_path_abs):
+                    checked_relpaths.append(rel_path)
+        size = self.size()
+        splitter_state = self.splitter.saveState()
+        _write_prefs_file(checked_relpaths, window_size=(size.width(), size.height()), splitter_state=splitter_state, output_format=fmt)
 
     def _generate_arrow_pixmaps(self):
         """Generates arrow icons and saves them to the temporary directory."""
@@ -1935,8 +1931,8 @@ def _prefs_path():
     else:
         return new_path
 
-def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None):
-    """Write preferences to .aicodeprep-gui file"""
+def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, output_format=None):
+    """Write preferences to .aicodeprep-gui file, now supports [format] section."""
     new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
     try:
         with open(new_path, "w", encoding="utf-8") as f:
@@ -1954,20 +1950,25 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None):
             if window_size:
                 f.write(f"[window]\nwidth={window_size[0]}\nheight={window_size[1]}\n")
                 if splitter_state is not None:
-                    # Convert QByteArray to base64 string for storage
                     import base64
                     splitter_data = base64.b64encode(splitter_state).decode('utf-8')
                     f.write(f"splitter_state={splitter_data}\n")
                 f.write("\n")
-            if checked_relpaths: f.write("[files]\n" + "\n".join(checked_relpaths) + "\n")
+            if output_format in ("xml", "markdown"):
+                f.write(f"[format]\noutput_format={output_format}\n\n")
+            if checked_relpaths:
+                f.write("[files]\n" + "\n".join(checked_relpaths) + "\n")
         logging.info(f"Saved preferences to {new_path}")
-    except Exception as e: 
+    except Exception as e:
         logging.warning(f"Could not write .aicodeprep-gui: {e}")
 
 def _read_prefs_file():
-    """Read preferences file with backwards compatibility for legacy .auicp files (migrates to .aicodeprep-gui)"""
+    """Read preferences file with backwards compatibility for legacy .auicp files (migrates to .aicodeprep-gui).
+    Returns checked, window_size, splitter_state, output_format (default 'xml').
+    """
     checked, window_size, splitter_state = set(), None, None
-    width_val, height_val = None, None 
+    width_val, height_val = None, None
+    output_format = "xml"
 
     legacy_path = os.path.join(os.getcwd(), ".auicp")
     new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
@@ -1999,6 +2000,11 @@ def _read_prefs_file():
                             splitter_state = base64.b64decode(splitter_data.encode('utf-8'))
                         except Exception as e:
                             logging.warning(f"Failed to decode splitter state: {e}")
+                elif section == "format":
+                    if line.startswith("output_format="):
+                        val = line.split("=", 1)[1].strip().lower()
+                        if val in ("xml", "markdown"):
+                            output_format = val
 
             if width_val is not None and height_val is not None:
                 window_size = (width_val, height_val)
@@ -2008,7 +2014,7 @@ def _read_prefs_file():
             logging.info("Migrating preferences from .auicp to .aicodeprep-gui")
             try:
                 # Write the data to the new .aicodeprep-gui file
-                _write_prefs_file(list(checked), window_size, splitter_state) 
+                _write_prefs_file(list(checked), window_size, splitter_state, output_format)
                 logging.info("Successfully migrated preferences to .aicodeprep-gui")
             except Exception as e:
                 logging.error(f"Failed to migrate preferences: {e}")
@@ -2019,7 +2025,7 @@ def _read_prefs_file():
     except Exception as e:
         logging.error(f"Error reading preferences file: {e}")
 
-    return checked, window_size, splitter_state
+    return checked, window_size, splitter_state, output_format
 
 # --- Feature Voting Dialog ---
 class VoteDialog(QtWidgets.QDialog):
@@ -2033,6 +2039,8 @@ class VoteDialog(QtWidgets.QDialog):
       "Idea 7: Auto Block Secrets - Automatically block sensitive information like API keys and secrets from being included in the context, ensuring user privacy and security.",
       "Idea 8: Add a command line option to immediately create context, skip UI"
     ]
+    
+    VOTE_OPTIONS = ["High Priority", "Medium Priority", "Low Priority", "No Interest"]
 
     def __init__(self, user_uuid, network_manager, parent=None):
         super().__init__(parent)
