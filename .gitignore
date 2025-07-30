@@ -19,6 +19,8 @@ __pycache__/
 
 loca/
 
+.kilocode/
+
 aicodeprep_gui/gui_old.py
 
 fullcode.txt

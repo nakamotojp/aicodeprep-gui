@@ -1,73 +1,173 @@
+Some snippets or reminders/docs mixed in here:
 
+# PySide6: Multi-State Checkbox Tree (QTreeWidget/QTreeView) – Research & Implementation Notes
+
+# 1. Standard Checkbox Support
+
+from PySide6.QtGui import QStandardItem, QStandardItemModel
+from PySide6.QtCore import Qt, QModelIndex
+from PySide6.QtWidgets import QStyledItemDelegate
+
+- `QTreeWidget` and `QTreeView` support checkboxes via the `Qt.CheckStateRole` in the model.
+- The built-in states are:
+  - `Qt.Unchecked`
+  - `Qt.Checked`
+- Example(from docs):
+  ```python
+  if role == Qt.CheckStateRole and index.row() == 1 and index.column() == 0:
+      return Qt.CheckState.Checked
+  ```
+
+# 2. Limitation: Only 2 States by Default
+
+- Qt's standard checkboxes only support 2 states(checked/unchecked).
+- For more states(e.g., "skeleton" or custom), you must implement a custom solution.
+
+# 3. Custom Multi-State Checkbox Implementation
+
+# a. Subclass QStyledItemDelegate
+
+- Override `paint()` to draw custom icons for each state(e.g., unchecked, checked, skeleton, ...).
+- Override `editorEvent()` to handle mouse clicks and cycle through states.
+
+# Example Skeleton (not from docs, but required for >2 states):
+
+```python
+
+
+class MultiStateCheckboxDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        state = index.data(Qt.CheckStateRole)
+        # Draw custom icon based on state (0, 1, 2, ...)
+        # Use QPixmap or QIcon for each state
+
+    def editorEvent(self, event, model, option, index):
+        if event.type() == event.MouseButtonRelease:
+            state = index.data(Qt.CheckStateRole) or 0
+            next_state = (state + 1) % 3  # For 3 states: 0, 1, 2
+            model.setData(index, next_state, Qt.CheckStateRole)
+            return True
+        return False
+
+
+```
+
+- Assign the delegate to your tree:
+  ```python
+  tree.setItemDelegateForColumn(0, MultiStateCheckboxDelegate(tree))
+  ```
+
+# b. Store State in Model
+
+- Use `Qt.CheckStateRole` to store an integer(0, 1, 2, ...).
+- The delegate interprets this value and draws the appropriate icon.
+
+# c. Custom Icons
+
+- Use `QPixmap` or `QIcon` for each state(e.g., checkmark, skeleton, placeholder).
+- You can load icons from files or generate them programmatically.
+
+# d. Example: QStandardItemModel Tree
+
+```python
+
+model = QStandardItemModel()
+item = QStandardItem("File.txt")
+item.setData(0, Qt.CheckStateRole)  # Start at state 0
+model.appendRow(item)
+```
+
+# 4. Related PySide6/Qt Classes
+
+- `QTreeWidget`, `QTreeView`
+- `QStandardItemModel`, `QAbstractItemModel`
+- `QStyledItemDelegate`
+- `Qt.CheckStateRole`
+
+# 5. Useful Doc Snippets
+
+- [QTreeView API Reference](https: // github.com/fernicar/pyside6_examples_doc_2025_v6.9.1/blob/6.9.1/examples/widgets/itemviews/dirview/README.md # \_snippet_1)
+- [Custom Delegate Example](https: // github.com/fernicar/pyside6_examples_doc_2025_v6.9.1/blob/6.9.1/examples/widgets/itemviews/stardelegate/README.md # \_snippet_5)
+- [QStandardItemModel Tree Setup](https: // github.com/fernicar/pyside6_examples_doc_2025_v6.9.1/blob/6.9.1/examples/widgets/tutorials/modelview/README.md # \_snippet_5)
+
+# 6. State Persistence
+
+- Use `QSettings` to persist user state(see "State Persistence with QSettings" in docs).
+
+# 7. Summary
+
+- Out-of-the-box, only 2-state checkboxes are supported.
+- For 3 + states, subclass `QStyledItemDelegate`, override `paint` and `editorEvent`, and use custom icons.
+- Store the state as an integer in the model using `Qt.CheckStateRole`.
+- Assign your delegate to the tree to enable multi-state cycling on click.
 
 # 🏆 Adding a New Pro Feature – Quick Reference
 
-1. **Check Pro Mode**  
-   Feature only shows up if `aicodeprep_gui.pro.enabled` is `True` (set by `--pro` flag or `pro_enabled` file).
+1. ** Check Pro Mode **
+   Feature only shows up if `aicodeprep_gui.pro.enabled` is `True` (set by `- -pro` flag or `pro_enabled` file).
 
-2. **Create the Feature File**  
-   Put it in `aicodeprep_gui/pro/` (e.g., `pro/my_feature.py`).  
-   Include a docstring at the top:  
+2. ** Create the Feature File **
+   Put it in `aicodeprep_gui/pro /` (e.g., `pro/my_feature.py`).
+   Include a docstring at the top:
    `"""Brief one-line description of the feature."""`
 
-3. **Expose via `pro/__init__.py`**  
-   ```python
+3. ** Expose via `pro/__init__.py`** ```python
    def get_my_feature():
-       from .my_feature import MyFeatureClass
-       return MyFeatureClass()
-Hook into gui.py
-Import: from aicodeprep_gui import pro
-Add checkbox in the Premium Features group box.
-Grey it out if not pro.enabled.
-On toggle, call your feature via pro.get_my_feature().
-Follow Existing Patterns
-Re-use apptheme.py styles and utilities.
-Respect dark/light mode.
-Log with logging.info(...) / logging.error(...).
-Test with aicp --pro.
-Example one-liner for .clinerules:
-“New pro features go in aicodeprep_gui/pro/, expose via pro/__init__.py, and connect in gui.py under the Premium Features panel, respecting pro.enabled check.”
+   from .my_feature import MyFeatureClass
+   return MyFeatureClass()
+   Hook into gui.py
+   Import: from aicodeprep_gui import pro
+   Add checkbox in the Premium Features group box.
+   Grey it out if not pro.enabled.
+   On toggle, call your feature via pro.get_my_feature().
+   Follow Existing Patterns
+   Re-use apptheme.py styles and utilities.
+   Respect dark/light mode.
+   Log with logging.info(...) / logging.error(...).
+   Test with aicp - -pro.
+   Example one-liner for .clinerules:
+   “New pro features go in aicodeprep_gui/pro /, expose via pro/**init**.py, and connect in gui.py under the Premium Features panel, respecting pro.enabled check.”
 
 ---
 
 # PySide6 Qt Documentation - Checkboxes and QTreeWidget Styling
 
-## Overview
+# Overview
 
 This document contains relevant PySide6 documentation for working with QTreeWidget checkboxes and custom styling.
 
-## QTreeWidget Checkbox Styling
+# QTreeWidget Checkbox Styling
 
-### Basic QTreeWidget Setup
+# Basic QTreeWidget Setup
 
 ```python
 import sys
 from PySide6.QtWidgets import QApplication, QTreeWidget, QTreeWidgetItem
 
-app = QApplication()
-tree = QTreeWidget()
+app=QApplication()
+tree=QTreeWidget()
 tree.setColumnCount(2)
 tree.setHeaderLabels(["Name", "Type"])
 ```
 
-### Populating QTreeWidget with Checkable Items
+# Populating QTreeWidget with Checkable Items
 
 ```python
 # Example data structure
-data = {"Project A": ["file_a.py", "file_a.txt", "something.xls"],
+data={"Project A": ["file_a.py", "file_a.txt", "something.xls"],
         "Project B": ["file_b.csv", "photo.jpg"],
         "Project C": []}
 
 # Populate tree with checkable items
-items = []
+items=[]
 for key, values in data.items():
-    item = QTreeWidgetItem([key])
+    item=QTreeWidgetItem([key])
     item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
     item.setCheckState(0, QtCore.Qt.Unchecked)
 
     for value in values:
-        ext = value.split(".")[-1].upper()
-        child = QTreeWidgetItem([value, ext])
+        ext=value.split(".")[-1].upper()
+        child=QTreeWidgetItem([value, ext])
         child.setFlags(child.flags() | QtCore.Qt.ItemIsUserCheckable)
         child.setCheckState(0, QtCore.Qt.Unchecked)
         item.addChild(child)
@@ -76,26 +176,26 @@ for key, values in data.items():
 tree.insertTopLevelItems(0, items)
 ```
 
-## Custom Styling with StyleSheets
+# Custom Styling with StyleSheets
 
-### Basic QTreeWidget Indicator Styling
+# Basic QTreeWidget Indicator Styling
 
 ```css
-QTreeView::indicator,
-QTreeWidget::indicator {
+QTreeView:: indicator,
+QTreeWidget:: indicator {
   width: 16px;
   height: 16px;
   border-radius: 3px;
 }
 
-QTreeView::indicator:unchecked,
-QTreeWidget::indicator:unchecked {
+QTreeView: : indicator: unchecked,
+QTreeWidget: : indicator: unchecked {
   background-color: #ffffff;
   border: 2px solid #aaaaaa;
 }
 
-QTreeView::indicator:checked,
-QTreeWidget::indicator:checked {
+QTreeView: : indicator: checked,
+QTreeWidget: : indicator: checked {
   background-color: #ffffff;
   border: 2px solidrgba(112, 164, 66, 1);
   image: url(
@@ -105,7 +205,7 @@ QTreeWidget::indicator:checked {
 }
 ```
 
-### Applying Stylesheets in PySide6
+# Applying Stylesheets in PySide6
 
 ```python
 from PySide6.QtWidgets import QApplication
@@ -118,15 +218,15 @@ tree_widget.setStyleSheet("""
 """)
 
 # Method 2: Apply to entire application
-app = QApplication()
+app=QApplication()
 with open("style.qss", "r") as f:
-    _style = f.read()
+    _style=f.read()
     app.setStyleSheet(_style)
 ```
 
-## Creating Custom Checkmark Images Programmatically
+# Creating Custom Checkmark Images Programmatically
 
-### Using QPainter to Create Checkmark
+# Using QPainter to Create Checkmark
 
 ```python
 from PySide6.QtGui import QPixmap, QPainter, QPen, QColor
@@ -134,13 +234,13 @@ from PySide6.QtCore import Qt
 
 def create_checkmark_pixmap(size=16, color="#0078D4"):
     """Create a checkmark pixmap programmatically."""
-    pixmap = QPixmap(size, size)
+    pixmap=QPixmap(size, size)
     pixmap.fill(Qt.transparent)
 
-    painter = QPainter(pixmap)
+    painter=QPainter(pixmap)
     painter.setRenderHint(QPainter.Antialiasing)
 
-    pen = QPen(QColor(color))
+    pen=QPen(QColor(color))
     pen.setWidth(2)
     pen.setCapStyle(Qt.RoundCap)
     pen.setJoinStyle(Qt.RoundJoin)
@@ -154,18 +254,18 @@ def create_checkmark_pixmap(size=16, color="#0078D4"):
     return pixmap
 ```
 
-## Common QTreeWidget Patterns
+# Common QTreeWidget Patterns
 
-### Handling Item State Changes
+# Handling Item State Changes
 
 ```python
 def handle_item_changed(self, item, column):
     if column == 0:
-        new_state = item.checkState(0)
+        new_state=item.checkState(0)
         # Apply state to children
         def apply_to_children(parent_item, state):
             for i in range(parent_item.childCount()):
-                child = parent_item.child(i)
+                child=parent_item.child(i)
                 if child.flags() & QtCore.Qt.ItemIsUserCheckable:
                     child.setCheckState(0, state)
                     if child.childCount() > 0:
@@ -176,36 +276,37 @@ def handle_item_changed(self, item, column):
 tree_widget.itemChanged.connect(handle_item_changed)
 ```
 
-### Getting Selected Items
+# Getting Selected Items
 
 ```python
 def get_selected_files(self):
-    selected = []
-    iterator = QtWidgets.QTreeWidgetItemIterator(self.tree_widget)
+    selected=[]
+    iterator=QtWidgets.QTreeWidgetItemIterator(self.tree_widget)
     while iterator.value():
-        item = iterator.value()
+        item=iterator.value()
         if item.checkState(0) == QtCore.Qt.Checked:
-            file_path = item.data(0, QtCore.Qt.UserRole)
+            file_path=item.data(0, QtCore.Qt.UserRole)
             if file_path and os.path.isfile(file_path):
                 selected.append(file_path)
         iterator += 1
     return selected
 ```
 
-## Dark Mode Support
+# Dark Mode Support
 
-### Detecting System Dark Mode
+# Detecting System Dark Mode
 
 ```python
 def system_pref_is_dark() -> bool:
     """Detect if system is using dark mode."""
-    system = platform.system()
+    system=platform.system()
 
     if system == "Darwin":  # macOS
         try:
             import subprocess
-            cmd = "defaults read -g AppleInterfaceStyle"
-            result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+            cmd="defaults read -g AppleInterfaceStyle"
+            result=subprocess.run(
+                cmd, shell=True, text=True, capture_output=True)
             return result.stdout.strip() == "Dark"
         except:
             pass
@@ -213,10 +314,10 @@ def system_pref_is_dark() -> bool:
     elif system == "Windows":  # Windows 10+
         try:
             import winreg
-            registry = winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
-            reg_keypath = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
-            key = winreg.OpenKey(registry, reg_keypath)
-            value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+            registry=winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+            reg_keypath=r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+            key=winreg.OpenKey(registry, reg_keypath)
+            value, _=winreg.QueryValueEx(key, "AppsUseLightTheme")
             return value == 0
         except:
             pass
@@ -225,18 +326,18 @@ def system_pref_is_dark() -> bool:
     return QApplication.palette().color(QPalette.Window).lightness() < 128
 ```
 
-### Dark Mode Checkbox Styling
+# Dark Mode Checkbox Styling
 
 ```css
-/* Dark mode checkbox styling */
-QTreeView::indicator:unchecked,
-QTreeWidget::indicator:unchecked {
+/ * Dark mode checkbox styling * /
+QTreeView: : indicator: unchecked,
+QTreeWidget: : indicator: unchecke {
   background-color: #2b2b2b;
   border: 2px solid #555555;
 }
 
-QTreeView::indicator:checked,
-QTreeWidget::indicator:checked {
+QTreeView: : indicator: checked,
+QTreeWidget: : indicator: checked {
   background-color: #2b2b2b;
   border: 2px solid #0078d4;
   image: url(
@@ -246,24 +347,24 @@ QTreeWidget::indicator:checked {
 }
 ```
 
-## Best Practices
+# Best Practices
 
-1. **Always use SVG for scalable icons** - SVG icons scale better across different DPI settings
-2. **Provide both light and dark mode styles** - Modern applications should support both themes
-3. **Use data URIs for simple icons** - Avoids external file dependencies
-4. **Test on different operating systems** - Checkbox rendering can vary between platforms
-5. **Use proper signal blocking** - Prevent infinite loops when programmatically changing states
+1. ** Always use SVG for scalable icons ** - SVG icons scale better across different DPI settings
+2. ** Provide both light and dark mode styles ** - Modern applications should support both themes
+3. ** Use data URIs for simple icons ** - Avoids external file dependencies
+4. ** Test on different operating systems ** - Checkbox rendering can vary between platforms
+5. ** Use proper signal blocking ** - Prevent infinite loops when programmatically changing states
 
-## Troubleshooting Common Issues
+# Troubleshooting Common Issues
 
-### Issue: Checkboxes show solid color instead of checkmark
+# Issue: Checkboxes show solid color instead of checkmark
 
-**Solution**: Ensure the `image` property is set in the CSS for the `:checked` state, and that the image path/data URI is valid.
+** Solution**: Ensure the `image` property is set in the CSS for the `: checked` state, and that the image path/data URI is valid.
 
-### Issue: Checkmark not visible in dark mode
+# Issue: Checkmark not visible in dark mode
 
 **Solution**: Use appropriate contrast colors and ensure the SVG stroke color is visible against the background.
 
-### Issue: Performance issues with large trees
+# Issue: Performance issues with large trees
 
 **Solution**: Use lazy loading and virtual scrolling for large datasets.

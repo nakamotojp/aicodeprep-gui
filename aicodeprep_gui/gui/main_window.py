@@ -320,6 +320,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             QTreeView, QTreeWidget {
                 outline: 2; /* Remove focus rectangle */
             }
+            QTreeView::item:selected, QTreeWidget::item:selected {
+                background-color: #8B0000; /* Dark red instead of blue */
+                color: white;
+            }
         """
         checkbox_style = get_checkbox_style_dark() if self.is_dark_mode else get_checkbox_style_light()
         self.tree_widget.setStyleSheet(base_style + checkbox_style)

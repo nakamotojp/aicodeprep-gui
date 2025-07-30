@@ -8,16 +8,17 @@
 version=1.0
 
 [window]
-width=830
-height=1430
+width=949
+height=1470
 splitter_state=AAAA/wAAAAEAAAACAAADAAAAAPwB/////wEAAAACAA==
 
 [format]
 output_format=markdown
 
 [files]
+.clinerules
 pyproject.toml
-README.md
+pyside6_checkbox_tree_docs.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui_old.py
@@ -28,6 +29,7 @@ aicodeprep_gui\smart_logic.py
 aicodeprep_gui\update_checker.py
 aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
+aicodeprep_gui\data\AICodePrep.workflow.zip
 aicodeprep_gui\data\default_config.toml
 aicodeprep_gui\gui\main_window.py
 aicodeprep_gui\gui\__init__.py
