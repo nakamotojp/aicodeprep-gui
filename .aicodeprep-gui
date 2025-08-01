@@ -8,8 +8,8 @@
 version=1.0
 
 [window]
-width=949
-height=1470
+width=1535
+height=1321
 splitter_state=AAAA/wAAAAEAAAACAAADAAAAAPwB/////wEAAAACAA==
 
 [format]
@@ -17,8 +17,11 @@ output_format=markdown
 
 [files]
 .clinerules
+INSTRUCTIONS.md
 pyproject.toml
-pyside6_checkbox_tree_docs.md
+README.md
+Z.md
+zzz_brain_mode.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui_old.py
@@ -29,7 +32,6 @@ aicodeprep_gui\smart_logic.py
 aicodeprep_gui\update_checker.py
 aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
-aicodeprep_gui\data\AICodePrep.workflow.zip
 aicodeprep_gui\data\default_config.toml
 aicodeprep_gui\gui\main_window.py
 aicodeprep_gui\gui\__init__.py
@@ -54,3 +56,4 @@ aicodeprep_gui\images\__init__.py
 aicodeprep_gui\pro\patches.py
 aicodeprep_gui\pro\preview_window.py
 aicodeprep_gui\pro\__init__.py
+loca\TODO.md

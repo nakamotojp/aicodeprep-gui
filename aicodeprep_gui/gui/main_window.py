@@ -12,7 +12,7 @@ from aicodeprep_gui import update_checker
 from PySide6.QtCore import QTemporaryDir
 from importlib import resources
 from aicodeprep_gui.apptheme import (
-    system_pref_is_dark, apply_dark_palette, apply_light_palette, 
+    system_pref_is_dark, apply_dark_palette, apply_light_palette,
     get_checkbox_style_dark, get_checkbox_style_light,
     create_arrow_pixmap, get_groupbox_style
 )
@@ -34,6 +34,7 @@ from .handlers.update_events import UpdateCheckWorker
 from .utils.metrics import MetricsManager
 from .utils.helpers import WindowHelpers
 
+
 class FileSelectionGUI(QtWidgets.QMainWindow):
     def __init__(self, files):
         super().__init__()
@@ -51,7 +52,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if self.temp_dir.isValid():
             self._generate_arrow_pixmaps()
         else:
-            logging.warning("Could not create temporary directory for theme assets.")
+            logging.warning(
+                "Could not create temporary directory for theme assets.")
 
         try:
             with resources.path('aicodeprep_gui.images', 'favicon.ico') as icon_path:
@@ -72,7 +74,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             tray.show()
             self.tray_icon = tray
         except FileNotFoundError:
-            logging.warning("Application icon 'favicon.ico' not found in package resources.")
+            logging.warning(
+                "Application icon 'favicon.ico' not found in package resources.")
 
         self.presets = []
         self.setAcceptDrops(True)
@@ -85,7 +88,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if not self.user_uuid:
             self.user_uuid = str(uuid.uuid4())
             settings.setValue("user_uuid", self.user_uuid)
-            logging.info(f"Generated new anonymous user UUID: {self.user_uuid}")
+            logging.info(
+                f"Generated new anonymous user UUID: {self.user_uuid}")
 
         app_open_count = settings.value("app_open_count", 0, type=int)
         try:
@@ -98,6 +102,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         self._send_metric_event("open")
 
+        # Show share dialog every 4th open
+        if self.app_open_count > 0 and self.app_open_count % 4 == 0:
+            # We use a timer to show the dialog slightly after the main window appears,
+            # which feels less intrusive.
+            QtCore.QTimer.singleShot(
+                1500, self.dialog_manager.open_share_dialog)
+
         install_date_str = settings.value("install_date")
         if not install_date_str:
             today_iso = date.today().isoformat()
@@ -107,7 +118,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         now = datetime.now()
         time_str = f"{now.strftime('%I').lstrip('0') or '12'}{now.strftime('%M')}{now.strftime('%p').lower()}"
-        request = QtNetwork.QNetworkRequest(QtCore.QUrl(f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={self.user_uuid}"))
+        request = QtNetwork.QNetworkRequest(QtCore.QUrl(
+            f"https://wuu73.org/dixels/newaicp.html?t={time_str}&user={self.user_uuid}"))
         self.network_manager.get(request)
 
         self.update_thread = None
@@ -118,7 +130,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.action = 'quit'
 
         self.prefs_filename = ".aicodeprep-gui"
-        self.remember_checkbox = None 
+        self.remember_checkbox = None
         self.preferences_manager.load_prefs_if_exists()
 
         if platform.system() == 'Windows':
@@ -140,10 +152,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             w, h = self.preferences_manager.window_size_from_prefs
             self.setGeometry(100, 100, w, h)
         else:
-            self.setGeometry(100, 100, int(600 * scale_factor), int(400 * scale_factor))
+            self.setGeometry(100, 100, int(600 * scale_factor),
+                             int(400 * scale_factor))
 
         self.is_dark_mode = self.ui_settings_manager._load_dark_mode_setting()
-        if self.is_dark_mode: apply_dark_palette(self.app)
+        if self.is_dark_mode:
+            apply_dark_palette(self.app)
 
         central = QtWidgets.QWidget()
         self.setCentralWidget(central)
@@ -152,47 +166,53 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         mb = self.menuBar()
         file_menu = mb.addMenu("&File")
-        
+
         # Add OS-specific installer menu items
         if platform.system() == "Windows":
             from .components.installer_dialogs import RegistryManagerDialog
+
             def open_registry_manager():
                 dialog = RegistryManagerDialog(self)
                 dialog.exec()
-            install_menu_act = QtGui.QAction("Install Right-Click Menu...", self)
+            install_menu_act = QtGui.QAction(
+                "Install Right-Click Menu...", self)
             install_menu_act.triggered.connect(open_registry_manager)
             file_menu.addAction(install_menu_act)
             file_menu.addSeparator()
-        
+
         elif platform.system() == "Darwin":
             from .components.installer_dialogs import MacInstallerDialog
+
             def open_mac_installer():
                 dialog = MacInstallerDialog(self)
                 dialog.exec()
-            install_menu_act = QtGui.QAction("Install Finder Quick Action...", self)
+            install_menu_act = QtGui.QAction(
+                "Install Finder Quick Action...", self)
             install_menu_act.triggered.connect(open_mac_installer)
             file_menu.addAction(install_menu_act)
             file_menu.addSeparator()
-        
+
         elif platform.system() == "Linux":
             from .components.installer_dialogs import LinuxInstallerDialog
+
             def open_linux_installer():
                 dialog = LinuxInstallerDialog(self)
                 dialog.exec()
-            install_menu_act = QtGui.QAction("Install File Manager Action...", self)
+            install_menu_act = QtGui.QAction(
+                "Install File Manager Action...", self)
             install_menu_act.triggered.connect(open_linux_installer)
             file_menu.addAction(install_menu_act)
             file_menu.addSeparator()
-        
+
         quit_act = QtGui.QAction("&Quit", self)
         quit_act.triggered.connect(self.quit_without_processing)
         file_menu.addAction(quit_act)
-        
+
         edit_menu = mb.addMenu("&Edit")
         new_preset_act = QtGui.QAction("&New Preset…", self)
         new_preset_act.triggered.connect(self.add_new_preset_dialog)
         edit_menu.addAction(new_preset_act)
-        
+
         open_settings_folder_act = QtGui.QAction("Open Settings Folder…", self)
         open_settings_folder_act.triggered.connect(self.open_settings_folder)
         edit_menu.addAction(open_settings_folder_act)
@@ -202,11 +222,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         links_act.triggered.connect(self.open_links_dialog)
         help_menu.addAction(links_act)
         help_menu.addSeparator()
-        
+
         about_act = QtGui.QAction("&About", self)
         about_act.triggered.connect(self.open_about_dialog)
         help_menu.addAction(about_act)
-        
+
         complain_act = QtGui.QAction("Send Ideas, bugs, thoughts!", self)
         complain_act.triggered.connect(self.open_complain_dialog)
         help_menu.addAction(complain_act)
@@ -216,19 +236,20 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.format_combo.setFixedWidth(130)
         self.format_combo.setItemData(0, 'xml')
         self.format_combo.setItemData(1, 'markdown')
-        
-        fmt = getattr(self.preferences_manager, "output_format_from_prefs", "xml")
+
+        fmt = getattr(self.preferences_manager,
+                      "output_format_from_prefs", "xml")
         idx = 0 if fmt == "xml" else 1
         self.format_combo.setCurrentIndex(idx)
         self.format_combo.currentIndexChanged.connect(self._save_format_choice)
-        
+
         output_label = QtWidgets.QLabel("&Output format:")
         output_label.setBuddy(self.format_combo)
-        
+
         self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
         self.dark_mode_box.setChecked(self.is_dark_mode)
         self.dark_mode_box.stateChanged.connect(self.toggle_dark_mode)
-        
+
         self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
         main_layout.addWidget(self.token_label)
         main_layout.addSpacing(8)
@@ -238,13 +259,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         vibe_font.setBold(True)
         vibe_font.setPointSize(self.default_font.pointSize() + 8)
         self.vibe_label.setFont(vibe_font)
-        self.vibe_label.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        self.vibe_label.setAlignment(
+            QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         self.vibe_label.setStyleSheet(
             "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
             "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
         )
         self.vibe_label.setFixedHeight(44)
-        
+
         banner_wrap = QtWidgets.QWidget()
         banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
         banner_layout.setContentsMargins(14, 0, 14, 0)
@@ -270,18 +292,20 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Preset buttons setup
         prompt_header_label = QtWidgets.QLabel("Prompt Preset Buttons:")
         main_layout.addWidget(prompt_header_label)
-        
+
         presets_wrapper = QtWidgets.QHBoxLayout()
         scroll_area = QtWidgets.QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_area.setFixedHeight(52)
-        
+
         scroll_widget = QtWidgets.QWidget()
         self.preset_strip = QtWidgets.QHBoxLayout(scroll_widget)
         self.preset_strip.setContentsMargins(0, 0, 0, 0)
-        
+
         add_preset_btn = QtWidgets.QPushButton("✚")
         add_preset_btn.setFixedSize(24, 24)
         add_preset_btn.setToolTip("New Preset…")
@@ -293,21 +317,22 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         delete_preset_btn.setToolTip("Delete a preset…")
         delete_preset_btn.clicked.connect(self.delete_preset_dialog)
         self.preset_strip.addWidget(delete_preset_btn)
-        
+
         self.preset_strip.addStretch()
-        
+
         scroll_area.setWidget(scroll_widget)
         presets_wrapper.addWidget(scroll_area)
         main_layout.addLayout(presets_wrapper)
 
         # Add explanation text below presets
-        preset_explanation = QtWidgets.QLabel("Presets help you save more time and will be saved for later use")
+        preset_explanation = QtWidgets.QLabel(
+            "Presets help you save more time and will be saved for later use")
         preset_explanation.setObjectName("preset_explanation")
         preset_explanation.setStyleSheet(
             f"font-size: 10px; color: {'#bbbbbb' if self.is_dark_mode else '#444444'};"
         )
         main_layout.addWidget(preset_explanation)
-        
+
         main_layout.addSpacing(8)
 
         # Tree widget and prompt setup
@@ -315,7 +340,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.tree_widget = QtWidgets.QTreeWidget()
         self.tree_widget.setHeaderLabels(["File/Folder"])
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        
+
         base_style = """
             QTreeView, QTreeWidget {
                 outline: 2; /* Remove focus rectangle */
@@ -325,26 +350,29 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 color: white;
             }
         """
-        checkbox_style = get_checkbox_style_dark() if self.is_dark_mode else get_checkbox_style_light()
+        checkbox_style = get_checkbox_style_dark(
+        ) if self.is_dark_mode else get_checkbox_style_light()
         self.tree_widget.setStyleSheet(base_style + checkbox_style)
-        
+
         self.splitter.addWidget(self.tree_widget)
-        
+
         prompt_widget = QtWidgets.QWidget()
         prompt_layout = QtWidgets.QVBoxLayout(prompt_widget)
         prompt_layout.setContentsMargins(0, 0, 0, 0)
-        prompt_layout.addWidget(QtWidgets.QLabel("Optional prompt/question for LLM (will be appended to the end):"))
+        prompt_layout.addWidget(QtWidgets.QLabel(
+            "Optional prompt/question for LLM (will be appended to the end):"))
         prompt_layout.addSpacing(8)
-        
+
         self.prompt_textbox = QtWidgets.QPlainTextEdit()
-        self.prompt_textbox.setPlaceholderText("Type your question or prompt here (optional)…")
+        self.prompt_textbox.setPlaceholderText(
+            "Type your question or prompt here (optional)…")
         prompt_layout.addWidget(self.prompt_textbox)
 
         self.clear_prompt_btn = QtWidgets.QPushButton("Clear")
         self.clear_prompt_btn.setToolTip("Clear the prompt box")
         self.clear_prompt_btn.clicked.connect(self.prompt_textbox.clear)
         prompt_layout.addWidget(self.clear_prompt_btn)
-        
+
         self.splitter.addWidget(prompt_widget)
         self.splitter.setStretchFactor(0, 4)
         self.splitter.setStretchFactor(1, 1)
@@ -358,13 +386,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             parent_node = root_node
             path_so_far = ""
             for part in parts[:-1]:
-                path_so_far = os.path.join(path_so_far, part) if path_so_far else part
+                path_so_far = os.path.join(
+                    path_so_far, part) if path_so_far else part
                 if path_so_far in self.path_to_item:
                     parent_node = self.path_to_item[path_so_far]
                 else:
                     new_parent = QtWidgets.QTreeWidgetItem(parent_node, [part])
                     new_parent.setIcon(0, self.folder_icon)
-                    new_parent.setFlags(new_parent.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    new_parent.setFlags(new_parent.flags()
+                                        | QtCore.Qt.ItemIsUserCheckable)
                     new_parent.setCheckState(0, QtCore.Qt.Unchecked)
                     self.path_to_item[path_so_far] = new_parent
                     parent_node = new_parent
@@ -376,7 +406,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
             if self.preferences_manager.prefs_loaded:
                 is_checked = rel_path in self.preferences_manager.checked_files_from_prefs
-            
+
             if os.path.isdir(abs_path):
                 item.setIcon(0, self.folder_icon)
                 item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
@@ -386,54 +416,64 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
                 if smart_logic.is_binary_file(abs_path):
                     is_checked = False
-            
-            item.setCheckState(0, QtCore.Qt.Checked if is_checked else QtCore.Qt.Unchecked)
+
+            item.setCheckState(
+                0, QtCore.Qt.Checked if is_checked else QtCore.Qt.Unchecked)
 
         # Connect tree signals
         self.tree_widget.itemExpanded.connect(self.on_item_expanded)
         self.tree_widget.itemChanged.connect(self.handle_item_changed)
-        
+
         # Auto-expand folders containing checked files
         if self.preferences_manager.prefs_loaded and self.preferences_manager.checked_files_from_prefs:
-            self._expand_folders_for_paths(self.preferences_manager.checked_files_from_prefs)
+            self._expand_folders_for_paths(
+                self.preferences_manager.checked_files_from_prefs)
         else:
             # On first load (no prefs), expand based on smart-selected files
-            initial_checked_paths = {rel_path for _, rel_path, is_checked in files if is_checked}
+            initial_checked_paths = {rel_path for _,
+                                     rel_path, is_checked in files if is_checked}
             self._expand_folders_for_paths(initial_checked_paths)
 
         # Checkboxes for options
-        self.remember_checkbox = QtWidgets.QCheckBox("Remember checked files for this folder, window size information")
+        self.remember_checkbox = QtWidgets.QCheckBox(
+            "Remember checked files for this folder, window size information")
         self.remember_checkbox.setChecked(True)
-        
-        self.prompt_top_checkbox = QtWidgets.QCheckBox("Add prompt/question to top")
-        self.prompt_bottom_checkbox = QtWidgets.QCheckBox("Add prompt/question to bottom")
-        
+
+        self.prompt_top_checkbox = QtWidgets.QCheckBox(
+            "Add prompt/question to top")
+        self.prompt_bottom_checkbox = QtWidgets.QCheckBox(
+            "Add prompt/question to bottom")
+
         # Load global prompt option settings
         self._load_prompt_options()
 
         # Save settings when toggled
-        self.prompt_top_checkbox.stateChanged.connect(self._save_prompt_options)
-        self.prompt_bottom_checkbox.stateChanged.connect(self._save_prompt_options)
-        
+        self.prompt_top_checkbox.stateChanged.connect(
+            self._save_prompt_options)
+        self.prompt_bottom_checkbox.stateChanged.connect(
+            self._save_prompt_options)
+
         # Options group
         options_group_box = QtWidgets.QGroupBox("Options")
         options_group_box.setCheckable(True)
         self.options_group_box = options_group_box
-        
+
         options_container = QtWidgets.QWidget()
         options_content_layout = QtWidgets.QVBoxLayout(options_container)
         options_content_layout.setContentsMargins(0, 5, 0, 5)
-        
+
         options_top_row = QtWidgets.QHBoxLayout()
         options_top_row.addWidget(output_label)
         options_top_row.addWidget(self.format_combo)
         options_top_row.addStretch()
         options_top_row.addWidget(self.dark_mode_box)
         options_content_layout.addLayout(options_top_row)
-        
+
         # Remember checkbox with help icon
-        remember_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
-        remember_help.setToolTip("Saves which files are included in the context for this folder, so you don't have to keep doing it over and over")
+        remember_help = QtWidgets.QLabel(
+            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        remember_help.setToolTip(
+            "Saves which files are included in the context for this folder, so you don't have to keep doing it over and over")
         remember_help.setAlignment(QtCore.Qt.AlignVCenter)
         remember_layout = QtWidgets.QHBoxLayout()
         remember_layout.setContentsMargins(0, 0, 0, 0)
@@ -443,8 +483,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         options_content_layout.addLayout(remember_layout)
 
         # Prompt top checkbox with help icon
-        prompt_top_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
-        prompt_top_help.setToolTip("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_top_help = QtWidgets.QLabel(
+            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        prompt_top_help.setToolTip(
+            "Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
         prompt_top_help.setAlignment(QtCore.Qt.AlignVCenter)
         prompt_top_layout = QtWidgets.QHBoxLayout()
         prompt_top_layout.setContentsMargins(0, 0, 0, 0)
@@ -454,8 +496,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         options_content_layout.addLayout(prompt_top_layout)
 
         # Prompt bottom checkbox with help icon
-        prompt_bottom_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
-        prompt_bottom_help.setToolTip("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_bottom_help = QtWidgets.QLabel(
+            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        prompt_bottom_help.setToolTip(
+            "Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
         prompt_bottom_help.setAlignment(QtCore.Qt.AlignVCenter)
         prompt_bottom_layout = QtWidgets.QHBoxLayout()
         prompt_bottom_layout.setContentsMargins(0, 0, 0, 0)
@@ -463,18 +507,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_bottom_layout.addWidget(prompt_bottom_help)
         prompt_bottom_layout.addStretch()
         options_content_layout.addLayout(prompt_bottom_layout)
-        
+
         group_box_main_layout = QtWidgets.QVBoxLayout(options_group_box)
         group_box_main_layout.setContentsMargins(10, 5, 10, 10)
         group_box_main_layout.addWidget(options_container)
-        
+
         options_group_box.toggled.connect(options_container.setVisible)
         options_group_box.toggled.connect(self._save_panel_visibility)
         self._update_groupbox_style(self.options_group_box)
         main_layout.addWidget(self.options_group_box)
 
-        # --- New Premium Features Group ---
-        premium_group_box = QtWidgets.QGroupBox("Premium Features - just ideas for now")
+        # --- New Pro Features Group ---
+        premium_group_box = QtWidgets.QGroupBox("Pro Features")
         premium_group_box.setCheckable(True)
         self.premium_group_box = premium_group_box
 
@@ -487,50 +531,63 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         def create_feature_row(text: str, tooltip: str) -> QtWidgets.QHBoxLayout:
             layout = QtWidgets.QHBoxLayout()
             layout.setContentsMargins(0, 0, 0, 0)
-            
+
             checkbox = QtWidgets.QCheckBox(text)
             checkbox.setEnabled(False)
             layout.addWidget(checkbox)
-            
-            help_icon = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+
+            help_icon = QtWidgets.QLabel(
+                "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
             help_icon.setToolTip(tooltip)
             help_icon.setAlignment(QtCore.Qt.AlignVCenter)
             layout.addWidget(help_icon)
-            
+
             layout.addStretch()
             return layout
 
         # No placeholder features - only real pro features below
 
-        # Add Preview Window toggle to premium features
+        # Add Preview Window toggle to premium features (always visible)
+        self.preview_toggle = QtWidgets.QCheckBox(
+            "Enable file preview window")
+        # Tooltip will be set conditionally below
+        preview_help = QtWidgets.QLabel(
+            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        preview_help.setToolTip(
+            "Shows a docked window on the right that previews file contents when you select them in the tree")
+        preview_help.setAlignment(QtCore.Qt.AlignVCenter)
+
+        preview_layout = QtWidgets.QHBoxLayout()
+        preview_layout.setContentsMargins(0, 0, 0, 0)
+        preview_layout.addWidget(self.preview_toggle)
+        preview_layout.addWidget(preview_help)
+        preview_layout.addStretch()
+
+        premium_content_layout.addLayout(preview_layout)
+
         if pro.enabled:
-            self.preview_toggle = QtWidgets.QCheckBox("Enable file preview window")
-            self.preview_toggle.setToolTip("Show docked preview of selected files")
-            preview_help = QtWidgets.QLabel("<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
-            preview_help.setToolTip("Shows a docked window on the right that previews file contents when you select them in the tree")
-            preview_help.setAlignment(QtCore.Qt.AlignVCenter)
-
-            preview_layout = QtWidgets.QHBoxLayout()
-            preview_layout.setContentsMargins(0, 0, 0, 0)
-            preview_layout.addWidget(self.preview_toggle)
-            preview_layout.addWidget(preview_help)
-            preview_layout.addStretch()
-
-            premium_content_layout.addLayout(preview_layout)
-
+            self.preview_toggle.setEnabled(True)
+            self.preview_toggle.setToolTip(
+                "Show docked preview of selected files")
             # Initialize preview window
             self.preview_window = pro.get_preview_window()
             if self.preview_window:
-                self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.preview_window)
+                self.addDockWidget(
+                    QtCore.Qt.RightDockWidgetArea, self.preview_window)
                 self.preview_toggle.toggled.connect(self.toggle_preview_window)
+        else:
+            self.preview_toggle.setEnabled(False)
+            self.preview_toggle.setToolTip(
+                "Enable file preview window (Pro Feature)")
 
         # The main layout for the QGroupBox itself. It will contain the collapsible widget.
-        premium_group_box_main_layout = QtWidgets.QVBoxLayout(premium_group_box)
+        premium_group_box_main_layout = QtWidgets.QVBoxLayout(
+            premium_group_box)
         premium_group_box_main_layout.setContentsMargins(10, 5, 10, 10)
         premium_group_box_main_layout.addWidget(premium_container)
         premium_group_box.toggled.connect(premium_container.setVisible)
         premium_group_box.toggled.connect(self._save_panel_visibility)
-        
+
         # Apply style and add to main layout
         self._update_groupbox_style(self.premium_group_box)
         main_layout.addWidget(self.premium_group_box)
@@ -546,11 +603,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         process_button = QtWidgets.QPushButton("GENERATE CONTEXT!")
         process_button.clicked.connect(self.process_selected)
         button_layout1.addWidget(process_button)
-        
+
         select_all_button = QtWidgets.QPushButton("Select All")
         select_all_button.clicked.connect(self.select_all)
         button_layout1.addWidget(select_all_button)
-        
+
         deselect_all_button = QtWidgets.QPushButton("Deselect All")
         deselect_all_button.clicked.connect(self.deselect_all)
         button_layout1.addWidget(deselect_all_button)
@@ -559,7 +616,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         load_prefs_button = QtWidgets.QPushButton("Load preferences")
         load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked)
         button_layout2.addWidget(load_prefs_button)
-        
+
         quit_button = QtWidgets.QPushButton("Quit")
         quit_button.clicked.connect(self.quit_without_processing)
         button_layout2.addWidget(quit_button)
@@ -571,24 +628,27 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.update_label = QtWidgets.QLabel()
         self.update_label.setAlignment(QtCore.Qt.AlignCenter)
         self.update_label.setVisible(False)
-        self.update_label.setStyleSheet("color: #28a745; font-weight: bold; padding: 5px;")
-        self.update_label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        self.update_label.setStyleSheet(
+            "color: #28a745; font-weight: bold; padding: 5px;")
+        self.update_label.setTextInteractionFlags(
+            QtCore.Qt.TextSelectableByMouse)
         main_layout.addWidget(self.update_label)
 
         # --- Footer Layout ---
         footer_layout = QtWidgets.QHBoxLayout()
-        
+
         email_text = '<a href="mailto:tom@wuu73.org">tom@wuu73.org</a>'
         email_label = QtWidgets.QLabel(email_text)
         email_label.setOpenExternalLinks(True)
         footer_layout.addWidget(email_label)
-        
+
         footer_layout.addStretch()
-        
-        website_label = QtWidgets.QLabel('<a href="https://wuu73.org/aicp">aicodeprep-gui</a>')
+
+        website_label = QtWidgets.QLabel(
+            '<a href="https://wuu73.org/aicp">aicodeprep-gui</a>')
         website_label.setOpenExternalLinks(True)
         footer_layout.addWidget(website_label)
-        
+
         main_layout.addLayout(footer_layout)
 
         self.update_token_counter()
@@ -661,25 +721,30 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             "light_fg": "#333333",
             "dark_fg": "#DDDDDD"
         }
-        
+
         # Light theme arrows
-        pix_right_light = create_arrow_pixmap('right', color=colors["light_fg"])
-        path_right_light = os.path.join(self.temp_dir.path(), "arrow_right_light.png")
+        pix_right_light = create_arrow_pixmap(
+            'right', color=colors["light_fg"])
+        path_right_light = os.path.join(
+            self.temp_dir.path(), "arrow_right_light.png")
         pix_right_light.save(path_right_light, "PNG")
-        
+
         pix_down_light = create_arrow_pixmap('down', color=colors["light_fg"])
-        path_down_light = os.path.join(self.temp_dir.path(), "arrow_down_light.png")
+        path_down_light = os.path.join(
+            self.temp_dir.path(), "arrow_down_light.png")
         pix_down_light.save(path_down_light, "PNG")
 
         # Dark theme arrows
         pix_right_dark = create_arrow_pixmap('right', color=colors["dark_fg"])
-        path_right_dark = os.path.join(self.temp_dir.path(), "arrow_right_dark.png")
+        path_right_dark = os.path.join(
+            self.temp_dir.path(), "arrow_right_dark.png")
         pix_right_dark.save(path_right_dark, "PNG")
 
         pix_down_dark = create_arrow_pixmap('down', color=colors["dark_fg"])
-        path_down_dark = os.path.join(self.temp_dir.path(), "arrow_down_dark.png")
+        path_down_dark = os.path.join(
+            self.temp_dir.path(), "arrow_down_dark.png")
         pix_down_dark.save(path_down_dark, "PNG")
-        
+
         self.arrow_pixmap_paths = {
             "light": {"down": path_down_light, "right": path_right_light},
             "dark": {"down": path_down_dark, "right": path_right_dark},
@@ -693,9 +758,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         theme = "dark" if self.is_dark_mode else "light"
         paths = self.arrow_pixmap_paths.get(theme)
         if not paths:
-            return # Don't apply style if paths aren't generated
-        
-        style = get_groupbox_style(paths['down'], paths['right'], self.is_dark_mode)
+            return  # Don't apply style if paths aren't generated
+
+        style = get_groupbox_style(
+            paths['down'], paths['right'], self.is_dark_mode)
         groupbox.setStyleSheet(style)
 
     def _start_update_check(self):
@@ -723,7 +789,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.update_label.setVisible(False)
 
     def process_selected(self):
-        self._send_metric_event("generate_start", token_count=self.total_tokens)
+        self._send_metric_event(
+            "generate_start", token_count=self.total_tokens)
         self.action = 'process'
         selected_files = self.get_selected_files()
         chosen_fmt = self.format_combo.currentData()
@@ -803,14 +870,16 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if enabled:
                 self.preview_window.show()
                 # Connect tree selection signal
-                self.tree_widget.itemSelectionChanged.connect(self.update_file_preview)
+                self.tree_widget.itemSelectionChanged.connect(
+                    self.update_file_preview)
                 # Show initial preview if something is selected
                 self.update_file_preview()
             else:
                 self.preview_window.hide()
                 # Disconnect tree selection signal
                 try:
-                    self.tree_widget.itemSelectionChanged.disconnect(self.update_file_preview)
+                    self.tree_widget.itemSelectionChanged.disconnect(
+                        self.update_file_preview)
                 except TypeError:
                     pass  # Signal was never connected
 

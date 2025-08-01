@@ -38,12 +38,14 @@ console_handler.setFormatter(formatter)
 # Add handler to root logger
 logger.addHandler(console_handler)
 
+
 def main():
-    parser = argparse.ArgumentParser(description="aicodeprep-gui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
+    parser = argparse.ArgumentParser(
+        description="aicodeprep-gui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
     parser.add_argument("-n", "--no-copy", action="store_true",
                         help="Do NOT copy output to clipboard (default: copy to clipboard)")
     parser.add_argument("--pro", action="store_true",
-                    help="Enable Pro features (fake license mode)")                    
+                        help="Enable Pro features (fake license mode)")
     parser.add_argument("-o", "--output", default="fullcode.txt",
                         help="Output file name (default: fullcode.txt)")
     parser.add_argument("-d", "--debug", action="store_true",
@@ -55,26 +57,31 @@ def main():
 
     # --- ADD THESE NEW ARGUMENTS ---
     if platform.system() == "Windows":
-        parser.add_argument("--install-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
-        parser.add_argument("--remove-context-menu-privileged", action="store_true", help=argparse.SUPPRESS)
+        parser.add_argument("--install-context-menu-privileged",
+                            action="store_true", help=argparse.SUPPRESS)
+        parser.add_argument("--remove-context-menu-privileged",
+                            action="store_true", help=argparse.SUPPRESS)
         parser.add_argument("--menu-text", type=str, help=argparse.SUPPRESS)
-        parser.add_argument("--disable-classic-menu", action="store_true", help=argparse.SUPPRESS)
+        parser.add_argument("--disable-classic-menu",
+                            action="store_true", help=argparse.SUPPRESS)
     # --- END OF NEW ARGUMENTS ---
 
     args = parser.parse_args()
     if '--pro' in sys.argv:
         open('pro_enabled', 'w').close()   # Create marker file
-    
+
     force_update = args.force_update_check
 
     # Set Windows AppUserModelID for proper taskbar icon
     if platform.system() == "Windows":
-        myappid = 'wuu73.aicodeprep-gui.1.0.8'  # arbitrary unique string
+        myappid = 'wuu73.aicodeprep-gui.1.1.0'  # arbitrary unique string
         try:
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                myappid)
         except AttributeError:
             # Fails on older Windows versions, but that's acceptable.
-            logging.warning("Could not set AppUserModelID. Taskbar icon may not be correct on older Windows.")
+            logging.warning(
+                "Could not set AppUserModelID. Taskbar icon may not be correct on older Windows.")
 
     # --- ADD THIS NEW LOGIC BLOCK ---
     if platform.system() == "Windows":
@@ -86,7 +93,8 @@ def main():
             print("Running privileged action: Install context menu...")
             menu_text = getattr(args, 'menu_text', None)
             enable_classic = not getattr(args, 'disable_classic_menu', False)
-            windows_registry.install_context_menu(menu_text, enable_classic_menu=enable_classic)
+            windows_registry.install_context_menu(
+                menu_text, enable_classic_menu=enable_classic)
             sys.exit(0)
         if args.remove_context_menu_privileged and windows_registry:
             print("Running privileged action: Remove context menu...")
@@ -136,8 +144,10 @@ def main():
     action, _ = show_file_selection_gui(all_files_with_flags)
 
     if action != 'quit':
-        logger.info("Buy my cat a treat, comments, ideas for improvement appreciated: ")
+        logger.info(
+            "Buy my cat a treat, comments, ideas for improvement appreciated: ")
         logger.info("https://wuu73.org/hello.html")
+
 
 if __name__ == "__main__":
     main()
