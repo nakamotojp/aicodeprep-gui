@@ -17,11 +17,9 @@ output_format=markdown
 
 [files]
 .clinerules
-INSTRUCTIONS.md
 pyproject.toml
 README.md
 Z.md
-zzz_brain_mode.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\gui_old.py
@@ -38,6 +36,7 @@ aicodeprep_gui\gui\__init__.py
 aicodeprep_gui\gui\components\dialogs.py
 aicodeprep_gui\gui\components\installer_dialogs.py
 aicodeprep_gui\gui\components\layouts.py
+aicodeprep_gui\gui\components\multi_state_level_delegate.py
 aicodeprep_gui\gui\components\preset_buttons.py
 aicodeprep_gui\gui\components\tree_widget.py
 aicodeprep_gui\gui\components\__init__.py
@@ -56,4 +55,4 @@ aicodeprep_gui\images\__init__.py
 aicodeprep_gui\pro\patches.py
 aicodeprep_gui\pro\preview_window.py
 aicodeprep_gui\pro\__init__.py
-loca\TODO.md
+pyside6_docs\level_column_delegate_guide.md

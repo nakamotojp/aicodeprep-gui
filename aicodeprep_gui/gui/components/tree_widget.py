@@ -2,6 +2,8 @@ import os
 import logging
 from PySide6 import QtWidgets, QtCore, QtGui
 from aicodeprep_gui import smart_logic
+from .multi_state_level_delegate import LEVEL_ROLE
+
 
 class FileTreeManager:
     def __init__(self, main_window):
@@ -9,7 +11,7 @@ class FileTreeManager:
 
     def on_item_expanded(self, item):
         dir_path = item.data(0, QtCore.Qt.UserRole)
-        if not dir_path or not os.path.isdir(dir_path): 
+        if not dir_path or not os.path.isdir(dir_path):
             return
         if item.childCount() > 0 and item.child(0).data(0, QtCore.Qt.UserRole) is not None:
             return
@@ -20,15 +22,21 @@ class FileTreeManager:
                 try:
                     rel_path = os.path.relpath(abs_path, os.getcwd())
                 except ValueError:
-                    logging.warning(f"Skipping {abs_path}: not on current drive.")
+                    logging.warning(
+                        f"Skipping {abs_path}: not on current drive.")
                     continue
                 if rel_path in self.main_window.path_to_item:
                     continue
-                new_item = QtWidgets.QTreeWidgetItem(item, [name])
+                # Ensure two columns; column 1 is the Level indicator cell
+                new_item = QtWidgets.QTreeWidgetItem(item, [name, ""])
                 new_item.setData(0, QtCore.Qt.UserRole, abs_path)
-                new_item.setFlags(new_item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                new_item.setFlags(new_item.flags() |
+                                  QtCore.Qt.ItemIsUserCheckable)
+                # Initialize Level column state = 0 (for all children)
+                new_item.setData(1, LEVEL_ROLE, 0)
                 self.main_window.path_to_item[rel_path] = new_item
-                is_excluded = smart_logic.exclude_spec.match_file(rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
+                is_excluded = smart_logic.exclude_spec.match_file(
+                    rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
                 if os.path.isdir(abs_path):
                     new_item.setIcon(0, self.main_window.folder_icon)
                     if is_excluded:
@@ -53,6 +61,7 @@ class FileTreeManager:
             self.main_window.tree_widget.blockSignals(True)
             try:
                 new_state = item.checkState(0)
+
                 def apply_to_children(parent_item, state):
                     for i in range(parent_item.childCount()):
                         child = parent_item.child(i)
@@ -96,7 +105,8 @@ class FileTreeManager:
             if item.checkState(0) == QtCore.Qt.Checked:
                 file_path = item.data(0, QtCore.Qt.UserRole)
                 if file_path and os.path.isfile(file_path):
-                    QtCore.QTimer.singleShot(0, lambda: self.expand_parents_of_item(item))
+                    QtCore.QTimer.singleShot(
+                        0, lambda: self.expand_parents_of_item(item))
             self.main_window.update_token_counter()
 
     def expand_parents_of_item(self, item):
@@ -104,10 +114,11 @@ class FileTreeManager:
         while parent is not None:
             self.main_window.tree_widget.expandItem(parent)
             parent = parent.parent()
-    
+
     def get_selected_files(self):
         selected = []
-        iterator = QtWidgets.QTreeWidgetItemIterator(self.main_window.tree_widget)
+        iterator = QtWidgets.QTreeWidgetItemIterator(
+            self.main_window.tree_widget)
         while iterator.value():
             item = iterator.value()
             file_path = item.data(0, QtCore.Qt.UserRole)
@@ -119,10 +130,12 @@ class FileTreeManager:
     def select_all(self):
         def check_all(item):
             abs_path = item.data(0, QtCore.Qt.UserRole)
-            rel_path = os.path.relpath(abs_path, os.getcwd()) if abs_path else None
+            rel_path = os.path.relpath(
+                abs_path, os.getcwd()) if abs_path else None
             is_excluded = False
             if rel_path:
-                is_excluded = smart_logic.exclude_spec.match_file(rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
+                is_excluded = smart_logic.exclude_spec.match_file(
+                    rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
                 if os.path.isfile(abs_path) and smart_logic.is_binary_file(abs_path):
                     is_excluded = True
             if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.flags() & QtCore.Qt.ItemIsEnabled and not is_excluded:
@@ -142,7 +155,8 @@ class FileTreeManager:
         self.main_window.update_token_counter()
 
     def deselect_all(self):
-        iterator = QtWidgets.QTreeWidgetItemIterator(self.main_window.tree_widget)
+        iterator = QtWidgets.QTreeWidgetItemIterator(
+            self.main_window.tree_widget)
         self.main_window.tree_widget.blockSignals(True)
         try:
             while iterator.value():
@@ -165,12 +179,14 @@ class FileTreeManager:
                 else:
                     current_path = os.path.join(current_path, part)
                 if current_path in self.main_window.path_to_item and os.path.isdir(self.main_window.path_to_item[current_path].data(0, QtCore.Qt.UserRole)):
-                    folders_to_expand.add(self.main_window.path_to_item[current_path])
+                    folders_to_expand.add(
+                        self.main_window.path_to_item[current_path])
         for item in folders_to_expand:
             self.main_window.tree_widget.expandItem(item)
 
     def auto_expand_common_folders(self):
-        common_folders = ['src', 'lib', 'app', 'components', 'utils', 'helpers', 'models', 'views', 'controllers']
+        common_folders = ['src', 'lib', 'app', 'components',
+                          'utils', 'helpers', 'models', 'views', 'controllers']
         for folder_name in common_folders:
             if folder_name in self.main_window.path_to_item:
                 item = self.main_window.path_to_item[folder_name]

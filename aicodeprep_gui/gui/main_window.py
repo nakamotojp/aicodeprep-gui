@@ -27,6 +27,7 @@ from .components.layouts import FlowLayout
 from .components.dialogs import DialogManager, VoteDialog
 from .components.tree_widget import FileTreeManager
 from .components.preset_buttons import PresetButtonManager
+from .components.multi_state_level_delegate import MultiStateLevelDelegate, LEVEL_ROLE
 from .settings.presets import global_preset_manager
 from .settings.preferences import PreferencesManager
 from .settings.ui_settings import UISettingsManager
@@ -338,8 +339,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Tree widget and prompt setup
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.tree_widget = QtWidgets.QTreeWidget()
-        self.tree_widget.setHeaderLabels(["File/Folder"])
+        # Two columns: 0 = File/Folder, 1 = Level (5-state)
+        self.tree_widget.setHeaderLabels(["File/Folder", "Level"])
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tree_widget.header().setSectionResizeMode(
+            1, QtWidgets.QHeaderView.ResizeToContents)
 
         base_style = """
             QTreeView, QTreeWidget {
@@ -386,22 +390,28 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             parent_node = root_node
             path_so_far = ""
             for part in parts[:-1]:
+                # Ensure Level column default state for intermediate folders if created
                 path_so_far = os.path.join(
                     path_so_far, part) if path_so_far else part
                 if path_so_far in self.path_to_item:
                     parent_node = self.path_to_item[path_so_far]
                 else:
-                    new_parent = QtWidgets.QTreeWidgetItem(parent_node, [part])
+                    new_parent = QtWidgets.QTreeWidgetItem(
+                        parent_node, [part, ""])
                     new_parent.setIcon(0, self.folder_icon)
                     new_parent.setFlags(new_parent.flags()
                                         | QtCore.Qt.ItemIsUserCheckable)
                     new_parent.setCheckState(0, QtCore.Qt.Unchecked)
+                    # Initialize Level column state = 0
+                    new_parent.setData(1, LEVEL_ROLE, 0)
                     self.path_to_item[path_so_far] = new_parent
                     parent_node = new_parent
 
             item_text = parts[-1]
-            item = QtWidgets.QTreeWidgetItem(parent_node, [item_text])
+            item = QtWidgets.QTreeWidgetItem(parent_node, [item_text, ""])
             item.setData(0, QtCore.Qt.UserRole, abs_path)
+            # Initialize Level column state = 0
+            item.setData(1, LEVEL_ROLE, 0)
             self.path_to_item[rel_path] = item
 
             if self.preferences_manager.prefs_loaded:
@@ -419,6 +429,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
             item.setCheckState(
                 0, QtCore.Qt.Checked if is_checked else QtCore.Qt.Unchecked)
+
+        # Attach delegate for Level column (column 1)
+        try:
+            self.level_delegate = MultiStateLevelDelegate(
+                self.tree_widget, is_dark_mode=self.is_dark_mode)
+            self.tree_widget.setItemDelegateForColumn(1, self.level_delegate)
+        except Exception as e:
+            logging.error(f"Failed to install MultiStateLevelDelegate: {e}")
 
         # Connect tree signals
         self.tree_widget.itemExpanded.connect(self.on_item_expanded)
