@@ -5,6 +5,7 @@ from PySide6 import QtCore
 
 AICODEPREP_GUI_VERSION = "1.0"
 
+
 def _prefs_path():
     """Get the path to the preferences file, preferring .aicodeprep-gui, with .auicp as legacy for migration"""
     new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
@@ -15,6 +16,7 @@ def _prefs_path():
         return legacy_path
     else:
         return new_path
+
 
 def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, output_format=None):
     """Write preferences to .aicodeprep-gui file, now supports [format] section."""
@@ -33,9 +35,11 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, o
             f.write(header)
             f.write(f"version={AICODEPREP_GUI_VERSION}\n\n")
             if window_size:
-                f.write(f"[window]\nwidth={window_size[0]}\nheight={window_size[1]}\n")
+                f.write(
+                    f"[window]\nwidth={window_size[0]}\nheight={window_size[1]}\n")
                 if splitter_state is not None:
-                    splitter_data = base64.b64encode(splitter_state).decode('utf-8')
+                    splitter_data = base64.b64encode(
+                        splitter_state).decode('utf-8')
                     f.write(f"splitter_state={splitter_data}\n")
                 f.write("\n")
             if output_format in ("xml", "markdown"):
@@ -45,6 +49,7 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, o
         logging.info(f"Saved preferences to {new_path}")
     except Exception as e:
         logging.warning(f"Could not write .aicodeprep-gui: {e}")
+
 
 def _read_prefs_file():
     """Read preferences file with backwards compatibility for legacy .auicp files (migrates to .aicodeprep-gui).
@@ -66,23 +71,31 @@ def _read_prefs_file():
                 if line.strip().startswith('[') and line.strip().endswith(']'):
                     section = line.strip()[1:-1]
                     continue
-                if not section: continue
+                if not section:
+                    continue
 
                 if section == "files":
-                    if line.strip(): checked.add(line.strip())
+                    if line.strip():
+                        checked.add(line.strip())
                 elif section == "window":
                     if line.startswith('width='):
-                        try: width_val = int(line.split('=')[1])
-                        except (ValueError, IndexError): pass
+                        try:
+                            width_val = int(line.split('=')[1])
+                        except (ValueError, IndexError):
+                            pass
                     elif line.startswith('height='):
-                        try: height_val = int(line.split('=')[1])
-                        except (ValueError, IndexError): pass
+                        try:
+                            height_val = int(line.split('=')[1])
+                        except (ValueError, IndexError):
+                            pass
                     elif line.startswith('splitter_state='):
                         try:
                             splitter_data = line.split('=', 1)[1]
-                            splitter_state = base64.b64decode(splitter_data.encode('utf-8'))
+                            splitter_state = base64.b64decode(
+                                splitter_data.encode('utf-8'))
                         except Exception as e:
-                            logging.warning(f"Failed to decode splitter state: {e}")
+                            logging.warning(
+                                f"Failed to decode splitter state: {e}")
                 elif section == "format":
                     if line.startswith("output_format="):
                         val = line.split("=", 1)[1].strip().lower()
@@ -93,20 +106,25 @@ def _read_prefs_file():
                 window_size = (width_val, height_val)
 
         if prefs_path == legacy_path and not os.path.exists(new_path):
-            logging.info("Migrating preferences from .auicp to .aicodeprep-gui")
+            logging.info(
+                "Migrating preferences from .auicp to .aicodeprep-gui")
             try:
-                _write_prefs_file(list(checked), window_size, splitter_state, output_format)
-                logging.info("Successfully migrated preferences to .aicodeprep-gui")
+                _write_prefs_file(list(checked), window_size,
+                                  splitter_state, output_format)
+                logging.info(
+                    "Successfully migrated preferences to .aicodeprep-gui")
             except Exception as e:
                 logging.error(f"Failed to migrate preferences: {e}")
 
     except FileNotFoundError:
-        file_type = ".auicp" if prefs_path.endswith(".auicp") else ".aicodeprep-gui"
+        file_type = ".auicp" if prefs_path.endswith(
+            ".auicp") else ".aicodeprep-gui"
         logging.info(f"{file_type} file not found, will create on save.")
     except Exception as e:
         logging.error(f"Error reading preferences file: {e}")
 
     return checked, window_size, splitter_state, output_format
+
 
 class PreferencesManager:
     def __init__(self, main_window):
@@ -115,15 +133,24 @@ class PreferencesManager:
         self.window_size_from_prefs = None
         self.splitter_state_from_prefs = None
         self.output_format_from_prefs = "xml"
+        # True only if a prefs file actually exists on disk
+        self.prefs_file_exists = False
+        # Backward-compat flag; set true only when prefs file exists
         self.prefs_loaded = False
 
     def load_prefs_if_exists(self):
+        # Determine if a prefs file exists before reading so we don't override smart defaults when missing
+        prefs_path = _prefs_path()
+        self.prefs_file_exists = os.path.exists(prefs_path)
+
         checked, window_size, splitter_state, output_format = _read_prefs_file()
         self.checked_files_from_prefs = checked
         self.window_size_from_prefs = window_size
         self.splitter_state_from_prefs = splitter_state
         self.output_format_from_prefs = output_format
-        self.prefs_loaded = True
+
+        # Only mark as loaded when a prefs file actually exists
+        self.prefs_loaded = self.prefs_file_exists
 
     def save_prefs(self):
         checked_relpaths = []
@@ -135,7 +162,8 @@ class PreferencesManager:
         size = self.main_window.size()
         splitter_state = self.main_window.splitter.saveState()
         fmt = self.main_window.format_combo.currentData()
-        _write_prefs_file(checked_relpaths, window_size=(size.width(), size.height()), splitter_state=splitter_state, output_format=fmt)
+        _write_prefs_file(checked_relpaths, window_size=(
+            size.width(), size.height()), splitter_state=splitter_state, output_format=fmt)
         self.main_window._save_prompt_options()
 
     def load_from_prefs_button_clicked(self):
@@ -144,7 +172,8 @@ class PreferencesManager:
             self.load_prefs_if_exists()
             self.main_window.tree_widget.blockSignals(True)
             try:
-                iterator = QtWidgets.QTreeWidgetItemIterator(self.main_window.tree_widget)
+                iterator = QtWidgets.QTreeWidgetItemIterator(
+                    self.main_window.tree_widget)
                 while iterator.value():
                     item = iterator.value()
                     if item.flags() & QtCore.Qt.ItemIsUserCheckable and os.path.isfile(item.data(0, QtCore.Qt.UserRole)):
@@ -159,13 +188,18 @@ class PreferencesManager:
                             parent = item.parent()
                             while parent:
                                 if parent.checkState(0) != QtCore.Qt.PartiallyChecked and parent.checkState(0) != QtCore.Qt.Checked:
-                                    parent.setCheckState(0, QtCore.Qt.PartiallyChecked)
+                                    parent.setCheckState(
+                                        0, QtCore.Qt.PartiallyChecked)
                                 parent = parent.parent()
             finally:
                 self.main_window.tree_widget.blockSignals(False)
-            self.main_window._expand_folders_for_paths(self.checked_files_from_prefs)
-            file_type = ".auicp" if prefs_path.endswith(".auicp") else ".aicodeprep-gui"
-            self.main_window.text_label.setText(f"Loaded selection from {file_type}")
+            self.main_window._expand_folders_for_paths(
+                self.checked_files_from_prefs)
+            file_type = ".auicp" if prefs_path.endswith(
+                ".auicp") else ".aicodeprep-gui"
+            self.main_window.text_label.setText(
+                f"Loaded selection from {file_type}")
             self.main_window.update_token_counter()
         else:
-            self.main_window.text_label.setText("No preferences file found (.aicodeprep-gui)")
+            self.main_window.text_label.setText(
+                "No preferences file found (.aicodeprep-gui)")

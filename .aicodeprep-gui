@@ -8,12 +8,12 @@
 version=1.0
 
 [window]
-width=1535
-height=1321
+width=1134
+height=1488
 splitter_state=AAAA/wAAAAEAAAACAAADAAAAAPwB/////wEAAAACAA==
 
 [format]
-output_format=markdown
+output_format=xml
 
 [files]
 .clinerules
@@ -22,7 +22,6 @@ README.md
 Z.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
-aicodeprep_gui\gui_old.py
 aicodeprep_gui\linux_installer.py
 aicodeprep_gui\macos_installer.py
 aicodeprep_gui\main.py
@@ -30,6 +29,7 @@ aicodeprep_gui\smart_logic.py
 aicodeprep_gui\update_checker.py
 aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
+aicodeprep_gui\data\AICodePrep.workflow.zip
 aicodeprep_gui\data\default_config.toml
 aicodeprep_gui\gui\main_window.py
 aicodeprep_gui\gui\__init__.py
@@ -52,7 +52,7 @@ aicodeprep_gui\gui\utils\helpers.py
 aicodeprep_gui\gui\utils\metrics.py
 aicodeprep_gui\gui\utils\__init__.py
 aicodeprep_gui\images\__init__.py
+aicodeprep_gui\pro\multi_state_level_delegate.py
 aicodeprep_gui\pro\patches.py
 aicodeprep_gui\pro\preview_window.py
 aicodeprep_gui\pro\__init__.py
-pyside6_docs\level_column_delegate_guide.md

@@ -2,7 +2,7 @@ import os
 import logging
 from PySide6 import QtWidgets, QtCore, QtGui
 from aicodeprep_gui import smart_logic
-from .multi_state_level_delegate import LEVEL_ROLE
+# LEVEL_ROLE is provided dynamically from main_window when Pro Level column is installed
 
 
 class FileTreeManager:
@@ -27,13 +27,36 @@ class FileTreeManager:
                     continue
                 if rel_path in self.main_window.path_to_item:
                     continue
-                # Ensure two columns; column 1 is the Level indicator cell
-                new_item = QtWidgets.QTreeWidgetItem(item, [name, ""])
+                # Create new item with appropriate number of columns
+                if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+                    # Two columns when level column is active
+                    new_item = QtWidgets.QTreeWidgetItem(item, [name, ""])
+                else:
+                    # Single column when level column is not active
+                    new_item = QtWidgets.QTreeWidgetItem(item, [name])
+
                 new_item.setData(0, QtCore.Qt.UserRole, abs_path)
                 new_item.setFlags(new_item.flags() |
-                                  QtCore.Qt.ItemIsUserCheckable)
-                # Initialize Level column state = 0 (for all children)
-                new_item.setData(1, LEVEL_ROLE, 0)
+                                  QtCore.Qt.ItemIsUserCheckable |
+                                  QtCore.Qt.ItemIsEditable)
+
+                # Initialize Level column state = 0 (for all children) only if Level column is installed
+                if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+                    try:
+                        new_item.setData(1, self.main_window.level_role, 0)
+                        # Also set a visible DisplayRole string so the cell is not blank
+                        labels = getattr(
+                            self.main_window.level_delegate, "LEVEL_LABELS", None)
+                        if labels:
+                            new_item.setData(
+                                1, QtCore.Qt.DisplayRole, labels[0])
+
+                        # Make sure the item is editable in column 1
+                        flags = new_item.flags()
+                        new_item.setFlags(flags | QtCore.Qt.ItemIsEditable)
+                    except Exception:
+                        pass
+
                 self.main_window.path_to_item[rel_path] = new_item
                 is_excluded = smart_logic.exclude_spec.match_file(
                     rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
@@ -55,6 +78,9 @@ class FileTreeManager:
                         new_item.setCheckState(0, item.checkState(0))
         except OSError as e:
             logging.error(f"Error scanning directory {dir_path}: {e}")
+        # After populating children, sync Skeleton Level values for this branch
+        if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+            self._sync_levels_for_subtree(item)
 
     def handle_item_changed(self, item, column):
         if column == 0:
@@ -107,6 +133,9 @@ class FileTreeManager:
                 if file_path and os.path.isfile(file_path):
                     QtCore.QTimer.singleShot(
                         0, lambda: self.expand_parents_of_item(item))
+            # Keep Level column in sync with check states
+            if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+                self._sync_levels_for_subtree(item)
             self.main_window.update_token_counter()
 
     def expand_parents_of_item(self, item):
@@ -126,6 +155,51 @@ class FileTreeManager:
                 selected.append(file_path)
             iterator += 1
         return selected
+
+    def sync_levels_to_checks(self):
+        """
+        Sync Level column for all FILE items to match checkbox state:
+        - Unchecked -> 'Paths only' (index 1)
+        - Checked   -> 'Full content' (index 3)
+        Safely no-ops if Level column is not installed.
+        """
+        if not hasattr(self.main_window, "level_role") or not self.main_window.level_delegate:
+            return
+        labels = getattr(self.main_window.level_delegate, "LEVEL_LABELS", None)
+        iterator = QtWidgets.QTreeWidgetItemIterator(
+            self.main_window.tree_widget)
+        while iterator.value():
+            item = iterator.value()
+            abs_path = item.data(0, QtCore.Qt.UserRole)
+            if abs_path and os.path.isfile(abs_path):
+                is_checked = item.checkState(0) == QtCore.Qt.Checked
+                level_index = 3 if is_checked else 1
+                item.setData(1, self.main_window.level_role, level_index)
+                if labels and 0 <= level_index < len(labels):
+                    item.setData(1, QtCore.Qt.DisplayRole, labels[level_index])
+            iterator += 1
+
+    def _sync_levels_for_subtree(self, root_item):
+        """
+        Sync Level column for a subtree rooted at root_item (files only).
+        Used after checkbox changes and lazy-loaded expansion.
+        """
+        if not hasattr(self.main_window, "level_role") or not self.main_window.level_delegate:
+            return
+        labels = getattr(self.main_window.level_delegate, "LEVEL_LABELS", None)
+
+        def recurse(item):
+            abs_path = item.data(0, QtCore.Qt.UserRole)
+            if abs_path and os.path.isfile(abs_path):
+                is_checked = item.checkState(0) == QtCore.Qt.Checked
+                level_index = 3 if is_checked else 1
+                item.setData(1, self.main_window.level_role, level_index)
+                if labels and 0 <= level_index < len(labels):
+                    item.setData(1, QtCore.Qt.DisplayRole, labels[level_index])
+            for i in range(item.childCount()):
+                recurse(item.child(i))
+
+        recurse(root_item)
 
     def select_all(self):
         def check_all(item):
@@ -152,6 +226,9 @@ class FileTreeManager:
                 check_all(self.main_window.tree_widget.topLevelItem(i))
         finally:
             self.main_window.tree_widget.blockSignals(False)
+        # Sync Level column across tree after bulk selection
+        if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+            self.sync_levels_to_checks()
         self.main_window.update_token_counter()
 
     def deselect_all(self):
@@ -166,6 +243,9 @@ class FileTreeManager:
                 iterator += 1
         finally:
             self.main_window.tree_widget.blockSignals(False)
+        # Sync Level column across tree after bulk deselection
+        if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+            self.sync_levels_to_checks()
         self.main_window.update_token_counter()
 
     def _expand_folders_for_paths(self, checked_paths):

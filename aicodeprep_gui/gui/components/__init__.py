@@ -3,4 +3,6 @@ from .dialogs import DialogManager, VoteDialog
 from .tree_widget import FileTreeManager
 from .preset_buttons import PresetButtonManager
 
-__all__ = ['FlowLayout', 'DialogManager', 'VoteDialog', 'FileTreeManager', 'PresetButtonManager']
+# Removed export of multi_state_level_delegate; Level delegate is now in pro/
+__all__ = ['FlowLayout', 'DialogManager', 'VoteDialog',
+           'FileTreeManager', 'PresetButtonManager']
