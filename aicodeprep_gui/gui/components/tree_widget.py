@@ -27,21 +27,17 @@ class FileTreeManager:
                     continue
                 if rel_path in self.main_window.path_to_item:
                     continue
-                # Create new item with appropriate number of columns
-                if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
-                    # Two columns when level column is active
-                    new_item = QtWidgets.QTreeWidgetItem(item, [name, ""])
-                else:
-                    # Single column when level column is not active
-                    new_item = QtWidgets.QTreeWidgetItem(item, [name])
+                # Always create with two columns since tree widget always has two columns
+                new_item = QtWidgets.QTreeWidgetItem(item, [name, ""])
 
                 new_item.setData(0, QtCore.Qt.UserRole, abs_path)
                 new_item.setFlags(new_item.flags() |
                                   QtCore.Qt.ItemIsUserCheckable |
                                   QtCore.Qt.ItemIsEditable)
 
-                # Initialize Level column state = 0 (for all children) only if Level column is installed
-                if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+                # Initialize Level column state = 0 (for all children) only if Level column is enabled
+                if (hasattr(self.main_window, "level_role") and self.main_window.level_delegate
+                        and self.main_window.is_pro_level_column_enabled()):
                     try:
                         new_item.setData(1, self.main_window.level_role, 0)
                         # Also set a visible DisplayRole string so the cell is not blank
@@ -79,7 +75,8 @@ class FileTreeManager:
         except OSError as e:
             logging.error(f"Error scanning directory {dir_path}: {e}")
         # After populating children, sync Skeleton Level values for this branch
-        if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+        if (hasattr(self.main_window, "level_role") and self.main_window.level_delegate
+                and self.main_window.is_pro_level_column_enabled()):
             self._sync_levels_for_subtree(item)
 
     def handle_item_changed(self, item, column):
@@ -134,8 +131,17 @@ class FileTreeManager:
                     QtCore.QTimer.singleShot(
                         0, lambda: self.expand_parents_of_item(item))
             # Keep Level column in sync with check states
-            if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+            if (hasattr(self.main_window, "level_role") and self.main_window.level_delegate
+                    and self.main_window.is_pro_level_column_enabled()):
                 self._sync_levels_for_subtree(item)
+            self.main_window.update_token_counter()
+        elif (column == 1 and hasattr(self.main_window, "level_role") and getattr(self.main_window, "level_delegate", None)
+              and self.main_window.is_pro_level_column_enabled()):
+            # Skeleton level column changed
+            new_level = item.data(1, self.main_window.level_role)
+            abs_path = item.data(0, QtCore.Qt.UserRole)
+            if abs_path and os.path.isdir(abs_path):
+                self._apply_level_to_children(item, new_level)
             self.main_window.update_token_counter()
 
     def expand_parents_of_item(self, item):
@@ -163,7 +169,8 @@ class FileTreeManager:
         - Checked   -> 'Full content' (index 3)
         Safely no-ops if Level column is not installed.
         """
-        if not hasattr(self.main_window, "level_role") or not self.main_window.level_delegate:
+        if (not hasattr(self.main_window, "level_role") or not self.main_window.level_delegate
+                or not self.main_window.is_pro_level_column_enabled()):
             return
         labels = getattr(self.main_window.level_delegate, "LEVEL_LABELS", None)
         iterator = QtWidgets.QTreeWidgetItemIterator(
@@ -227,7 +234,8 @@ class FileTreeManager:
         finally:
             self.main_window.tree_widget.blockSignals(False)
         # Sync Level column across tree after bulk selection
-        if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+        if (hasattr(self.main_window, "level_role") and self.main_window.level_delegate
+                and self.main_window.is_pro_level_column_enabled()):
             self.sync_levels_to_checks()
         self.main_window.update_token_counter()
 
@@ -244,7 +252,8 @@ class FileTreeManager:
         finally:
             self.main_window.tree_widget.blockSignals(False)
         # Sync Level column across tree after bulk deselection
-        if hasattr(self.main_window, "level_role") and self.main_window.level_delegate:
+        if (hasattr(self.main_window, "level_role") and self.main_window.level_delegate
+                and self.main_window.is_pro_level_column_enabled()):
             self.sync_levels_to_checks()
         self.main_window.update_token_counter()
 
@@ -263,6 +272,40 @@ class FileTreeManager:
                         self.main_window.path_to_item[current_path])
         for item in folders_to_expand:
             self.main_window.tree_widget.expandItem(item)
+
+    def _apply_level_to_children(self, parent_item, level_value):
+        """
+        Recursively applies the specified skeleton level to all descendants of the parent_item.
+        This respects the tree hierarchy and correctly handles lazy-loaded subdirectories.
+        """
+        labels = getattr(self.main_window.level_delegate, "LEVEL_LABELS", None)
+
+        def recurse_and_apply(current_parent):
+            # Iterate through the direct children of the current parent item.
+            for i in range(current_parent.childCount()):
+                child = current_parent.child(i)
+
+                # Apply the new level to the child item
+                child.setData(1, self.main_window.level_role, level_value)
+                if labels and 0 <= level_value < len(labels):
+                    child.setData(1, QtCore.Qt.DisplayRole,
+                                  labels[level_value])
+
+                # If the child is a directory, recurse into it
+                child_path = child.data(0, QtCore.Qt.UserRole)
+                if child_path and os.path.isdir(child_path):
+                    # Before recursing, ensure its children are loaded
+                    if child.childCount() == 0:
+                        self.on_item_expanded(child)
+                    recurse_and_apply(child)
+
+        self.main_window.tree_widget.blockSignals(True)
+        try:
+            recurse_and_apply(parent_item)
+        finally:
+            self.main_window.tree_widget.blockSignals(False)
+
+        self.main_window.tree_widget.viewport().update()
 
     def auto_expand_common_folders(self):
         common_folders = ['src', 'lib', 'app', 'components',

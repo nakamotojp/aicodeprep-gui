@@ -27,6 +27,12 @@ class ComboBoxLevelDelegate(QtWidgets.QStyledItemDelegate):
         combo.addItems(self.LEVEL_LABELS)
         combo.setEditable(False)
         combo.setFocusPolicy(QtCore.Qt.StrongFocus)
+
+        # Commit the data and close the editor immediately when the user selects an item.
+        combo.currentIndexChanged.connect(lambda: self.commitData.emit(combo))
+        combo.currentIndexChanged.connect(lambda: self.closeEditor.emit(
+            combo, QtWidgets.QAbstractItemDelegate.NoHint))
+
         return combo
 
     def setEditorData(self, editor, index):
@@ -57,13 +63,14 @@ class ComboBoxLevelDelegate(QtWidgets.QStyledItemDelegate):
 
     def editorEvent(self, event, model, option, index):
         """Handle mouse clicks to trigger editing."""
-        if event.type() == QtCore.QEvent.MouseButtonPress:
+        if event.type() == QtCore.QEvent.MouseButtonRelease:
             if event.button() == QtCore.Qt.LeftButton:
-                # Trigger editing on single click
-                view = option.widget if hasattr(option, 'widget') else None
+                # Get the tree widget from the option
+                view = option.widget
                 if view:
+                    # Trigger editing on the clicked index
                     view.edit(index)
-                return True
+                    return True
         return super().editorEvent(event, model, option, index)
 
     def paint(self, painter, option, index):

@@ -341,9 +341,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 
         self.tree_widget = QtWidgets.QTreeWidget()
-        # Start with a single column; Level column is optional (Pro feature)
-        self.tree_widget.setHeaderLabels(["File/Folder"])
+        # Start with two columns but hide the second one initially (Pro feature)
+        self.tree_widget.setHeaderLabels(["File/Folder", "Skeleton Level"])
+        # Hide level column by default
+        self.tree_widget.setColumnHidden(1, True)
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
+        # Pro level column state tracking
+        self.pro_level_column_enabled = False
 
         base_style = """
             QTreeView, QTreeWidget {
@@ -396,8 +401,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 if path_so_far in self.path_to_item:
                     parent_node = self.path_to_item[path_so_far]
                 else:
-                    # Only create with single column initially - level column is added dynamically
-                    new_parent = QtWidgets.QTreeWidgetItem(parent_node, [part])
+                    # Always create with two columns since tree widget always has two columns
+                    new_parent = QtWidgets.QTreeWidgetItem(
+                        parent_node, [part, ""])
                     new_parent.setIcon(0, self.folder_icon)
                     new_parent.setFlags(new_parent.flags()
                                         | QtCore.Qt.ItemIsUserCheckable)
@@ -406,8 +412,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     parent_node = new_parent
 
             item_text = parts[-1]
-            # Only create with single column initially - level column is added dynamically
-            item = QtWidgets.QTreeWidgetItem(parent_node, [item_text])
+            # Always create with two columns since tree widget always has two columns
+            item = QtWidgets.QTreeWidgetItem(parent_node, [item_text, ""])
             item.setData(0, QtCore.Qt.UserRole, abs_path)
             self.path_to_item[rel_path] = item
 
@@ -751,8 +757,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     # --- Pro Level column management ---
     def install_pro_level_column(self):
-        # If already installed, return
+        # If already installed, just show the column
         if hasattr(self, "level_delegate") and self.level_delegate:
+            self.tree_widget.setColumnHidden(1, False)
+            self.pro_level_column_enabled = True
             return
 
         # Create delegate via pro getter
@@ -762,21 +770,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             logging.error(
                 "Pro Level delegate not available; cannot install Level column.")
             return
+
         delegate, level_role = result
         self.level_delegate = delegate
         self.level_role = level_role
 
-        # Add the Level column to the tree widget
-        self.tree_widget.setHeaderLabels(["File/Folder", "Skeleton Level"])
-
-        # Set column resize modes - File/Folder takes most space, Skeleton Level takes minimal
+        # Set column resize modes (headers already set during initialization)
         header = self.tree_widget.header()
-        # Disable automatic stretch of last section
         header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Fixed)
-        # Fixed width of 140px for skeleton level column
-        header.resizeSection(1, 140)
+        header.resizeSection(1, 140)  # Fixed width for skeleton level column
 
         # Attach delegate to column 1 of the tree widget
         self.tree_widget.setItemDelegateForColumn(1, self.level_delegate)
@@ -784,8 +788,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Initialize all existing items with Level data
         self._initialize_level_data_for_existing_items()
 
-        # Sync Level column to current checkbox states so enabling the column
-        # mirrors existing selections without altering checkmarks.
+        # Show the column and set flag
+        self.tree_widget.setColumnHidden(1, False)
+        self.pro_level_column_enabled = True
+
+        # Sync Level column to current checkbox states
         if hasattr(self, "tree_manager"):
             try:
                 self.tree_manager.sync_levels_to_checks()
@@ -794,19 +801,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     f"Failed to sync levels to checks after enabling Level column: {e}")
 
     def uninstall_pro_level_column(self):
-        # Remove the Level column delegate
-        try:
-            self.tree_widget.setItemDelegateForColumn(1, None)
-        except Exception:
-            pass
+        # Hide the Level column instead of removing it
+        if hasattr(self, "level_delegate") and self.level_delegate:
+            self.tree_widget.setColumnHidden(1, True)
+            self.pro_level_column_enabled = False
 
-        # Reset to single column
-        self.tree_widget.setHeaderLabels(["File/Folder"])
-        header = self.tree_widget.header()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-
-        self.level_delegate = None
-        self.level_role = None
+            # Force a UI refresh to ensure the column disappears immediately
+            self.tree_widget.repaint()
+            self.tree_widget.viewport().update()
 
     def _initialize_level_data_for_existing_items(self):
         """Initialize Level data for all existing tree items."""
@@ -826,10 +828,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     labels = getattr(self.level_delegate, "LEVEL_LABELS", None)
                     if labels:
                         item.setData(1, QtCore.Qt.DisplayRole, labels[0])
-
                 # Make sure the item is editable in column 1
                 flags = item.flags()
-                item.setFlags(flags | QtCore.Qt.ItemIsUserCheckable)
+                item.setFlags(flags | QtCore.Qt.ItemIsEditable)
                 iterator += 1
         finally:
             self.tree_widget.blockSignals(False)
@@ -839,6 +840,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.install_pro_level_column()
         else:
             self.uninstall_pro_level_column()
+
+    def is_pro_level_column_enabled(self):
+        """Returns True if the pro level column is currently enabled and visible."""
+        return getattr(self, 'pro_level_column_enabled', False)
 
     def _generate_arrow_pixmaps(self):
         """Generates arrow icons and saves them to the temporary directory."""
