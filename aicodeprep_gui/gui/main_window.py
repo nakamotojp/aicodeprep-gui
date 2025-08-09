@@ -958,12 +958,19 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             # Show share dialog every 6th generate
             if self.generate_count > 0 and self.generate_count % 6 == 0:
                 # We use a timer to show the dialog slightly after the process completes
+                # Don't auto-close the window when showing share dialog
                 QtCore.QTimer.singleShot(
-                    500, self.dialog_manager.open_share_dialog)
-
-            QtCore.QTimer.singleShot(1500, self.close)
+                    500, self.show_share_dialog_and_close)
+            else:
+                QtCore.QTimer.singleShot(1500, self.close)
         else:
             self.close()
+
+    def show_share_dialog_and_close(self):
+        """Shows the share dialog and closes the window after user dismisses it."""
+        self.dialog_manager.open_share_dialog()
+        # Close the window after the dialog is dismissed
+        self.close()
 
     def quit_without_processing(self):
         self.action = 'quit'
