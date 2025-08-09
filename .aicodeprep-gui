@@ -13,7 +13,7 @@ height=1488
 splitter_state=AAAA/wAAAAEAAAACAAADAAAAAPwB/////wEAAAACAA==
 
 [format]
-output_format=xml
+output_format=markdown
 
 [files]
 .clinerules
@@ -22,9 +22,12 @@ README.md
 Z.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
+aicodeprep_gui\linux_installer.py
+aicodeprep_gui\macos_installer.py
 aicodeprep_gui\main.py
 aicodeprep_gui\smart_logic.py
 aicodeprep_gui\update_checker.py
+aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
 aicodeprep_gui\data\default_config.toml
 aicodeprep_gui\gui\main_window.py
@@ -36,6 +39,10 @@ aicodeprep_gui\gui\components\multi_state_level_delegate.py
 aicodeprep_gui\gui\components\preset_buttons.py
 aicodeprep_gui\gui\components\tree_widget.py
 aicodeprep_gui\gui\components\__init__.py
+aicodeprep_gui\gui\handlers\file_events.py
+aicodeprep_gui\gui\handlers\ui_events.py
+aicodeprep_gui\gui\handlers\update_events.py
+aicodeprep_gui\gui\handlers\__init__.py
 aicodeprep_gui\gui\settings\preferences.py
 aicodeprep_gui\gui\settings\presets.py
 aicodeprep_gui\gui\settings\ui_settings.py

@@ -8,8 +8,9 @@ DEFAULT_PRESETS = [
     ("Security check", "Can you analyze this code for any security issues?"),
     ("Best Practices", "Please analyze this code for: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic."),
     ("Please review for", "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Security concerns. Suggest improvements and explain your reasoning for each suggestion"),
-    ("Cline, Roo Code Prompt", "Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste.")
+    ("Cline, Roo Code Prompt", "Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste. Cline likes search and replace blocks with just plain language with a little bit of explanations about why we are doing things to help guide the agent.")
 ]
+
 
 class GlobalPresetManager:
     PRESET_SCHEMA_VERSION = 1
@@ -34,7 +35,8 @@ class GlobalPresetManager:
             if last_version >= self.PRESET_SCHEMA_VERSION:
                 return
 
-            logging.info(f"Updating default button presets (schema version {last_version} -> {self.PRESET_SCHEMA_VERSION})")
+            logging.info(
+                f"Updating default button presets (schema version {last_version} -> {self.PRESET_SCHEMA_VERSION})")
 
             self.settings.beginGroup("presets")
             for label, text in DEFAULT_PRESETS:
@@ -42,7 +44,8 @@ class GlobalPresetManager:
             self.settings.endGroup()
 
             self.settings.beginGroup("internal")
-            self.settings.setValue("preset_version", self.PRESET_SCHEMA_VERSION)
+            self.settings.setValue(
+                "preset_version", self.PRESET_SCHEMA_VERSION)
             self.settings.endGroup()
 
             logging.info("Default button presets updated successfully.")
@@ -51,7 +54,8 @@ class GlobalPresetManager:
 
     def get_all_presets(self):
         try:
-            if not self.settings: return []
+            if not self.settings:
+                return []
             presets = []
             self.settings.beginGroup("presets")
             for key in self.settings.childKeys():
@@ -61,10 +65,11 @@ class GlobalPresetManager:
         except Exception as e:
             logging.error(f"Failed to get presets: {e}")
             return []
-    
+
     def add_preset(self, label, text):
         try:
-            if not self.settings or not label.strip() or not text.strip(): return False
+            if not self.settings or not label.strip() or not text.strip():
+                return False
             self.settings.beginGroup("presets")
             self.settings.setValue(label.strip(), text.strip())
             self.settings.endGroup()
@@ -72,10 +77,11 @@ class GlobalPresetManager:
         except Exception as e:
             logging.error(f"Failed to add preset '{label}': {e}")
             return False
-    
+
     def delete_preset(self, label):
         try:
-            if not self.settings or not label.strip(): return False
+            if not self.settings or not label.strip():
+                return False
             self.settings.beginGroup("presets")
             self.settings.remove(label.strip())
             self.settings.endGroup()
@@ -83,5 +89,6 @@ class GlobalPresetManager:
         except Exception as e:
             logging.error(f"Failed to delete preset '{label}': {e}")
             return False
+
 
 global_preset_manager = GlobalPresetManager()

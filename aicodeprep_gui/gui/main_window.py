@@ -104,12 +104,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         self._send_metric_event("open")
 
-        # Show share dialog every 4th open
-        if self.app_open_count > 0 and self.app_open_count % 4 == 0:
-            # We use a timer to show the dialog slightly after the main window appears,
-            # which feels less intrusive.
-            QtCore.QTimer.singleShot(
-                1500, self.dialog_manager.open_share_dialog)
+        # Track generate context clicks for share dialog
+        generate_count = settings.value("generate_count", 0, type=int)
+        try:
+            generate_count = int(generate_count)
+        except Exception:
+            generate_count = 0
+        self.generate_count = generate_count
 
         install_date_str = settings.value("install_date")
         if not install_date_str:
@@ -607,8 +608,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Pro: Enable Skeleton Level column toggle
         level_layout = QtWidgets.QHBoxLayout()
         level_layout.setContentsMargins(0, 0, 0, 0)
+
         self.pro_level_toggle = QtWidgets.QCheckBox(
-            "Enable Skeleton Level column")
+            "Enable Context Compression Modes")
         level_help = QtWidgets.QLabel(
             "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
         level_help.setToolTip(
@@ -947,6 +949,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             )
             self.text_label.setText("Copied to clipboard and fullcode.txt")
             self.save_prefs()
+
+            # Increment generate count and check if we should show share dialog
+            self.generate_count += 1
+            settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
+            settings.setValue("generate_count", self.generate_count)
+
+            # Show share dialog every 6th generate
+            if self.generate_count > 0 and self.generate_count % 6 == 0:
+                # We use a timer to show the dialog slightly after the process completes
+                QtCore.QTimer.singleShot(
+                    500, self.dialog_manager.open_share_dialog)
+
             QtCore.QTimer.singleShot(1500, self.close)
         else:
             self.close()

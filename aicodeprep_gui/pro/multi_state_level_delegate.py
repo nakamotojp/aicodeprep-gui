@@ -11,11 +11,13 @@ class ComboBoxLevelDelegate(QtWidgets.QStyledItemDelegate):
     Stores the integer index in LEVEL_ROLE and stores a human-readable label
     in Qt.DisplayRole so the cell shows text when not editing.
     """
+
     LEVEL_LABELS = [
-        "None",
-        "Paths only",
-        "Skeleton (partial)",
-        "Full content"
+        # visually blank instead of "None" (3 spaces)
+        "   ",
+        "path/to/fileName.only",     # changed from "Paths only"
+        "Skeleton (partial)",        # unchanged
+        "Full File Contents"         # changed from "Full content"
     ]
 
     def __init__(self, parent=None, is_dark_mode: bool = False):
@@ -28,7 +30,6 @@ class ComboBoxLevelDelegate(QtWidgets.QStyledItemDelegate):
         combo.setEditable(False)
         combo.setFocusPolicy(QtCore.Qt.StrongFocus)
 
-        # Commit the data and close the editor immediately when the user selects an item.
         combo.currentIndexChanged.connect(lambda: self.commitData.emit(combo))
         combo.currentIndexChanged.connect(lambda: self.closeEditor.emit(
             combo, QtWidgets.QAbstractItemDelegate.NoHint))
@@ -36,7 +37,6 @@ class ComboBoxLevelDelegate(QtWidgets.QStyledItemDelegate):
         return combo
 
     def setEditorData(self, editor, index):
-        # Prefer the integer stored in LEVEL_ROLE; fallback to 0
         try:
             val = index.data(LEVEL_ROLE)
             if val is None:
@@ -51,9 +51,7 @@ class ComboBoxLevelDelegate(QtWidgets.QStyledItemDelegate):
 
     def setModelData(self, editor, model, index):
         idx = editor.currentIndex()
-        # Store integer level
         model.setData(index, idx, LEVEL_ROLE)
-        # Also store display text so the non-edit paint shows readable text
         text = self.LEVEL_LABELS[idx] if 0 <= idx < len(
             self.LEVEL_LABELS) else ""
         model.setData(index, text, QtCore.Qt.DisplayRole)
@@ -62,22 +60,15 @@ class ComboBoxLevelDelegate(QtWidgets.QStyledItemDelegate):
         editor.setGeometry(option.rect)
 
     def editorEvent(self, event, model, option, index):
-        """Handle mouse clicks to trigger editing."""
         if event.type() == QtCore.QEvent.MouseButtonRelease:
             if event.button() == QtCore.Qt.LeftButton:
-                # Get the tree widget from the option
                 view = option.widget
                 if view:
-                    # Trigger editing on the clicked index
                     view.edit(index)
                     return True
         return super().editorEvent(event, model, option, index)
 
     def paint(self, painter, option, index):
-        """
-        Ensure a readable label is painted for the cell. If the model does not
-        provide DisplayRole text, fall back to LEVEL_LABELS based on LEVEL_ROLE.
-        """
         text = index.data(QtCore.Qt.DisplayRole)
         if not text:
             try:
