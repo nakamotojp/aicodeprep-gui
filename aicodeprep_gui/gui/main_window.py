@@ -610,7 +610,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         level_layout.setContentsMargins(0, 0, 0, 0)
 
         self.pro_level_toggle = QtWidgets.QCheckBox(
-            "Enable Context Compression Modes")
+            "Enable Context Compression Modes - does not work yet, still experimenting!")
         level_help = QtWidgets.QLabel(
             "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
         level_help.setToolTip(
