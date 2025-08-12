@@ -17,6 +17,8 @@ wheels/
 *.egg
 __pycache__/
 
+zzz_gumroad.md
+
 loca/
 
 .kilocode/

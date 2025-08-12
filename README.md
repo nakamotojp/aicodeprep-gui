@@ -221,6 +221,12 @@ For a full list of default settings, see the [default_config.toml](aicodeprep_gu
 
 Contributions, bug reports, and feature requests are welcome! Please feel free to open an issue or submit a pull request on GitHub. Or just email me your complaints! Happy to hear from you: tom@wuu73.org
 
+## Github Sponsors
+
+Your github, or your website, name, can get listed somewhere, maybe in the app itself or website, on github, etc. Any amount helps. Can enable Pro mode forever as thanks. Moved to new state, mom is dying from stage 4 adenocarcinoma, been taking care of her and also coding lots of stuff like this app. Bills are high but can't work quite yet (well I am, just not a normal job). Any money would go towards the basics to keep the lights on etc and for anything related to this. Also seeing people send dollars just motivates me to do better and want to make other useful things.
+
+Been setting up Stripe but want to spend time reading all the docs and make sure I do everything correct - seen a lot of people that get banned posting about it and I don't ever want that to happen. I have it on Gumroad, but can take cryptocurrency, cashapp, apple pay, github sponsor button, etc
+
 ---
 
 ## Support & Donations
@@ -229,11 +235,16 @@ If this tool saves you time and makes your life easier, consider supporting its 
 
 | Method   | Address / Link                                                                                    |
 | -------- | ------------------------------------------------------------------------------------------------- |
-| Bitcoin  | `bc1qkuwhujaxhzk7e3g4f3vekpzjad2rwlh9usagy6`                                                      |
+| Bitcoin  | `bc1qut8nz74hlwztckdghlg0jxan5gnwyqmzkr9c94`                                                      |
 | Litecoin | `ltc1q3z327a3ea22mlhtawmdjxmwn69n65a32fek2s4`                                                     |
 | Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
 | CashApp  | `$lightweb73`                                                                                     |
 | Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
+
+---
+
+Bitcoin QR Code (same address as above):
+![alt text](scrs/qrb.png)
 
 ---
 
