@@ -755,7 +755,22 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         return self.window_helpers.showEvent(event)
 
     def closeEvent(self, event):
-        return self.window_helpers.closeEvent(event)
+        try:
+            # Cancel any pending network requests before shutdown
+            if hasattr(self, 'network_manager'):
+                self.network_manager.clearAccessCache()
+
+            # ... rest of your existing closeEvent code ...
+
+            # Don't send metrics during shutdown to avoid HTTP/2 errors
+            if self.action != 'process':
+                self.action = 'quit'
+                # self._send_metric_event("quit")  # Disabled to prevent HTTP/2 errors
+
+            super(FileSelectionGUI, self).closeEvent(event)
+        except Exception as e:
+            logging.error(f"Error during closeEvent: {e}")
+            super(FileSelectionGUI, self).closeEvent(event)
 
     # --- Pro Level column management ---
     def install_pro_level_column(self):
@@ -942,12 +957,41 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             output_path = os.path.join(os.getcwd(), "fullcode.txt")
             with open(output_path, "r", encoding="utf-8") as f:
                 content = f.read()
-            QtWidgets.QApplication.clipboard().setText(content)
-            logging.info(f"Copied {len(content)} chars to clipboard.")
-            self.text_label.setStyleSheet(
-                f"font-size: 20px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
-            )
-            self.text_label.setText("Copied to clipboard and fullcode.txt")
+
+            # Check content size and warn if very large
+            content_size_mb = len(content) / (1024 * 1024)
+            if content_size_mb > 10:  # Warn for content larger than 10MB
+                logging.warning(f"Large content size: {content_size_mb:.2f}MB")
+                self.text_label.setText(
+                    f"Large content ({content_size_mb:.1f}MB) may exceed clipboard limits. Saved to fullcode.txt.")
+
+            # Enhanced clipboard operation with error handling
+            try:
+                clipboard = QtWidgets.QApplication.clipboard()
+                clipboard.setText(content)
+                # Verify the clipboard operation succeeded
+                if clipboard.text() != content:
+                    logging.warning("Clipboard verification failed")
+                    self.text_label.setText(
+                        "Warning: Clipboard copy may have failed. Content saved to fullcode.txt")
+                    self.text_label.setStyleSheet(
+                        f"font-size: 20px; color: {'#ff9900' if self.is_dark_mode else '#cc7a00'}; font-weight: bold;"
+                    )
+                else:
+                    logging.info(f"Copied {len(content)} chars to clipboard.")
+                    self.text_label.setText(
+                        "Copied to clipboard and fullcode.txt")
+                    self.text_label.setStyleSheet(
+                        f"font-size: 20px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
+                    )
+            except Exception as e:
+                logging.error(f"Failed to copy to clipboard: {e}")
+                self.text_label.setText(
+                    f"Clipboard error: {str(e)}. Content saved to fullcode.txt")
+                self.text_label.setStyleSheet(
+                    f"font-size: 20px; color: {'#ff6666' if self.is_dark_mode else '#cc0000'}; font-weight: bold;"
+                )
+
             self.save_prefs()
 
             # Increment generate count and check if we should show share dialog
@@ -957,12 +1001,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
             # Show share dialog every 6th generate
             if self.generate_count > 0 and self.generate_count % 6 == 0:
-                # We use a timer to show the dialog slightly after the process completes
-                # Don't auto-close the window when showing share dialog
-                QtCore.QTimer.singleShot(
-                    500, self.show_share_dialog_and_close)
+                QtCore.QTimer.singleShot(500, self.show_share_dialog_and_close)
             else:
-                QtCore.QTimer.singleShot(1500, self.close)
+                # Increase the delay to ensure clipboard operations complete
+                QtCore.QTimer.singleShot(2000, self.close)
         else:
             self.close()
 

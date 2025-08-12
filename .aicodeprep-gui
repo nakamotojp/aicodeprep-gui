@@ -19,7 +19,7 @@ output_format=markdown
 .clinerules
 pyproject.toml
 README.md
-zzz_gumroad.md
+Z.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\linux_installer.py
