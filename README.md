@@ -259,3 +259,55 @@ This software uses a Sustainable License:
 - ❌ Cannot offer this as a hosted service
 
 [Full license details](SUSTAINABLE-LICENSE)
+
+**・[GLM-4.5](https://gigazine.net/news/20250729-glm-4-5/)**  
+
+GLM-4.5は中国に拠点を置くAI企業の**[Z.ai](https://chat.z.ai/)**が公開しているチャットAIです。Tom氏いわく「冗談抜きで、Claude 4と同等性能」とのことで、GLM-4.5のタブを2～3個開きっぱなしにしているそうです。  
+
+**・[Kimi K2](https://gigazine.net/news/20250714-ai-kimi-k2/)**  
+
+Kimi K2も中国製のAIで、**[Moonshot AI](https://www.moonshot.cn/)**によって2025年7月にリリースされました。Tom氏は1～2個のタブで**[kimi.com](https://www.kimi.com/)**を開いており、難しいバグについて1日に何度も質問しているそうです。  
+
+**・[Qwenシリーズ](https://gigazine.net/news/20250728-qwen3-235b-a22b-thinking-2507/)**  
+
+AlibabaのAI研究チームであるQwenが開発するAIシリーズもお気に入りとのこと。  
+
+**・[OpenAI Playground](https://platform.openai.com/playground)**  
+
+OpenAI PlaygroundはGPT-4.5やOpenAI o3といったOpenAI製AIモデルをトークン数に応じて使えるサービスです。Tom氏は使用データをAIの学習に使用することに同意した際にもらえる無料クレジットを活用しています。  
+
+**・[Google AI Studio](https://aistudio.google.com/)**  
+
+Google AI StudioではGemini 2.5 ProやGemini 2.5 Flashを一部無料で使えます。Tom氏は3個のタブでGoogle AI Studioを使っています。  
+
+**・[Poe](https://poe.com/)**  
+
+PoeはClaude 4などのAIサービスを回数制限があるものの無料で使えるサービスです。  
+
+**・[OpenRouter](https://openrouter.ai/)**  
+
+OpenRouterも各種AIサービスを一部無料で使えます。  
+
+**・[LMArena](https://lmarena.ai/)**  
+
+LMArenaもいろんなAIを使えるサービスです。特にClaude Opus 4を無料で使える点がお気に入りとのこと。  
+
+**・[ChatGPT](https://chatgpt.com/)**  
+
+もちろん、ChatGPTも使っています。Tom氏いわく「無料でも便利」とのこと。  
+
+**・[Perplexity](https://gigazine.net/news/20240912-perplexity-dmitry-shevelenko-cbo-interview/)**  
+
+Perplexityのタブを少なくとも1つは開いており、ウェブ上の情報を調査させたいタスクで活用しています。  
+
+**・[DeepSeek](https://gigazine.net/news/20250121-deepseek-r1-open-released/)**  
+
+DeepSeek-R1で一躍有名になったDeepSeekのチャットAIも常用。おもにDeepSeek-R1とDeepSeek-V3を使っているそうです。  
+
+**・[Grok](https://grok.com/)**  
+
+Tom氏はGrokをPerplexityと同様に調査用のツールとして使っているとのこと。Tom氏はGrokに**[政治的な偏り](https://gigazine.net/news/20250709-grok-update-conspiracy-jewish/)**が存在することを認識しつつ、「用途をコーディングに限るか、疑わしい動機で開発されている可能性に注意すれば、ときどき役に立つ」と述べています。  
+
+**・[Phind](https://www.phind.com/)**  
+
+Phindは無料で使えるチャットAIで、フローチャートや図表の作成で威力を発揮します。  
